@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-playfair: var(--font-playfair);
+  --font-franklin: var(--font-franklin);
+
+  /* ESO Design tokens */
+  --color-stone-950: #0c0a09;
+  --color-amber-500: #f59e0b;
+  --color-sky-300: #7dd3fc;
+}
+
+/* Font utilities */
+.font-playfair {
+  font-family: var(--font-playfair), "Georgia", serif;
+}
+
+.font-franklin {
+  font-family: var(--font-franklin), "Arial", sans-serif;
+}

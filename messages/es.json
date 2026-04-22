@@ -1,0 +1,102 @@
+{
+  "landing": {
+    "title": "Observatorios ESO Chile",
+    "subtitle": "Visitas guiadas gratuitas a La Silla y Paranal — reserva tu lugar.",
+    "selectObservatory": "Elige el observatorio",
+    "lasilla": "La Silla",
+    "paranal": "Paranal (VLT)",
+    "reserveButton": "Reservar visita",
+    "freeVisit": "Visita gratuita",
+    "slotsAvailable": "{count} cupos disponibles"
+  },
+  "calendario": {
+    "title": "Selecciona fecha y turno",
+    "morning": "Mañana",
+    "afternoon": "Tarde",
+    "noSlots": "Sin cupos disponibles",
+    "soldOut": "Agotado",
+    "next": "Continuar"
+  },
+  "formulario": {
+    "title": "Datos del titular",
+    "nombre": "Nombre",
+    "apellido": "Apellido",
+    "rutOPasaporte": "RUT o Pasaporte",
+    "rutHint": "Chilenos: 12.345.678-9  ·  Extranjeros: número de pasaporte",
+    "email": "Correo electrónico",
+    "emailConfirm": "Confirmar correo",
+    "telefono": "Teléfono (WhatsApp)",
+    "cantidadPersonas": "Número de personas",
+    "idioma": "Idioma de la visita",
+    "idiomaES": "Español",
+    "idiomaEN": "English",
+    "tienesMenores": "Viaja con menores de edad",
+    "recibirWhatsapp": "Recibir notificaciones por WhatsApp",
+    "whatsappOptIn": "Acepto recibir mensajes de WhatsApp de ESO Chile",
+    "password": "Contraseña de gestión",
+    "passwordHint": "La usarás para ver o modificar tu reserva",
+    "acompanantes": "Acompañantes",
+    "addAcompanante": "Agregar acompañante",
+    "submit": "Confirmar reserva",
+    "maxPersons": "Máximo 10 personas por reserva. Para grupos mayores, escribe a reservas@observatorioseso.cl",
+    "edadMinima8": "Edad mínima para este período: 8 años",
+    "edadMinima4": "Edad mínima: 4 años"
+  },
+  "confirmacion": {
+    "title": "¡Reserva registrada!",
+    "subtitle": "Revisa tu correo — recibirás la confirmación con el PDF de tu visita.",
+    "deadline": "Confirma tu asistencia antes de {fecha}",
+    "confirmWhatsapp": "Confirmar por WhatsApp",
+    "confirmEmail": "Confirmar por email",
+    "confirmPortal": "Confirmar en el portal",
+    "downloadPDF": "Descargar PDF",
+    "bookingNumber": "N.° de reserva"
+  },
+  "exito": {
+    "title": "¡Nos vemos en el observatorio!",
+    "subtitle": "Tu reserva ha sido confirmada. Guarda tu PDF y preséntalo al llegar.",
+    "instructions": "Instrucciones de llegada",
+    "contact": "Contacto: reservas@observatorioseso.cl"
+  },
+  "miReserva": {
+    "title": "Mi reserva",
+    "login": "Ingresa tu correo y contraseña de gestión",
+    "changeDate": "Cambiar fecha",
+    "cancel": "Anular reserva",
+    "confirm": "Confirmar asistencia",
+    "cancelConfirm": "¿Seguro que deseas anular tu reserva?"
+  },
+  "nav": {
+    "home": "Inicio",
+    "myBooking": "Mi reserva",
+    "schools": "Visitas escolares",
+    "contact": "Contacto"
+  },
+  "errors": {
+    "notFound": "Página no encontrada",
+    "serverError": "Error del servidor",
+    "noSlots": "No hay cupos disponibles para esta fecha",
+    "maxPersons": "Máximo 10 personas por reserva",
+    "invalidRut": "El RUT no coincide — formato esperado: 12.345.678-9",
+    "emailMismatch": "Los correos no coinciden",
+    "required": "Campo requerido",
+    "generic": "Ocurrió un error inesperado. Intenta de nuevo."
+  },
+  "observatorios": {
+    "LA_SILLA": "La Silla",
+    "PARANAL": "Paranal (VLT)",
+    "lasilla_region": "Región de Coquimbo",
+    "paranal_region": "Región de Antofagasta"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "back": "Volver",
+    "next": "Siguiente",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "save": "Guardar",
+    "close": "Cerrar",
+    "yes": "Sí",
+    "no": "No"
+  }
+}

@@ -1,0 +1,194 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Observatorio {
+  LA_SILLA
+  PARANAL
+}
+
+enum EstadoReserva {
+  PENDIENTE_CONFIRMACION
+  CONFIRMADA
+  ANULADA
+}
+
+enum IdiomaVisita {
+  ES
+  EN
+}
+
+enum TipoLogAgente {
+  VALIDACION
+  COMUNICACION
+  RECORDATORIO
+  AUTOANULACION
+  PDF
+  MODIFICACION
+  CONFIRMACION
+  ANULACION
+  EMAIL
+  WHATSAPP
+  ERROR
+}
+
+// ---------------------------------------------------------------------------
+// Turno — bloque de visita en un observatorio (creado por admin)
+// ---------------------------------------------------------------------------
+
+model Turno {
+  id           String       @id @default(cuid())
+  observatorio Observatorio
+  fecha        DateTime     @db.Date
+  horaInicio   String       // "09:30"
+  horaFin      String       // "13:00"
+  capacidadMax Int
+  cuposOcupados Int         @default(0)
+  activo       Boolean      @default(true)
+
+  // Campos de asistencia real (para reportes mensuales)
+  asistentesReales         Int?
+  asistenciaRegistradaEn   DateTime?
+  asistenciaRegistradaPor  String?
+
+  reservas Reserva[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([observatorio, fecha, horaInicio])
+  @@index([observatorio, fecha, activo])
+  @@index([fecha])
+}
+
+// ---------------------------------------------------------------------------
+// Reserva — reserva individual hecha por un titular
+// ---------------------------------------------------------------------------
+
+model Reserva {
+  id      String @id @default(cuid())
+  token   String @unique @default(cuid())
+  // ID legible para admin y cliente: "ESO-A1B2C3D4"
+  shortId String @unique
+
+  // Observatorio y turno
+  observatorio Observatorio
+  turnoId      String
+  turno        Turno        @relation(fields: [turnoId], references: [id])
+
+  // Estado y confirmación
+  estado                   EstadoReserva @default(PENDIENTE_CONFIRMACION)
+  fechaLimiteConfirmacion  DateTime
+  confirmadaEn             DateTime?
+
+  // Datos del titular
+  nombre          String
+  apellido        String
+  rutOPasaporte   String
+  email           String
+  telefono        String
+
+  // Preferencias
+  idioma          IdiomaVisita @default(ES)
+  cantidadPersonas Int
+  tienesMenores   Boolean     @default(false)
+  recibirWhatsapp Boolean     @default(false)
+  whatsappOptIn   Boolean     @default(false)
+
+  // Contraseña de gestión (bcryptjs, 12 rounds) — nunca en texto plano
+  passwordHash    String
+
+  // Locale del usuario al reservar (para emails/reportes)
+  locale          String      @default("es")
+
+  // PDF y QR
+  pdfUrl          String?
+
+  // Nota interna del admin (visible solo en panel)
+  notaAdmin       String?
+
+  acompanantes Acompanante[]
+  logsAgente   LogAgente[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([token])
+  @@index([shortId])
+  @@index([email])
+  @@index([estado])
+  @@index([turnoId])
+}
+
+// ---------------------------------------------------------------------------
+// Acompanante — personas adicionales en la reserva (hasta 9)
+// ---------------------------------------------------------------------------
+
+model Acompanante {
+  id          String  @id @default(cuid())
+  reservaId   String
+  reserva     Reserva @relation(fields: [reservaId], references: [id], onDelete: Cascade)
+
+  nombre      String
+  apellido    String
+  documento   String? // RUT o pasaporte — opcional, sin validación algorítmica
+
+  createdAt DateTime @default(now())
+
+  @@index([reservaId])
+}
+
+// ---------------------------------------------------------------------------
+// LogAgente — trazabilidad de las acciones de los 5 agentes IA
+// ---------------------------------------------------------------------------
+
+model LogAgente {
+  id        String        @id @default(cuid())
+  tipo      TipoLogAgente
+  reservaId String?
+  reserva   Reserva?      @relation(fields: [reservaId], references: [id])
+
+  resultado  String
+  metadata   Json?
+  duracionMs Int?
+
+  createdAt DateTime @default(now())
+
+  @@index([tipo])
+  @@index([reservaId])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Admin — usuarios del panel de administración
+// ---------------------------------------------------------------------------
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  nombre       String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// ConfigSistema — parámetros operacionales configurables desde el panel admin
+// ---------------------------------------------------------------------------
+
+model ConfigSistema {
+  clave      String   @id
+  valor      String
+  descripcion String?
+  updatedAt  DateTime @updatedAt
+  updatedBy  String?  // email del admin que hizo el último cambio
+}

@@ -1,0 +1,102 @@
+{
+  "landing": {
+    "title": "ESO Observatories Chile",
+    "subtitle": "Free guided tours to La Silla and Paranal — book your spot.",
+    "selectObservatory": "Choose an observatory",
+    "lasilla": "La Silla",
+    "paranal": "Paranal (VLT)",
+    "reserveButton": "Book a visit",
+    "freeVisit": "Free visit",
+    "slotsAvailable": "{count} spots available"
+  },
+  "calendario": {
+    "title": "Select date and time slot",
+    "morning": "Morning",
+    "afternoon": "Afternoon",
+    "noSlots": "No spots available",
+    "soldOut": "Sold out",
+    "next": "Continue"
+  },
+  "formulario": {
+    "title": "Lead visitor details",
+    "nombre": "First name",
+    "apellido": "Last name",
+    "rutOPasaporte": "ID or Passport",
+    "rutHint": "Chilean citizens: 12.345.678-9  ·  Foreign visitors: passport number",
+    "email": "Email address",
+    "emailConfirm": "Confirm email",
+    "telefono": "Phone (WhatsApp)",
+    "cantidadPersonas": "Number of people",
+    "idioma": "Tour language",
+    "idiomaES": "Spanish",
+    "idiomaEN": "English",
+    "tienesMenores": "Travelling with minors",
+    "recibirWhatsapp": "Receive WhatsApp notifications",
+    "whatsappOptIn": "I agree to receive WhatsApp messages from ESO Chile",
+    "password": "Management password",
+    "passwordHint": "You'll use this to view or modify your booking",
+    "acompanantes": "Companions",
+    "addAcompanante": "Add companion",
+    "submit": "Confirm booking",
+    "maxPersons": "Maximum 10 people per booking. For larger groups, email reservas@observatorioseso.cl",
+    "edadMinima8": "Minimum age for this period: 8 years",
+    "edadMinima4": "Minimum age: 4 years"
+  },
+  "confirmacion": {
+    "title": "Booking registered!",
+    "subtitle": "Check your email — you'll receive a confirmation with the PDF of your visit.",
+    "deadline": "Confirm your attendance before {fecha}",
+    "confirmWhatsapp": "Confirm via WhatsApp",
+    "confirmEmail": "Confirm via email",
+    "confirmPortal": "Confirm in the portal",
+    "downloadPDF": "Download PDF",
+    "bookingNumber": "Booking number"
+  },
+  "exito": {
+    "title": "See you at the observatory!",
+    "subtitle": "Your booking has been confirmed. Save your PDF and show it on arrival.",
+    "instructions": "Arrival instructions",
+    "contact": "Contact: reservas@observatorioseso.cl"
+  },
+  "miReserva": {
+    "title": "My booking",
+    "login": "Enter your email and management password",
+    "changeDate": "Change date",
+    "cancel": "Cancel booking",
+    "confirm": "Confirm attendance",
+    "cancelConfirm": "Are you sure you want to cancel your booking?"
+  },
+  "nav": {
+    "home": "Home",
+    "myBooking": "My booking",
+    "schools": "School visits",
+    "contact": "Contact"
+  },
+  "errors": {
+    "notFound": "Page not found",
+    "serverError": "Server error",
+    "noSlots": "No spots available for this date",
+    "maxPersons": "Maximum 10 people per booking",
+    "invalidRut": "ID number does not match — expected format: 12.345.678-9",
+    "emailMismatch": "Emails do not match",
+    "required": "Required field",
+    "generic": "An unexpected error occurred. Please try again."
+  },
+  "observatorios": {
+    "LA_SILLA": "La Silla",
+    "PARANAL": "Paranal (VLT)",
+    "lasilla_region": "Coquimbo Region",
+    "paranal_region": "Antofagasta Region"
+  },
+  "common": {
+    "loading": "Loading...",
+    "back": "Back",
+    "next": "Next",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No"
+  }
+}
