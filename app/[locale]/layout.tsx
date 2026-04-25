@@ -4,7 +4,20 @@ import { getMessages } from "next-intl/server"
 import { notFound } from "next/navigation"
 import { routing } from "@/i18n/routing"
 import { ChatWidget } from "@/components/chat/ChatWidget"
+import type { Metadata, Viewport } from "next"
 import "../globals.css"
+
+const BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
+
+export const metadata: Metadata = {
+  metadataBase: new URL(BASE_URL),
+  manifest: "/manifest.webmanifest",
+}
+
+export const viewport: Viewport = {
+  themeColor: "#f59e0b",
+}
 
 const playfair = Playfair_Display({
   subsets: ["latin"],

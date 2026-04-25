@@ -1,0 +1,24 @@
+{
+  "name": "ESO Observatorios — Reservas",
+  "short_name": "ESO Reservas",
+  "description": "Reserva tu visita guiada gratuita a los observatorios ESO Chile",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0a09",
+  "theme_color": "#f59e0b",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

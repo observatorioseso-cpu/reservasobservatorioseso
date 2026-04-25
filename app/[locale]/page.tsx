@@ -5,6 +5,15 @@ import { Telescope, MapPin, Star, Clock, Users, ChevronRight, Zap } from "lucide
 import { LandingMarquee } from "@/components/landing/LandingMarquee"
 import { ObservatoryCard } from "@/components/landing/ObservatoryCard"
 import { LandingNav } from "@/components/landing/LandingNav"
+import { organizationSchema } from "@/lib/jsonld"
+
+const BASE_URL =
+  process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
+
+const descriptions: Record<string, string> = {
+  es: "Reserva gratis tu visita guiada a La Silla o Paranal, los observatorios de la ESO en Chile. Disponible en español e inglés.",
+  en: "Book your free guided tour to La Silla or Paranal, ESO's world-class observatories in Chile.",
+}
 
 export async function generateMetadata({
   params,
@@ -12,10 +21,41 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>
 }): Promise<Metadata> {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: "landing" })
+  const description = descriptions[locale] ?? descriptions.es
+  const canonicalUrl = `${BASE_URL}/${locale}`
+
   return {
-    title: `${t("title")} — ESO Chile`,
-    description: t("subtitle"),
+    title: "Reserva tu visita guiada | ESO Observatorios Chile",
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        es: `${BASE_URL}/es`,
+        en: `${BASE_URL}/en`,
+      },
+    },
+    openGraph: {
+      title: "Reserva tu visita guiada | ESO Observatorios Chile",
+      description,
+      url: canonicalUrl,
+      siteName: "ESO Observatorios Chile",
+      locale: locale === "en" ? "en_US" : "es_CL",
+      type: "website",
+      images: [
+        {
+          url: "/og/home.png",
+          width: 1200,
+          height: 630,
+          alt: "ESO Observatorios Chile — La Silla y Paranal",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Reserva tu visita guiada | ESO Observatorios Chile",
+      description,
+      images: ["/og/home.png"],
+    },
   }
 }
 
@@ -29,8 +69,14 @@ export default async function LandingPage({
   const tNav = await getTranslations({ locale, namespace: "nav" })
   const tObs = await getTranslations({ locale, namespace: "observatorios" })
 
+  const orgSchema = organizationSchema()
+
   return (
     <div className="min-h-[100dvh] bg-stone-950 text-stone-100">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
+      />
       <LandingNav homeLabel={tNav("home")} myBookingLabel={tNav("myBooking")} locale={locale} />
 
       {/* ─── HERO — Split asimétrico ─── */}
