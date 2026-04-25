@@ -301,7 +301,7 @@ function ReservaPDF({ datos, qrDataUrl }: ReservaPDFProps): React.ReactElement {
       subject={`Visita guiada ${nombreObservatorio(datos.observatorio)}`}
       language={datos.locale}
     >
-      <Page size="A4" style={S.page}>
+      <Page size="LETTER" style={S.page}>
         {/* ── Header ── */}
         <View style={S.header}>
           <View style={S.headerLeft}>
