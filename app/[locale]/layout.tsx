@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from "next-intl"
 import { getMessages } from "next-intl/server"
 import { notFound } from "next/navigation"
 import { routing } from "@/i18n/routing"
+import { ChatWidget } from "@/components/chat/ChatWidget"
 import "../globals.css"
 
 const playfair = Playfair_Display({
@@ -41,6 +42,7 @@ export default async function LocaleLayout({
       <body className="min-h-[100dvh] bg-stone-950 text-stone-100 font-franklin antialiased">
         <NextIntlClientProvider messages={messages}>
           {children}
+          <ChatWidget />
         </NextIntlClientProvider>
       </body>
     </html>

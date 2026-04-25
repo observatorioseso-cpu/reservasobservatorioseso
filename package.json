@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "eslint"
   },
+  "prisma": {
+    "seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
     "@auth/prisma-adapter": "^2.11.2",

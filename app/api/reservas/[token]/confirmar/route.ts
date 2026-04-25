@@ -84,11 +84,20 @@ export async function POST(
     },
   })
 
-  // Regenerar PDF y notificar (async)
+  // Notificar al titular (email/WhatsApp) — async, no bloquea
   import("@/agents/comunicaciones")
     .then(({ orquestarComunicacionesPostReserva }) =>
       orquestarComunicacionesPostReserva(reserva.id).catch((e) =>
         console.error("[comunicaciones/confirmacion] error:", e)
+      )
+    )
+    .catch(() => {})
+
+  // Post-confirmación: generar PDF en background (no bloquea la respuesta)
+  import("@/agents/pdf")
+    .then(({ generarPDFPorToken }) =>
+      generarPDFPorToken(token).catch((e: unknown) =>
+        console.error("[pdf] error generando PDF:", e)
       )
     )
     .catch(() => {})

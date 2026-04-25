@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma"
 import { reservaSchema } from "@/lib/schemas"
 import { calcularFechaLimiteConfirmacion } from "@/lib/confirmacion"
 import { estaAbiertaLaReserva } from "@/lib/horarios"
+import { validarReserva } from "@/agents/validador"
 
 // Rate limiting: máx. 5 reservas por minuto por IP
 const ratelimit = new Ratelimit({
@@ -65,6 +66,23 @@ export async function POST(request: Request) {
         error: "Máximo 10 personas por reserva individual",
         contacto: "reservas@observatorioseso.cl",
       },
+      { status: 422 }
+    )
+  }
+
+  // 4b. Validación IA (síncrono, pre-persistencia)
+  const validacion = await validarReserva({
+    nombre: data.nombre,
+    apellido: data.apellido,
+    email: data.email,
+    telefono: data.telefono,
+    rutOPasaporte: data.rutOPasaporte,
+    cantidadPersonas: data.cantidadPersonas,
+  })
+
+  if (!validacion.valido) {
+    return NextResponse.json(
+      { error: "Los datos de la reserva no parecen válidos.", detalle: validacion.motivo },
       { status: 422 }
     )
   }
@@ -128,6 +146,16 @@ export async function POST(request: Request) {
           },
         },
         select: { id: true, token: true, shortId: true },
+      })
+
+      await tx.logAgente.create({
+        data: {
+          tipo: "VALIDACION",
+          reservaId: nueva.id,
+          resultado: "Reserva validada por IA",
+          duracionMs: validacion.duracionMs,
+          metadata: { modelo: "claude-haiku-4-5-20251001" },
+        },
       })
 
       return nueva
