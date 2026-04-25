@@ -43,7 +43,7 @@ export async function generateMetadata({
       type: "website",
       images: [
         {
-          url: "/og/home.png",
+          url: `/api/og?obs=home&locale=${locale}`,
           width: 1200,
           height: 630,
           alt: "ESO Observatorios Chile — La Silla y Paranal",
@@ -54,7 +54,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: "Reserva tu visita guiada | ESO Observatorios Chile",
       description,
-      images: ["/og/home.png"],
+      images: [`/api/og?obs=home&locale=${locale}`],
     },
   }
 }
