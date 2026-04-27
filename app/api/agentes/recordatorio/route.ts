@@ -13,12 +13,17 @@ import { NextResponse } from "next/server"
 import { ejecutarAutoAnulaciones, ejecutarRecordatorios } from "@/agents/recordatorio"
 
 export async function GET(request: Request): Promise<NextResponse> {
-  // Verificar que la petición viene de Vercel Cron
-  if (process.env.CRON_SECRET) {
-    const authHeader = request.headers.get("authorization")
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-    }
+  // Verificar que la petición viene de Vercel Cron.
+  // Fail-CLOSED: si CRON_SECRET no está configurado, bloquear igualmente
+  // para evitar exposición accidental del endpoint.
+  const cronSecret = process.env.CRON_SECRET
+  if (!cronSecret) {
+    console.error("[cron/recordatorio] CRON_SECRET no está configurado — solicitud rechazada")
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+  }
+  const authHeader = request.headers.get("authorization")
+  if (authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
   const inicio = Date.now()

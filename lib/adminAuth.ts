@@ -5,8 +5,8 @@ const COOKIE_NAME = "eso_admin_session"
 const EXPIRY_MS = 8 * 60 * 60 * 1000
 
 function getSecret(): string {
-  const s = process.env.ADMIN_JWT_SECRET
-  if (!s) throw new Error("[adminAuth] ADMIN_JWT_SECRET no está configurado")
+  const s = process.env.ADMIN_SECRET_KEY
+  if (!s) throw new Error("[adminAuth] ADMIN_SECRET_KEY no está configurado")
   return s
 }
 

@@ -2,11 +2,26 @@ import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { Ratelimit } from "@upstash/ratelimit"
+import { Redis } from "@upstash/redis"
 
 const bodySchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 })
+
+// Rate limiting: máx. 5 intentos de login por IP por minuto
+let ratelimit: Ratelimit | null = null
+try {
+  ratelimit = new Ratelimit({
+    redis: Redis.fromEnv(),
+    limiter: Ratelimit.slidingWindow(5, "1 m"),
+    prefix: "mi-reserva-auth",
+  })
+} catch {
+  // Si Redis no está configurado, el login sigue funcionando (fail-open)
+  ratelimit = null
+}
 
 /**
  * POST /api/mi-reserva/auth
@@ -15,6 +30,18 @@ const bodySchema = z.object({
  * Responde siempre con el mismo mensaje genérico para evitar enumeración.
  */
 export async function POST(request: Request) {
+  // Rate limiting
+  if (ratelimit) {
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
+    const { success } = await ratelimit.limit(`mi-reserva-auth:${ip}`)
+    if (!success) {
+      return NextResponse.json(
+        { error: "Demasiados intentos. Espera un minuto e intenta nuevamente." },
+        { status: 429 }
+      )
+    }
+  }
   let body: unknown
   try {
     body = await request.json()

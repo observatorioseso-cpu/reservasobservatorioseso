@@ -3,6 +3,10 @@ import { routing } from "./i18n/routing"
 import { NextRequest, NextResponse } from "next/server"
 import { verifyAdminToken } from "@/lib/adminAuth"
 
+// Forzar Node.js runtime en el middleware para poder usar
+// crypto de Node.js (createHmac, timingSafeEqual) en adminAuth.
+export const runtime = "nodejs"
+
 const intlMiddleware = createMiddleware(routing)
 
 export default async function middleware(request: NextRequest) {
