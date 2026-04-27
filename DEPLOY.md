@@ -287,11 +287,9 @@ If you get `503` with `"db": "unreachable"`, the database is not reachable — s
 ### Cron jobs
 
 1. In the Vercel dashboard, go to your project and open **Settings > Crons**
-2. Verify the following cron jobs are listed:
+2. Verify the following cron job is listed:
    - `/api/agentes/recordatorio` — runs at `0 12,21 * * *` (12:00 and 21:00 UTC daily)
-   - `/api/reportes/semanal` — runs at `0 11 * * 1` (Mondays 11:00 UTC)
-   - `/api/reportes/mensual` — runs at `0 11 1 * *` (1st of each month 11:00 UTC)
-3. Trigger a manual run by clicking **Run Now** on the `/api/agentes/recordatorio` job and confirm it returns `200`
+3. Trigger a manual run by clicking **Run Now** and confirm it returns `200`
 
 Note: Vercel Cron sends an `Authorization: Bearer [CRON_SECRET]` header. Make sure `CRON_SECRET` matches what you set in Step 6.
 
