@@ -34,6 +34,11 @@ interface Labels {
   submit: string
   edadMinima8: string
   edadMinima4: string
+  sectionTitular: string
+  sectionVisita: string
+  sectionPassword: string
+  reducirPersonas: string
+  aumentarPersonas: string
 }
 
 interface FormularioReservaProps {
@@ -130,7 +135,7 @@ export function FormularioReserva({
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8" noValidate>
       {/* ─── Sección: Titular ─── */}
       <section className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm space-y-5">
-        <h2 className="font-playfair font-bold text-stone-800 text-lg">Datos del titular</h2>
+        <h2 className="font-playfair font-bold text-stone-800 text-lg">{labels.sectionTitular}</h2>
 
         <div className="grid grid-cols-2 gap-4">
           <FormField
@@ -230,7 +235,7 @@ export function FormularioReserva({
 
       {/* ─── Sección: Visita ─── */}
       <section className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm space-y-5">
-        <h2 className="font-playfair font-bold text-stone-800 text-lg">Detalles de la visita</h2>
+        <h2 className="font-playfair font-bold text-stone-800 text-lg">{labels.sectionVisita}</h2>
 
         {/* Cantidad */}
         <FormField
@@ -243,8 +248,8 @@ export function FormularioReserva({
             <button
               type="button"
               onClick={() => handleCantidadChange(Math.max(1, cantidadPersonas - 1))}
-              className="size-10 rounded-lg border border-stone-300 bg-stone-50 text-stone-700 hover:bg-stone-100 font-bold text-lg flex items-center justify-center transition-colors"
-              aria-label="Reducir personas"
+              className="size-10 rounded-lg border border-stone-300 bg-stone-50 text-stone-700 hover:bg-stone-100 font-bold text-lg flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+              aria-label={labels.reducirPersonas}
             >
               –
             </button>
@@ -254,8 +259,8 @@ export function FormularioReserva({
             <button
               type="button"
               onClick={() => handleCantidadChange(Math.min(10, cantidadPersonas + 1))}
-              className="size-10 rounded-lg border border-stone-300 bg-stone-50 text-stone-700 hover:bg-stone-100 font-bold text-lg flex items-center justify-center transition-colors"
-              aria-label="Aumentar personas"
+              className="size-10 rounded-lg border border-stone-300 bg-stone-50 text-stone-700 hover:bg-stone-100 font-bold text-lg flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+              aria-label={labels.aumentarPersonas}
             >
               +
             </button>
@@ -366,7 +371,7 @@ export function FormularioReserva({
 
       {/* ─── Contraseña ─── */}
       <section className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm space-y-4">
-        <h2 className="font-playfair font-bold text-stone-800 text-lg">Contraseña de gestión</h2>
+        <h2 className="font-playfair font-bold text-stone-800 text-lg">{labels.sectionPassword}</h2>
         <FormField
           label={labels.password}
           htmlFor="password"
@@ -396,19 +401,21 @@ export function FormularioReserva({
       </section>
 
       {/* ─── Error global ─── */}
-      <AnimatePresence>
-        {submitError && (
-          <motion.div
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3"
-          >
-            <AlertCircle className="size-4 text-red-500 mt-0.5 shrink-0" />
-            <p className="text-sm text-red-700">{submitError}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div role="alert" aria-live="assertive" aria-atomic="true">
+        <AnimatePresence>
+          {submitError && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3"
+            >
+              <AlertCircle className="size-4 text-red-500 mt-0.5 shrink-0" aria-hidden="true" />
+              <p className="text-sm text-red-700">{submitError}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* ─── Submit ─── */}
       <Button

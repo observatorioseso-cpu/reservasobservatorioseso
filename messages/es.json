@@ -1,4 +1,15 @@
 {
+  "notFound": {
+    "heading": "Página no encontrada",
+    "body": "La página que buscas no existe o fue movida.",
+    "cta": "Volver al inicio"
+  },
+  "error": {
+    "heading": "Algo salió mal",
+    "body": "Ocurrió un error inesperado. Puedes intentar de nuevo o volver al inicio.",
+    "retry": "Reintentar",
+    "home": "Volver al inicio"
+  },
   "landing": {
     "title": "Observatorios ESO Chile",
     "subtitle": "Visitas guiadas gratuitas a La Silla y Paranal — reserva tu lugar.",
@@ -15,7 +26,14 @@
     "afternoon": "Tarde",
     "noSlots": "Sin cupos disponibles",
     "soldOut": "Agotado",
-    "next": "Continuar"
+    "next": "Continuar",
+    "seleccionaFecha": "Selecciona una fecha para ver los turnos disponibles",
+    "sinTurnosDisponibles": "Sin turnos disponibles para esta fecha",
+    "turnosDisponibles": "Turnos disponibles",
+    "conCupos": "Con cupos",
+    "agotado": "Agotado",
+    "mesAnterior": "Mes anterior",
+    "mesSiguiente": "Mes siguiente"
   },
   "formulario": {
     "title": "Datos del titular",
@@ -40,7 +58,12 @@
     "submit": "Confirmar reserva",
     "maxPersons": "Máximo 10 personas por reserva. Para grupos mayores, escribe a reservas@observatorioseso.cl",
     "edadMinima8": "Edad mínima para este período: 8 años",
-    "edadMinima4": "Edad mínima: 4 años"
+    "edadMinima4": "Edad mínima: 4 años",
+    "sectionTitular": "Datos del titular",
+    "sectionVisita": "Detalles de la visita",
+    "sectionPassword": "Contraseña de gestión",
+    "reducirPersonas": "Reducir número de personas",
+    "aumentarPersonas": "Aumentar número de personas"
   },
   "confirmacion": {
     "title": "¡Reserva registrada!",

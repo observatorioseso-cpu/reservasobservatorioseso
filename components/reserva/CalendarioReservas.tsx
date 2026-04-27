@@ -23,9 +23,20 @@ interface DisponibilidadPorFecha {
   [fecha: string]: TurnoDisponible[]
 }
 
+export interface CalendarioLabels {
+  next: string
+  seleccionaFecha: string
+  sinTurnosDisponibles: string
+  turnosDisponibles: string
+  conCupos: string
+  agotado: string
+  mesAnterior: string
+  mesSiguiente: string
+}
+
 interface CalendarioReservasProps {
   observatorio: "LA_SILLA" | "PARANAL"
-  nextLabel: string
+  labels: CalendarioLabels
 }
 
 const DIAS_SEMANA_ES = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sá"]
@@ -47,7 +58,7 @@ function toISODate(d: Date): string {
   return d.toISOString().split("T")[0]
 }
 
-export function CalendarioReservas({ observatorio, nextLabel }: CalendarioReservasProps) {
+export function CalendarioReservas({ observatorio, labels }: CalendarioReservasProps) {
   const router = useRouter()
 
   const today = new Date()
@@ -112,6 +123,7 @@ export function CalendarioReservas({ observatorio, nextLabel }: CalendarioReserv
   }
 
   const turnosDelDia = selectedDate ? (disponibilidad[selectedDate] ?? []) : []
+  const mesActual = `${MESES_ES[viewMonth]} ${viewYear}`
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
@@ -121,36 +133,43 @@ export function CalendarioReservas({ observatorio, nextLabel }: CalendarioReserv
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={prevMonth}
-            className="rounded-lg p-2 text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-colors"
-            aria-label="Mes anterior"
+            className="rounded-lg p-2 text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/60"
+            aria-label={labels.mesAnterior}
           >
-            <ChevronLeft className="size-4" />
+            <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
           <div className="text-center">
-            <p className="font-playfair font-bold text-stone-100">
-              {MESES_ES[viewMonth]} {viewYear}
+            <p
+              className="font-playfair font-bold text-stone-100"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {mesActual}
             </p>
             {loading && <Spinner size="sm" className="mx-auto mt-1" />}
           </div>
           <button
             onClick={nextMonth}
-            className="rounded-lg p-2 text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-colors"
-            aria-label="Mes siguiente"
+            className="rounded-lg p-2 text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/60"
+            aria-label={labels.mesSiguiente}
           >
-            <ChevronRight className="size-4" />
+            <ChevronRight className="size-4" aria-hidden="true" />
           </button>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-800/50 bg-red-950/30 px-4 py-3 text-sm text-red-400">
-            <AlertCircle className="size-4 shrink-0" />
+          <div
+            role="alert"
+            className="mb-4 flex items-center gap-2 rounded-lg border border-red-800/50 bg-red-950/30 px-4 py-3 text-sm text-red-400"
+          >
+            <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
             {error}
           </div>
         )}
 
         {/* Días semana */}
-        <div className="grid grid-cols-7 mb-2">
+        <div className="grid grid-cols-7 mb-2" aria-hidden="true">
           {DIAS_SEMANA_ES.map((d) => (
             <div key={d} className="py-2 text-center text-xs font-medium text-stone-600">
               {d}
@@ -159,8 +178,8 @@ export function CalendarioReservas({ observatorio, nextLabel }: CalendarioReserv
         </div>
 
         {/* Grid días */}
-        <div className="grid grid-cols-7 gap-1">
-          {blancos.map((_, i) => <div key={`b-${i}`} />)}
+        <div className="grid grid-cols-7 gap-1" role="grid" aria-label={mesActual}>
+          {blancos.map((_, i) => <div key={`b-${i}`} role="gridcell" />)}
           {dias.map((dia) => {
             const iso = toISODate(dia)
             const turnos = disponibilidad[iso]
@@ -172,6 +191,7 @@ export function CalendarioReservas({ observatorio, nextLabel }: CalendarioReserv
             return (
               <motion.button
                 key={iso}
+                role="gridcell"
                 whileTap={{ scale: esPasado || sinCupos ? 1 : 0.9 }}
                 onClick={() => !esPasado && turnos && handleSelectDate(iso)}
                 disabled={esPasado || !turnos || sinCupos}
@@ -190,14 +210,15 @@ export function CalendarioReservas({ observatorio, nextLabel }: CalendarioReserv
                 )}
                 aria-label={`${dia.getDate()} de ${MESES_ES[dia.getMonth()]}`}
                 aria-pressed={isSelected}
+                aria-disabled={esPasado || !turnos || sinCupos}
               >
                 {dia.getDate()}
                 {/* Indicador de disponibilidad */}
                 {tieneCupos && !isSelected && (
-                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-sky-400" />
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-sky-400" aria-hidden="true" />
                 )}
                 {sinCupos && (
-                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-red-600/60" />
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-red-600/60" aria-hidden="true" />
                 )}
               </motion.button>
             )
@@ -205,67 +226,69 @@ export function CalendarioReservas({ observatorio, nextLabel }: CalendarioReserv
         </div>
 
         {/* Leyenda */}
-        <div className="mt-4 flex items-center gap-5 text-xs text-stone-600">
+        <div className="mt-4 flex items-center gap-5 text-xs text-stone-600" aria-hidden="true">
           <span className="flex items-center gap-1.5">
             <span className="size-2 rounded-full bg-sky-400" />
-            Con cupos
+            {labels.conCupos}
           </span>
           <span className="flex items-center gap-1.5">
             <span className="size-2 rounded-full bg-red-600/60" />
-            Agotado
+            {labels.agotado}
           </span>
         </div>
       </div>
 
       {/* Panel de turnos */}
       <div className="flex flex-col gap-4">
-        <AnimatePresence mode="wait">
-          {!selectedDate ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="rounded-2xl border border-stone-800 bg-stone-900/40 p-8 text-center"
-            >
-              <p className="text-stone-500 text-sm">Selecciona una fecha para ver los turnos disponibles</p>
-            </motion.div>
-          ) : turnosDelDia.length === 0 ? (
-            <motion.div
-              key="noTurnos"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="rounded-2xl border border-stone-800 bg-stone-900/40 p-8 text-center"
-            >
-              <p className="text-stone-500 text-sm">Sin turnos disponibles para esta fecha</p>
-            </motion.div>
-          ) : (
-            <motion.div
-              key={selectedDate}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col gap-3"
-            >
-              <p className="text-xs font-medium uppercase tracking-widest text-stone-500">
-                Turnos disponibles
-              </p>
-              {turnosDelDia.map((turno) => (
-                <TurnoCard
-                  key={turno.id}
-                  id={turno.id}
-                  horaInicio={turno.horaInicio}
-                  horaFin={turno.horaFin}
-                  cuposLibres={turno.cuposLibres}
-                  capacidadMax={turno.capacidadMax}
-                  selected={selectedTurnoId === turno.id}
-                  onSelect={setSelectedTurnoId}
-                />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div aria-live="polite" aria-atomic="true">
+          <AnimatePresence mode="wait">
+            {!selectedDate ? (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="rounded-2xl border border-stone-800 bg-stone-900/40 p-8 text-center"
+              >
+                <p className="text-stone-500 text-sm">{labels.seleccionaFecha}</p>
+              </motion.div>
+            ) : turnosDelDia.length === 0 ? (
+              <motion.div
+                key="noTurnos"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="rounded-2xl border border-stone-800 bg-stone-900/40 p-8 text-center"
+              >
+                <p className="text-stone-500 text-sm">{labels.sinTurnosDisponibles}</p>
+              </motion.div>
+            ) : (
+              <motion.div
+                key={selectedDate}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col gap-3"
+              >
+                <p className="text-xs font-medium uppercase tracking-widest text-stone-500">
+                  {labels.turnosDisponibles}
+                </p>
+                {turnosDelDia.map((turno) => (
+                  <TurnoCard
+                    key={turno.id}
+                    id={turno.id}
+                    horaInicio={turno.horaInicio}
+                    horaFin={turno.horaFin}
+                    cuposLibres={turno.cuposLibres}
+                    capacidadMax={turno.capacidadMax}
+                    selected={selectedTurnoId === turno.id}
+                    onSelect={setSelectedTurnoId}
+                  />
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* CTA */}
         {selectedTurnoId && (
@@ -280,7 +303,7 @@ export function CalendarioReservas({ observatorio, nextLabel }: CalendarioReserv
               className="w-full"
               onClick={handleContinuar}
             >
-              {nextLabel}
+              {labels.next}
             </Button>
           </motion.div>
         )}

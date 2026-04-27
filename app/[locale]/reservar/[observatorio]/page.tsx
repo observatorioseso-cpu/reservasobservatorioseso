@@ -165,7 +165,19 @@ export default async function CalendarioPage({
             <p className="mt-1 text-sm text-stone-500">{meta.descripcionCorta}</p>
           </div>
 
-          <CalendarioReservas observatorio={resolvedKey} nextLabel={t("next")} />
+          <CalendarioReservas
+            observatorio={resolvedKey}
+            labels={{
+              next: t("next"),
+              seleccionaFecha: t("seleccionaFecha"),
+              sinTurnosDisponibles: t("sinTurnosDisponibles"),
+              turnosDisponibles: t("turnosDisponibles"),
+              conCupos: t("conCupos"),
+              agotado: t("agotado"),
+              mesAnterior: t("mesAnterior"),
+              mesSiguiente: t("mesSiguiente"),
+            }}
+          />
         </main>
       </div>
     </>

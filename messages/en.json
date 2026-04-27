@@ -1,4 +1,15 @@
 {
+  "notFound": {
+    "heading": "Page not found",
+    "body": "The page you are looking for does not exist or was moved.",
+    "cta": "Back to home"
+  },
+  "error": {
+    "heading": "Something went wrong",
+    "body": "An unexpected error occurred. You can try again or return to the home page.",
+    "retry": "Try again",
+    "home": "Back to home"
+  },
   "landing": {
     "title": "ESO Observatories Chile",
     "subtitle": "Free guided tours to La Silla and Paranal — book your spot.",
@@ -15,7 +26,14 @@
     "afternoon": "Afternoon",
     "noSlots": "No spots available",
     "soldOut": "Sold out",
-    "next": "Continue"
+    "next": "Continue",
+    "seleccionaFecha": "Select a date to see available time slots",
+    "sinTurnosDisponibles": "No time slots available for this date",
+    "turnosDisponibles": "Available time slots",
+    "conCupos": "Available",
+    "agotado": "Sold out",
+    "mesAnterior": "Previous month",
+    "mesSiguiente": "Next month"
   },
   "formulario": {
     "title": "Lead visitor details",
@@ -40,7 +58,12 @@
     "submit": "Confirm booking",
     "maxPersons": "Maximum 10 people per booking. For larger groups, email reservas@observatorioseso.cl",
     "edadMinima8": "Minimum age for this period: 8 years",
-    "edadMinima4": "Minimum age: 4 years"
+    "edadMinima4": "Minimum age: 4 years",
+    "sectionTitular": "Lead visitor details",
+    "sectionVisita": "Visit details",
+    "sectionPassword": "Management password",
+    "reducirPersonas": "Decrease number of people",
+    "aumentarPersonas": "Increase number of people"
   },
   "confirmacion": {
     "title": "Booking registered!",

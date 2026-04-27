@@ -37,6 +37,7 @@ export default async function FormularioPage({
 
   const t = await getTranslations({ locale, namespace: "formulario" })
   const tCommon = await getTranslations({ locale, namespace: "common" })
+  const tErrors = await getTranslations({ locale, namespace: "errors" })
   const nombre = NOMBRES[slug]
 
   return (
@@ -90,13 +91,18 @@ export default async function FormularioPage({
             submit: t("submit"),
             edadMinima8: t("edadMinima8"),
             edadMinima4: t("edadMinima4"),
+            sectionTitular: t("sectionTitular"),
+            sectionVisita: t("sectionVisita"),
+            sectionPassword: t("sectionPassword"),
+            reducirPersonas: t("reducirPersonas"),
+            aumentarPersonas: t("aumentarPersonas"),
           }}
           errorLabels={{
-            required: tCommon("loading"),
-            emailMismatch: "Los correos no coinciden",
-            invalidRut: "El RUT no es válido — formato esperado: 12.345.678-9",
-            maxPersons: t("maxPersons"),
-            generic: "Ocurrió un error inesperado. Intenta de nuevo.",
+            required: tErrors("required"),
+            emailMismatch: tErrors("emailMismatch"),
+            invalidRut: tErrors("invalidRut"),
+            maxPersons: tErrors("maxPersons"),
+            generic: tErrors("generic"),
           }}
           backLabel={tCommon("back")}
           locale={locale}

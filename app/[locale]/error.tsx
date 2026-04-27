@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
+import { useTranslations } from "next-intl"
 import { AlertTriangle } from "lucide-react"
 
 interface ErrorPageProps {
@@ -8,39 +9,14 @@ interface ErrorPageProps {
   reset: () => void
 }
 
-const text = {
-  es: {
-    heading: "Algo salió mal",
-    body: "Ocurrió un error inesperado. Puedes intentar de nuevo o volver al inicio.",
-    retry: "Reintentar",
-    home: "Volver al inicio",
-  },
-  en: {
-    heading: "Something went wrong",
-    body: "An unexpected error occurred. You can try again or return to the home page.",
-    retry: "Try again",
-    home: "Back to home",
-  },
-}
-
-function detectLocale(): "es" | "en" {
-  if (typeof window === "undefined") return "es"
-  return window.location.pathname.startsWith("/en") ? "en" : "es"
-}
-
 export default function ErrorPage({ error, reset }: ErrorPageProps) {
-  const [locale, setLocale] = useState<"es" | "en">("es")
+  const t = useTranslations("error")
 
   useEffect(() => {
-    setLocale(detectLocale())
-    // Log to console for debugging — digest ties to server logs
     if (process.env.NODE_ENV !== "production") {
       console.error("[ErrorBoundary]", error.message, error.digest)
     }
   }, [error])
-
-  const t = text[locale]
-  const homeHref = `/${locale}`
 
   return (
     <div className="min-h-[100dvh] bg-stone-950 flex flex-col items-center justify-center px-4 text-center">
@@ -50,9 +26,9 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
       />
 
       <h1 className="font-playfair text-2xl font-bold text-stone-100 mb-2">
-        {t.heading}
+        {t("heading")}
       </h1>
-      <p className="text-stone-400 text-sm max-w-sm mb-8">{t.body}</p>
+      <p className="text-stone-400 text-sm max-w-sm mb-8">{t("body")}</p>
 
       {error.digest && (
         <p className="text-stone-600 text-xs mb-6 font-mono">
@@ -63,15 +39,15 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
       <div className="flex flex-col sm:flex-row gap-3">
         <button
           onClick={reset}
-          className="inline-block rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-stone-950 hover:bg-amber-400 transition-colors"
+          className="inline-block rounded-lg bg-amber-500 px-6 py-3 text-sm font-semibold text-stone-950 hover:bg-amber-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
         >
-          {t.retry}
+          {t("retry")}
         </button>
         <a
-          href={homeHref}
-          className="inline-block rounded-lg border border-stone-700 px-6 py-3 text-sm font-semibold text-stone-300 hover:border-stone-500 hover:text-stone-100 transition-colors"
+          href="/"
+          className="inline-block rounded-lg border border-stone-700 px-6 py-3 text-sm font-semibold text-stone-300 hover:border-stone-500 hover:text-stone-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-500"
         >
-          {t.home}
+          {t("home")}
         </a>
       </div>
     </div>
