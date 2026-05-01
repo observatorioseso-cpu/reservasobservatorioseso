@@ -7,22 +7,34 @@ import { signAdminToken, setAdminCookie } from "@/lib/adminAuth"
 import { Ratelimit } from "@upstash/ratelimit"
 import { Redis } from "@upstash/redis"
 
-const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(10, "1 m"),
-  prefix: "admin-login",
-})
+let ratelimit: Ratelimit | null = null
+function getRatelimit(): Ratelimit | null {
+  if (ratelimit) return ratelimit
+  try {
+    ratelimit = new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(10, "1 m"),
+      prefix: "admin-login",
+    })
+    return ratelimit
+  } catch {
+    return null
+  }
+}
 
 export async function POST(request: Request): Promise<NextResponse> {
   const ip =
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "anonymous"
 
-  const { success } = await ratelimit.limit(ip)
-  if (!success) {
-    return NextResponse.json(
-      { error: "Demasiados intentos. Intenta nuevamente en un minuto." },
-      { status: 429 }
-    )
+  const rl = getRatelimit()
+  if (rl) {
+    const { success } = await rl.limit(ip)
+    if (!success) {
+      return NextResponse.json(
+        { error: "Demasiados intentos. Intenta nuevamente en un minuto." },
+        { status: 429 }
+      )
+    }
   }
 
   let body: unknown

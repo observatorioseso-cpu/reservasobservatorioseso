@@ -12,12 +12,21 @@ import { calcularFechaLimiteConfirmacion } from "@/lib/confirmacion"
 import { estaAbiertaLaReserva } from "@/lib/horarios"
 import { validarReserva } from "@/agents/validador"
 
-// Rate limiting: máx. 5 reservas por minuto por IP
-const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(5, "1 m"),
-  analytics: false,
-})
+// Rate limiting: máx. 5 reservas por minuto por IP (lazy init)
+let ratelimit: Ratelimit | null = null
+function getRatelimit(): Ratelimit | null {
+  if (ratelimit) return ratelimit
+  try {
+    ratelimit = new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(5, "1 m"),
+      analytics: false,
+    })
+    return ratelimit
+  } catch {
+    return null
+  }
+}
 
 /** Genera un shortId único legible: "ESO-A1B2C3D4" */
 function generarShortId(): string {
@@ -31,15 +40,18 @@ export async function POST(request: Request) {
     request.headers.get("x-real-ip") ??
     "unknown"
 
-  const { success, reset } = await ratelimit.limit(`reserva:${ip}`)
-  if (!success) {
-    return NextResponse.json(
-      { error: "Demasiadas solicitudes. Intenta en unos minutos." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(Math.ceil((reset - Date.now()) / 1000)) },
-      }
-    )
+  const rl = getRatelimit()
+  if (rl) {
+    const { success, reset } = await rl.limit(`reserva:${ip}`)
+    if (!success) {
+      return NextResponse.json(
+        { error: "Demasiadas solicitudes. Intenta en unos minutos." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(Math.ceil((reset - Date.now()) / 1000)) },
+        }
+      )
+    }
   }
 
   // 2. Parsear body
