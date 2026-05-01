@@ -4,17 +4,90 @@
   --font-playfair: var(--font-playfair);
   --font-franklin: var(--font-franklin);
 
-  /* ESO Design tokens */
-  --color-stone-950: #0c0a09;
-  --color-amber-500: #f59e0b;
-  --color-sky-300: #7dd3fc;
+  /* ── Atacama nocturno ───────────────────────────────── */
+  --color-atacama-950: #0d0804;
+  --color-atacama-900: #150e05;
+  --color-atacama-800: #1e1508;
+  --color-atacama-700: #2a1c0a;
+
+  /* ── Ocre Diaguita ──────────────────────────────────── */
+  --color-ocre-300: #F0C570;
+  --color-ocre-400: #D4993A;
+  --color-ocre-500: #B87020;
+  --color-ocre-600: #8B4E10;
+
+  /* ── Cielo altiplánico ──────────────────────────────── */
+  --color-cielo-300: #A8C8DA;
+  --color-cielo-400: #7FAFC0;
+  --color-cielo-500: #5A8FA5;
+
+  /* ── Caliche mineral ────────────────────────────────── */
+  --color-caliche-50:  #FDF8F0;
+  --color-caliche-100: #F0E6D0;
+  --color-caliche-200: #D9C9A8;
+  --color-caliche-500: #8B7A60;
+  --color-caliche-700: #5C4A32;
+  --color-caliche-900: #2D2010;
 }
 
-/* Font utilities */
+/* ── Font utilities ─────────────────────────────────────── */
 .font-playfair {
   font-family: var(--font-playfair), "Georgia", serif;
 }
 
 .font-franklin {
-  font-family: var(--font-franklin), "Arial", sans-serif;
+  font-family: var(--font-franklin), sans-serif;
+}
+
+/* ── Diaguita geometric background pattern ──────────────── */
+/*    Inspired by the repeating triangles and chevrons of    */
+/*    Diaguita ceramics — ocre trazos sobre tierra oscura    */
+.diaguita-bg {
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 18px,
+      color-mix(in srgb, #D4993A 6%, transparent) 18px,
+      color-mix(in srgb, #D4993A 6%, transparent) 19px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 18px,
+      color-mix(in srgb, #B87020 5%, transparent) 18px,
+      color-mix(in srgb, #B87020 5%, transparent) 19px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 36px,
+      color-mix(in srgb, #D4993A 4%, transparent) 36px,
+      color-mix(in srgb, #D4993A 4%, transparent) 37px
+    );
+}
+
+/* ── Floating star micro-animation ─────────────────────── */
+@keyframes float-star {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+
+.animate-float-star {
+  animation: float-star 6s ease-in-out infinite;
+}
+
+/* ── Sand grain overlay ─────────────────────────────────── */
+/*    SVG turbulence noise rendered as a fixed overlay       */
+/*    to evoke the fine mineral texture of Atacama sand      */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 300px 300px;
 }

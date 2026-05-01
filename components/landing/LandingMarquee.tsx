@@ -4,30 +4,34 @@ import { motion } from "framer-motion"
 
 const items = [
   "Desierto de Atacama",
+  "Pueblo Diaguita",
+  "Pueblo Chango",
   "VLT · Paranal",
-  "La Silla Observatory",
+  "La Silla 1969",
   "320 noches despejadas",
   "Visita gratuita",
-  "Astronomía de clase mundial",
+  "2.635 m.s.n.m.",
+  "Región de Coquimbo",
+  "Región de Antofagasta",
   "ESO Chile",
-  "Reserva tu lugar",
+  "Astronomía de clase mundial",
 ]
 
 export function LandingMarquee() {
   return (
-    <div className="overflow-hidden border-y border-stone-800 bg-stone-900/40 py-4">
+    <div className="overflow-hidden border-y border-ocre-600/20 bg-atacama-800/80 py-3.5">
       <motion.div
-        className="flex gap-12 whitespace-nowrap"
+        className="flex whitespace-nowrap"
         animate={{ x: ["0%", "-50%"] }}
-        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+        transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
       >
         {[...items, ...items].map((item, i) => (
           <span
             key={i}
-            className="text-xs font-medium tracking-widest uppercase text-stone-500 shrink-0"
+            className="inline-flex items-center shrink-0 text-xs tracking-[0.2em] uppercase text-caliche-500"
           >
-            {item}
-            <span className="ml-12 text-amber-600/40">·</span>
+            <span className="px-8">{item}</span>
+            <span className="text-ocre-500/50" aria-hidden="true">·</span>
           </span>
         ))}
       </motion.div>
