@@ -9,6 +9,8 @@
  * - ejecutarRecordatorios — envía emails de recordatorio a pendientes
  */
 
+export const dynamic = "force-dynamic"
+
 import { NextResponse } from "next/server"
 import { ejecutarAutoAnulaciones, ejecutarRecordatorios } from "@/agents/recordatorio"
 

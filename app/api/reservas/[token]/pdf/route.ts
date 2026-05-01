@@ -5,6 +5,8 @@
  * No requiere autenticación — el token es secreto y funciona como credencial.
  */
 
+export const dynamic = "force-dynamic"
+
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { generarPDFPorToken } from "@/agents/pdf"
