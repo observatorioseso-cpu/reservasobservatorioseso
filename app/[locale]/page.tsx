@@ -7,8 +7,9 @@ import { ObservatoryCard } from "@/components/landing/ObservatoryCard"
 import { LandingNav } from "@/components/landing/LandingNav"
 import { organizationSchema } from "@/lib/jsonld"
 
-const BASE_URL =
+const BASE_URL = (
   process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
+).replace(/^﻿/, "").trim()
 
 const descriptions: Record<string, string> = {
   es: "Reserva gratis tu visita guiada a La Silla o Paranal, los observatorios de la ESO en Chile. Disponible en español e inglés.",

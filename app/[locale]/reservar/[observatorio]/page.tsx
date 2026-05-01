@@ -6,8 +6,9 @@ import { ChevronLeft, Telescope } from "lucide-react"
 import { CalendarioReservas } from "@/components/reserva/CalendarioReservas"
 import { touristAttractionSchema, breadcrumbSchema } from "@/lib/jsonld"
 
-const BASE_URL =
+const BASE_URL = (
   process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
+).replace(/^﻿/, "").trim()
 
 type ObservatorioSlug = "LA_SILLA" | "PARANAL"
 

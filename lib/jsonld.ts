@@ -3,8 +3,9 @@
  * Uses plain typed objects — schema-dts is not a project dependency.
  */
 
-const BASE_URL =
+const BASE_URL = (
   process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
+).replace(/^﻿/, "").trim()
 
 // ---------------------------------------------------------------------------
 // Shared primitives
