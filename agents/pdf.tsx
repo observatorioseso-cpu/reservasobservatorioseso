@@ -470,7 +470,7 @@ export async function generarPDFPorToken(token: string): Promise<Buffer | null> 
     horaFin: reserva.turno.horaFin,
     idioma: reserva.idioma,
     cantidadPersonas: reserva.cantidadPersonas,
-    acompanantes: reserva.acompanantes.map((a) => ({
+    acompanantes: reserva.acompanantes.map((a: { nombre: string; apellido: string; documento: string }) => ({
       nombre: a.nombre,
       apellido: a.apellido,
       documento: a.documento,
