@@ -13,7 +13,6 @@ const BASE_URL = (
 
 type ObservatorioSlug = "LA_SILLA" | "PARANAL"
 
-// Accept both kebab-case slugs and uppercase keys from URL
 const obsMap: Partial<Record<string, ObservatorioSlug>> = {
   "la-silla": "LA_SILLA",
   LA_SILLA: "LA_SILLA",
@@ -28,7 +27,6 @@ const obsMeta: Record<
     nameEn: string
     descEs: string
     descEn: string
-    descripcionCorta: string
     slug: string
   }
 > = {
@@ -36,54 +34,88 @@ const obsMeta: Record<
     nameEs: "Observatorio La Silla — ESO Chile",
     nameEn: "La Silla Observatory — ESO Chile",
     descEs:
-      "Reserva gratis tu visita guiada al Observatorio La Silla de la ESO, en la Región de Coquimbo. Visitas los sábados, máximo 10 personas.",
+      "Reserva gratis tu visita guiada al Observatorio La Silla de la ESO, en la Región de Coquimbo. Visitas los sábados, hasta 40 personas.",
     descEn:
-      "Book your free guided tour to ESO's La Silla Observatory in the Coquimbo Region. Saturday visits, up to 10 people.",
-    descripcionCorta: "Región de Coquimbo · Solo sábados · Edad mínima invierno: 8 años",
+      "Book your free guided tour to ESO's La Silla Observatory in the Coquimbo Region. Saturday visits, up to 40 people.",
     slug: "la-silla",
   },
   PARANAL: {
     nameEs: "Observatorio Paranal VLT — ESO Chile",
     nameEn: "Paranal VLT Observatory — ESO Chile",
     descEs:
-      "Reserva gratis tu visita guiada al Observatorio Paranal de la ESO, hogar del Very Large Telescope en Antofagasta. Máximo 10 personas.",
+      "Reserva gratis tu visita guiada al Observatorio Paranal de la ESO, hogar del Very Large Telescope en Antofagasta. Hasta 60 personas por turno.",
     descEn:
-      "Book your free guided tour to ESO's Paranal Observatory, home of the Very Large Telescope in Antofagasta. Up to 10 people.",
-    descripcionCorta: "Región de Antofagasta · Desierto de Atacama · Edad mínima: 4 años",
+      "Book your free guided tour to ESO's Paranal Observatory, home of the Very Large Telescope in Antofagasta. Up to 60 people per slot.",
     slug: "paranal",
   },
 }
 
+// ---------------------------------------------------------------------------
+// Config visual por observatorio — fondo claro, psicología de color
+// ---------------------------------------------------------------------------
+
 const obsConfig = {
   LA_SILLA: {
+    // Foto
     photo: "/images/lasilla-eclipse.jpg",
     photoAlt: "Eclipse solar sobre el Observatorio La Silla, Región de Coquimbo, Chile",
-    overlay: "linear-gradient(to top, rgba(13,8,4,0.96) 0%, rgba(13,8,4,0.55) 55%, rgba(13,8,4,0.15) 100%)",
-    accentClass: "text-tierra-400",
-    badgeClass: "border-tierra-700/50 bg-tierra-900/50 text-tierra-300",
-    chipClass: "text-tierra-400",
-    region: "Región de Coquimbo · La Serena ~160 km",
-    schedule: "Sábados 09:30–13:00 h",
-    capacity: "Hasta 40 cupos",
-    minAge: "Edad mínima: 8 años (invierno)",
-    navAccent: "text-tierra-400",
-    navRing: "focus-visible:ring-tierra-600/50",
+    photoOverlay:
+      "linear-gradient(to top, rgba(13,8,4,0.92) 0%, rgba(13,8,4,0.45) 55%, rgba(13,8,4,0.10) 100%)",
+    // Página — fondo arena cálido
+    pageBg: "bg-arena-50",
+    // Nav claro con acento tierra
+    navBg: "bg-arena-50/96 border-tierra-500/12",
+    navBack: "text-tinta-500 hover:text-tierra-700",
+    navTitle: "text-tinta-900",
+    navIcon: "text-tierra-500",
+    navDot: "text-tinta-300",
+    navRing: "focus-visible:ring-tierra-500/40",
+    // Info bar
+    infoBar: "bg-tierra-700/6 border-b border-tierra-500/12",
+    infoIcon: "text-tierra-500",
+    infoText: "text-tinta-600",
+    // Hero label
+    heroLabel: "text-tierra-300",
+    // Chips
+    chipRegion: "Región de Coquimbo · La Serena ~160 km",
+    chipSchedule: "Sábados 09:30–13:00 h",
+    chipCapacity: "Hasta 40 cupos por visita",
+    chipMinAge: "Edad mínima: 8 años (invierno)",
+    heroTitle: "La Silla",
   },
   PARANAL: {
+    // Foto
     photo: "/images/paranal-night.jpg",
     photoAlt: "El Very Large Telescope bajo el cielo nocturno del desierto de Atacama, Paranal",
-    overlay: "linear-gradient(to top, rgba(6,11,18,0.97) 0%, rgba(6,11,18,0.55) 55%, rgba(6,11,18,0.15) 100%)",
-    accentClass: "text-cielo-400",
-    badgeClass: "border-cielo-800/50 bg-cielo-900/50 text-cielo-300",
-    chipClass: "text-cielo-400",
-    region: "Región de Antofagasta · Antofagasta ~130 km",
-    schedule: "Sábados 09:30–13:00 y 13:30–17:00 h",
-    capacity: "Hasta 60 cupos por turno",
-    minAge: "Edad mínima: 4 años",
-    navAccent: "text-cielo-400",
-    navRing: "focus-visible:ring-cielo-600/50",
+    photoOverlay:
+      "linear-gradient(to top, rgba(6,11,18,0.95) 0%, rgba(6,11,18,0.45) 55%, rgba(6,11,18,0.08) 100%)",
+    // Página — fondo stone neutro frío
+    pageBg: "bg-stone-50",
+    // Nav claro con acento cielo
+    navBg: "bg-stone-50/96 border-cielo-500/15",
+    navBack: "text-stone-500 hover:text-cielo-700",
+    navTitle: "text-stone-900",
+    navIcon: "text-cielo-600",
+    navDot: "text-stone-300",
+    navRing: "focus-visible:ring-cielo-500/40",
+    // Info bar
+    infoBar: "bg-cielo-100/40 border-b border-cielo-500/12",
+    infoIcon: "text-cielo-600",
+    infoText: "text-stone-600",
+    // Hero label
+    heroLabel: "text-cielo-300",
+    // Chips
+    chipRegion: "Región de Antofagasta · Antofagasta ~130 km",
+    chipSchedule: "Sábados 09:30–13:00 y 13:30–17:00 h",
+    chipCapacity: "Hasta 60 cupos por turno",
+    chipMinAge: "Edad mínima: 4 años",
+    heroTitle: "Paranal VLT",
   },
 } as const
+
+// ---------------------------------------------------------------------------
+// Metadata
+// ---------------------------------------------------------------------------
 
 export async function generateMetadata({
   params,
@@ -135,6 +167,10 @@ export async function generateMetadata({
   }
 }
 
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
 export default async function CalendarioPage({
   params,
 }: {
@@ -143,11 +179,8 @@ export default async function CalendarioPage({
   const { observatorio, locale } = await params
   const obsKey = obsMap[observatorio] ?? obsMap[observatorio.toLowerCase()]
 
-  if (!obsKey) {
-    notFound()
-  }
+  if (!obsKey) notFound()
 
-  // obsKey is narrowed to ObservatorioSlug after notFound()
   const resolvedKey = obsKey as ObservatorioSlug
   const meta = obsMeta[resolvedKey]
   const cfg = obsConfig[resolvedKey]
@@ -174,71 +207,84 @@ export default async function CalendarioPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(crumbs) }}
       />
-      <div className="min-h-[100dvh] bg-stone-950">
-        {/* Sticky nav */}
-        <header className="sticky top-0 z-40 border-b border-stone-800/60 bg-stone-950/90 backdrop-blur-md">
-          <div className="mx-auto flex h-13 max-w-5xl items-center gap-3 px-4 sm:px-6">
+
+      <div className={cn("min-h-[100dvh]", cfg.pageBg)}>
+
+        {/* ── Sticky nav — modo claro por observatorio ── */}
+        <header
+          className={cn(
+            "sticky top-0 z-40 border-b backdrop-blur-md",
+            cfg.navBg
+          )}
+        >
+          <div className="mx-auto flex h-14 max-w-5xl items-center gap-3 px-4 sm:px-6">
             <Link
               href="/"
               className={cn(
-                "flex items-center gap-1.5 text-stone-500 hover:text-stone-300 transition-colors text-sm",
+                "flex items-center gap-1.5 text-sm transition-colors",
                 "focus-visible:outline-none focus-visible:ring-2 rounded",
+                cfg.navBack,
                 cfg.navRing
               )}
             >
               <ChevronLeft className="size-4" aria-hidden="true" />
-              <span className="hidden sm:inline text-xs">ESO Chile</span>
+              <span className="hidden sm:inline text-xs font-medium">ESO Chile</span>
             </Link>
-            <span className="text-stone-700" aria-hidden="true">·</span>
-            <Telescope className={cn("size-4 shrink-0", cfg.accentClass)} aria-hidden="true" />
-            <span className="font-playfair font-semibold text-stone-200 text-sm truncate">
+            <span className={cn("text-sm", cfg.navDot)} aria-hidden="true">·</span>
+            <Telescope className={cn("size-4 shrink-0", cfg.navIcon)} aria-hidden="true" />
+            <span className={cn("font-playfair font-semibold text-sm truncate", cfg.navTitle)}>
               {isEs ? meta.nameEs : meta.nameEn}
             </span>
           </div>
         </header>
 
-        {/* Photo hero */}
-        <div className="relative h-52 sm:h-64 overflow-hidden">
+        {/* ── Photo hero — imagen del observatorio ── */}
+        <div className="relative h-56 sm:h-72 overflow-hidden">
           <img
             src={cfg.photo}
             alt={cfg.photoAlt}
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
-          <div className="absolute inset-0" style={{ background: cfg.overlay }} />
-          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-6 max-w-5xl mx-auto">
-            <span className={cn("text-[10px] font-medium uppercase tracking-[0.25em] mb-1 block", cfg.accentClass)}>
-              Entrada gratuita · Visita guiada
+          <div className="absolute inset-0" style={{ background: cfg.photoOverlay }} />
+          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-7 max-w-5xl mx-auto">
+            <span
+              className={cn(
+                "text-[10px] font-medium uppercase tracking-[0.25em] mb-1.5 block",
+                cfg.heroLabel
+              )}
+            >
+              Entrada gratuita · Visita guiada ESO
             </span>
-            <h1 className="font-playfair text-3xl sm:text-4xl font-black text-white leading-none">
-              {resolvedKey === "LA_SILLA" ? "La Silla" : "Paranal VLT"}
+            <h1 className="font-playfair text-4xl sm:text-5xl font-black text-white leading-none">
+              {cfg.heroTitle}
             </h1>
-            <p className="text-sm text-stone-400 mt-1.5">{cfg.region}</p>
+            <p className="text-sm text-stone-400 mt-2">{cfg.chipRegion}</p>
           </div>
         </div>
 
-        {/* Info chips bar */}
-        <div className="border-b border-stone-800/50 bg-stone-900/30 px-4 sm:px-8 py-3">
-          <div className="mx-auto max-w-5xl flex flex-wrap gap-x-5 gap-y-1.5 items-center">
-            <span className="flex items-center gap-1.5 text-xs text-stone-400">
-              <Clock className={cn("size-3.5", cfg.chipClass)} aria-hidden="true" />
-              {cfg.schedule}
+        {/* ── Info chips bar ── */}
+        <div className={cn("px-4 sm:px-8 py-3", cfg.infoBar)}>
+          <div className="mx-auto max-w-5xl flex flex-wrap gap-x-6 gap-y-1.5 items-center">
+            <span className={cn("flex items-center gap-1.5 text-xs", cfg.infoText)}>
+              <Clock className={cn("size-3.5 shrink-0", cfg.infoIcon)} aria-hidden="true" />
+              {cfg.chipSchedule}
             </span>
-            <span className="flex items-center gap-1.5 text-xs text-stone-400">
-              <Users className={cn("size-3.5", cfg.chipClass)} aria-hidden="true" />
-              {cfg.capacity}
+            <span className={cn("flex items-center gap-1.5 text-xs", cfg.infoText)}>
+              <Users className={cn("size-3.5 shrink-0", cfg.infoIcon)} aria-hidden="true" />
+              {cfg.chipCapacity}
             </span>
-            <span className="flex items-center gap-1.5 text-xs text-stone-400">
-              <MapPin className={cn("size-3.5", cfg.chipClass)} aria-hidden="true" />
-              {cfg.region}
+            <span className={cn("flex items-center gap-1.5 text-xs", cfg.infoText)}>
+              <MapPin className={cn("size-3.5 shrink-0", cfg.infoIcon)} aria-hidden="true" />
+              {cfg.chipRegion}
             </span>
-            <span className="flex items-center gap-1.5 text-xs text-stone-400">
-              <ShieldCheck className={cn("size-3.5", cfg.chipClass)} aria-hidden="true" />
-              {cfg.minAge}
+            <span className={cn("flex items-center gap-1.5 text-xs", cfg.infoText)}>
+              <ShieldCheck className={cn("size-3.5 shrink-0", cfg.infoIcon)} aria-hidden="true" />
+              {cfg.chipMinAge}
             </span>
           </div>
         </div>
 
-        {/* Calendar */}
+        {/* ── Calendario ── */}
         <main id="main-content" className="mx-auto max-w-5xl px-4 sm:px-6 py-8 sm:py-10">
           <CalendarioReservas
             observatorio={resolvedKey}
