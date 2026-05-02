@@ -10,18 +10,20 @@ interface LandingNavProps {
   homeLabel: string
   myBookingLabel: string
   locale: string
+  /** When true the pill stays in light/cream mode regardless of scroll position */
+  lightBg?: boolean
 }
 
-export function LandingNav({ homeLabel: _, myBookingLabel, locale }: LandingNavProps) {
-  const [scrolled, setScrolled] = useState(false)
+export function LandingNav({ homeLabel: _, myBookingLabel, locale, lightBg = false }: LandingNavProps) {
+  const [scrolled, setScrolled] = useState(lightBg)
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
-    // Hero is ~100dvh — switch to light pill once past the photo section
+    if (lightBg) return // always light — no scroll tracking needed
     const onScroll = () => setScrolled(window.scrollY > window.innerHeight * 0.72)
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
-  }, [])
+  }, [lightBg])
 
   const altLocale = locale === "es" ? "en" : "es"
 
