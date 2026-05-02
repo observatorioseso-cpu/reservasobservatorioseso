@@ -3,9 +3,8 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "@/i18n/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { ChevronLeft, ChevronRight, AlertCircle } from "lucide-react"
+import { ChevronLeft, ChevronRight, AlertCircle, Telescope } from "lucide-react"
 import { TurnoCard } from "./TurnoCard"
-import { Button } from "@/components/ui/Button"
 import { Spinner } from "@/components/ui/Spinner"
 import { cn } from "@/lib/utils"
 
@@ -39,6 +38,41 @@ interface CalendarioReservasProps {
   labels: CalendarioLabels
 }
 
+const OBS_THEME = {
+  LA_SILLA: {
+    surface: "bg-tinta-900/50",
+    border: "border-tierra-800/30",
+    monthBtn: "hover:bg-tierra-900/50 hover:text-tierra-300 focus-visible:ring-tierra-600/50",
+    monthText: "text-tierra-400",
+    daySelected: "bg-tierra-500 text-arena-50 font-semibold shadow-[0_0_12px_rgba(184,112,32,0.5)]",
+    dayHover: "hover:bg-tierra-900/40 hover:text-tierra-200",
+    dayText: "text-stone-300",
+    dotAvailable: "bg-tierra-400",
+    dotAgotado: "bg-red-800/70",
+    emptyState: "text-stone-500",
+    ctaBtn: "bg-tierra-600 hover:bg-tierra-500 text-arena-50 focus-visible:ring-tierra-500/60",
+    legend: "text-stone-500",
+    turnoLabel: "text-stone-400",
+    panelTitle: "text-tierra-400",
+  },
+  PARANAL: {
+    surface: "bg-cielo-800/15",
+    border: "border-cielo-800/30",
+    monthBtn: "hover:bg-cielo-900/50 hover:text-cielo-300 focus-visible:ring-cielo-600/50",
+    monthText: "text-cielo-400",
+    daySelected: "bg-cielo-600 text-white font-semibold shadow-[0_0_12px_rgba(61,110,133,0.6)]",
+    dayHover: "hover:bg-cielo-900/40 hover:text-cielo-200",
+    dayText: "text-stone-300",
+    dotAvailable: "bg-cielo-400",
+    dotAgotado: "bg-red-800/70",
+    emptyState: "text-stone-500",
+    ctaBtn: "bg-cielo-700 hover:bg-cielo-600 text-white focus-visible:ring-cielo-500/60",
+    legend: "text-stone-500",
+    turnoLabel: "text-stone-400",
+    panelTitle: "text-cielo-400",
+  },
+} as const
+
 const DIAS_SEMANA_ES = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sá"]
 const MESES_ES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -60,6 +94,7 @@ function toISODate(d: Date): string {
 
 export function CalendarioReservas({ observatorio, labels }: CalendarioReservasProps) {
   const router = useRouter()
+  const theme = OBS_THEME[observatorio]
 
   const today = new Date()
   const [viewYear, setViewYear] = useState(today.getFullYear())
@@ -75,14 +110,11 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
     setLoading(true)
     setError(null)
     try {
-      const desde = new Date(year, month, 1).toISOString().split("T")[0]
-      const hasta = new Date(year, month + 1, 0).toISOString().split("T")[0]
-      const res = await fetch(
-        `/api/disponibilidad?observatorio=${observatorio}&desde=${desde}&hasta=${hasta}`
-      )
+      const mes = `${year}-${String(month + 1).padStart(2, "0")}`
+      const res = await fetch(`/api/disponibilidad?observatorio=${observatorio}&mes=${mes}`)
       if (!res.ok) throw new Error("Error al cargar disponibilidad")
       const data = await res.json()
-      setDisponibilidad((prev) => ({ ...prev, ...data.disponibilidad }))
+      setDisponibilidad((prev) => ({ ...prev, ...data }))
     } catch {
       setError("No se pudo cargar la disponibilidad. Intenta de nuevo.")
     } finally {
@@ -119,7 +151,9 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
 
   const handleContinuar = () => {
     if (!selectedDate || !selectedTurnoId) return
-    router.push(`/reservar/${observatorio.toLowerCase().replace("_", "-")}/registro?turnoId=${selectedTurnoId}&fecha=${selectedDate}`)
+    router.push(
+      `/reservar/${observatorio.toLowerCase().replace("_", "-")}/registro?turnoId=${selectedTurnoId}&fecha=${selectedDate}`
+    )
   }
 
   const turnosDelDia = selectedDate ? (disponibilidad[selectedDate] ?? []) : []
@@ -128,19 +162,23 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
       {/* Calendario */}
-      <div className="rounded-2xl border border-stone-800 bg-stone-900/80 p-6">
+      <div className={cn("rounded-2xl border p-6", theme.surface, theme.border)}>
         {/* Header mes */}
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={prevMonth}
-            className="rounded-lg p-2 text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/60"
+            className={cn(
+              "rounded-lg p-2 text-stone-400 transition-colors",
+              "focus-visible:outline-none focus-visible:ring-2",
+              theme.monthBtn
+            )}
             aria-label={labels.mesAnterior}
           >
             <ChevronLeft className="size-4" aria-hidden="true" />
           </button>
-          <div className="text-center">
+          <div className="text-center min-w-0">
             <p
-              className="font-playfair font-bold text-stone-100"
+              className={cn("font-playfair font-bold text-stone-100")}
               aria-live="polite"
               aria-atomic="true"
             >
@@ -150,7 +188,11 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
           </div>
           <button
             onClick={nextMonth}
-            className="rounded-lg p-2 text-stone-400 hover:bg-stone-800 hover:text-stone-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/60"
+            className={cn(
+              "rounded-lg p-2 text-stone-400 transition-colors",
+              "focus-visible:outline-none focus-visible:ring-2",
+              theme.monthBtn
+            )}
             aria-label={labels.mesSiguiente}
           >
             <ChevronRight className="size-4" aria-hidden="true" />
@@ -168,7 +210,7 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
           </div>
         )}
 
-        {/* Días semana */}
+        {/* Dias semana */}
         <div className="grid grid-cols-7 mb-2" aria-hidden="true">
           {DIAS_SEMANA_ES.map((d) => (
             <div key={d} className="py-2 text-center text-xs font-medium text-stone-600">
@@ -177,7 +219,7 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
           ))}
         </div>
 
-        {/* Grid días */}
+        {/* Grid dias */}
         <div className="grid grid-cols-7 gap-1" role="grid" aria-label={mesActual}>
           {blancos.map((_, i) => <div key={`b-${i}`} role="gridcell" />)}
           {dias.map((dia) => {
@@ -187,38 +229,44 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
             const tieneCupos = turnos?.some((t) => t.cuposLibres > 0)
             const sinCupos = turnos && !tieneCupos
             const isSelected = selectedDate === iso
+            const sinTurno = !turnos
 
             return (
               <motion.button
                 key={iso}
                 role="gridcell"
-                whileTap={{ scale: esPasado || sinCupos ? 1 : 0.9 }}
-                onClick={() => !esPasado && turnos && handleSelectDate(iso)}
-                disabled={esPasado || !turnos || sinCupos}
+                whileTap={{ scale: esPasado || sinCupos || sinTurno ? 1 : 0.88 }}
+                onClick={() => !esPasado && turnos && tieneCupos && handleSelectDate(iso)}
+                disabled={esPasado || !turnos || !!sinCupos}
                 className={cn(
                   "relative aspect-square rounded-lg text-sm transition-all duration-100",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/60",
-                  esPasado
+                  "focus-visible:outline-none focus-visible:ring-2",
+                  observatorio === "LA_SILLA"
+                    ? "focus-visible:ring-tierra-600/50"
+                    : "focus-visible:ring-cielo-600/50",
+                  esPasado || sinTurno || sinCupos
                     ? "text-stone-700 cursor-not-allowed"
-                    : !turnos
-                    ? "text-stone-600 cursor-not-allowed"
-                    : sinCupos
-                    ? "text-stone-600 cursor-not-allowed"
                     : isSelected
-                    ? "bg-amber-500 text-stone-950 font-semibold shadow-[0_0_12px_rgba(245,158,11,0.4)]"
-                    : "text-stone-300 hover:bg-stone-800 hover:text-stone-100"
+                    ? theme.daySelected
+                    : cn(theme.dayText, theme.dayHover)
                 )}
                 aria-label={`${dia.getDate()} de ${MESES_ES[dia.getMonth()]}`}
                 aria-pressed={isSelected}
-                aria-disabled={esPasado || !turnos || sinCupos}
+                aria-disabled={esPasado || !turnos || !!sinCupos}
               >
                 {dia.getDate()}
                 {/* Indicador de disponibilidad */}
                 {tieneCupos && !isSelected && (
-                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-sky-400" aria-hidden="true" />
+                  <span
+                    className={cn("absolute bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full", theme.dotAvailable)}
+                    aria-hidden="true"
+                  />
                 )}
                 {sinCupos && (
-                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-red-600/60" aria-hidden="true" />
+                  <span
+                    className={cn("absolute bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full", theme.dotAgotado)}
+                    aria-hidden="true"
+                  />
                 )}
               </motion.button>
             )
@@ -226,13 +274,13 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
         </div>
 
         {/* Leyenda */}
-        <div className="mt-4 flex items-center gap-5 text-xs text-stone-600" aria-hidden="true">
+        <div className={cn("mt-4 flex items-center gap-5 text-xs", theme.legend)} aria-hidden="true">
           <span className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-sky-400" />
+            <span className={cn("size-2 rounded-full", theme.dotAvailable)} />
             {labels.conCupos}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-red-600/60" />
+            <span className={cn("size-2 rounded-full", theme.dotAgotado)} />
             {labels.agotado}
           </span>
         </div>
@@ -248,9 +296,14 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="rounded-2xl border border-stone-800 bg-stone-900/40 p-8 text-center"
+                className={cn(
+                  "rounded-2xl border p-8 text-center flex flex-col items-center gap-3",
+                  theme.border,
+                  theme.surface
+                )}
               >
-                <p className="text-stone-500 text-sm">{labels.seleccionaFecha}</p>
+                <Telescope className={cn("size-8 opacity-30", theme.panelTitle)} aria-hidden="true" />
+                <p className={cn("text-sm", theme.emptyState)}>{labels.seleccionaFecha}</p>
               </motion.div>
             ) : turnosDelDia.length === 0 ? (
               <motion.div
@@ -258,9 +311,13 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="rounded-2xl border border-stone-800 bg-stone-900/40 p-8 text-center"
+                className={cn(
+                  "rounded-2xl border p-8 text-center",
+                  theme.border,
+                  theme.surface
+                )}
               >
-                <p className="text-stone-500 text-sm">{labels.sinTurnosDisponibles}</p>
+                <p className={cn("text-sm", theme.emptyState)}>{labels.sinTurnosDisponibles}</p>
               </motion.div>
             ) : (
               <motion.div
@@ -270,7 +327,7 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
                 exit={{ opacity: 0 }}
                 className="flex flex-col gap-3"
               >
-                <p className="text-xs font-medium uppercase tracking-widest text-stone-500">
+                <p className={cn("text-xs font-medium uppercase tracking-widest", theme.panelTitle)}>
                   {labels.turnosDisponibles}
                 </p>
                 {turnosDelDia.map((turno) => (
@@ -283,6 +340,7 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
                     capacidadMax={turno.capacidadMax}
                     selected={selectedTurnoId === turno.id}
                     onSelect={setSelectedTurnoId}
+                    observatorio={observatorio}
                   />
                 ))}
               </motion.div>
@@ -297,14 +355,16 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20 }}
           >
-            <Button
-              variant="primary"
-              size="lg"
-              className="w-full"
+            <button
               onClick={handleContinuar}
+              className={cn(
+                "w-full rounded-full px-6 py-3 text-sm font-semibold transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2",
+                theme.ctaBtn
+              )}
             >
               {labels.next}
-            </Button>
+            </button>
           </motion.div>
         )}
       </div>

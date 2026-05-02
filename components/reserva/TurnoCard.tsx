@@ -4,6 +4,31 @@ import { motion } from "framer-motion"
 import { Sun, Sunset, Users, CheckCircle2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+const CARD_THEME = {
+  LA_SILLA: {
+    selectedBorder: "border-tierra-500/70",
+    selectedBg: "bg-tierra-900/30",
+    selectedGlow: "shadow-[0_0_20px_rgba(184,112,32,0.15)]",
+    selectedIcon: "text-tierra-400",
+    iconBg: "bg-tierra-900/60",
+    idleBorder: "border-stone-800",
+    idleBg: "bg-stone-900",
+    horaText: "text-tierra-300",
+    checkIcon: "text-tierra-400",
+  },
+  PARANAL: {
+    selectedBorder: "border-cielo-500/70",
+    selectedBg: "bg-cielo-900/30",
+    selectedGlow: "shadow-[0_0_20px_rgba(63,110,133,0.20)]",
+    selectedIcon: "text-cielo-400",
+    iconBg: "bg-cielo-900/50",
+    idleBorder: "border-stone-800",
+    idleBg: "bg-stone-900",
+    horaText: "text-cielo-300",
+    checkIcon: "text-cielo-400",
+  },
+} as const
+
 interface TurnoCardProps {
   id: string
   horaInicio: string
@@ -12,6 +37,7 @@ interface TurnoCardProps {
   capacidadMax: number
   selected: boolean
   onSelect: (id: string) => void
+  observatorio: "LA_SILLA" | "PARANAL"
 }
 
 export function TurnoCard({
@@ -22,10 +48,20 @@ export function TurnoCard({
   capacidadMax,
   selected,
   onSelect,
+  observatorio,
 }: TurnoCardProps) {
+  const theme = CARD_THEME[observatorio]
   const isMañana = parseInt(horaInicio) < 12
   const agotado = cuposLibres === 0
   const ocupacion = Math.round(((capacidadMax - cuposLibres) / capacidadMax) * 100)
+
+  const progressColor = ocupacion >= 80
+    ? "bg-red-500/70"
+    : selected
+    ? observatorio === "LA_SILLA"
+      ? "bg-tierra-500"
+      : "bg-cielo-500"
+    : "bg-sky-500/60"
 
   return (
     <motion.button
@@ -36,35 +72,38 @@ export function TurnoCard({
       aria-pressed={selected}
       className={cn(
         "relative w-full rounded-xl border p-5 text-left transition-all duration-150",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/60",
+        "focus-visible:outline-none focus-visible:ring-2",
+        observatorio === "LA_SILLA"
+          ? "focus-visible:ring-tierra-600/50"
+          : "focus-visible:ring-cielo-600/50",
         agotado
           ? "border-stone-800 bg-stone-900/40 opacity-50 cursor-not-allowed"
           : selected
-          ? "border-amber-500/70 bg-amber-500/10 shadow-[0_0_20px_rgba(245,158,11,0.12)]"
-          : "border-stone-800 bg-stone-900 hover:border-stone-700 hover:bg-stone-800/80"
+          ? cn(theme.selectedBorder, theme.selectedBg, theme.selectedGlow)
+          : cn(theme.idleBorder, theme.idleBg, "hover:border-stone-700 hover:bg-stone-800/80")
       )}
     >
       {/* Selected indicator */}
       {selected && !agotado && (
-        <CheckCircle2 className="absolute top-4 right-4 size-5 text-amber-400" />
+        <CheckCircle2 className={cn("absolute top-4 right-4 size-5", theme.checkIcon)} />
       )}
 
       <div className="flex items-start gap-4">
         {/* Icono turno */}
         <div className={cn(
           "rounded-lg p-2.5 shrink-0",
-          selected ? "bg-amber-500/20" : "bg-stone-800"
+          selected ? theme.iconBg : "bg-stone-800"
         )}>
           {isMañana
-            ? <Sun className={cn("size-5", selected ? "text-amber-400" : "text-stone-500")} />
-            : <Sunset className={cn("size-5", selected ? "text-amber-400" : "text-stone-500")} />
+            ? <Sun className={cn("size-5", selected ? theme.selectedIcon : "text-stone-500")} />
+            : <Sunset className={cn("size-5", selected ? theme.selectedIcon : "text-stone-500")} />
           }
         </div>
 
         <div className="flex-1 min-w-0">
           <p className={cn(
             "font-semibold text-sm",
-            selected ? "text-amber-300" : agotado ? "text-stone-600" : "text-stone-200"
+            selected ? theme.horaText : agotado ? "text-stone-600" : "text-stone-200"
           )}>
             {horaInicio} – {horaFin}
           </p>
@@ -86,10 +125,7 @@ export function TurnoCard({
         {/* Progress bar */}
         <div className="h-1 rounded-full bg-stone-800 overflow-hidden">
           <div
-            className={cn(
-              "h-full rounded-full transition-all",
-              ocupacion >= 80 ? "bg-red-500/70" : selected ? "bg-amber-500" : "bg-sky-500/60"
-            )}
+            className={cn("h-full rounded-full transition-all", progressColor)}
             style={{ width: `${ocupacion}%` }}
           />
         </div>

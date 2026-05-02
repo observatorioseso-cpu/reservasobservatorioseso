@@ -1,42 +1,27 @@
 import { PrismaClient } from "@prisma/client"
+import { PrismaPg } from "@prisma/adapter-pg"
 import bcrypt from "bcryptjs"
 
-const prisma = new PrismaClient()
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+const prisma = new PrismaClient({ adapter })
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function proximosSabados(cantidad: number): Date[] {
-  const sabados: Date[] = []
+function nextNSaturdays(n: number): Date[] {
+  const result: Date[] = []
   const d = new Date()
-  // Avanzar al próximo sábado (día 6)
   while (d.getDay() !== 6) d.setDate(d.getDate() + 1)
-  for (let i = 0; i < cantidad; i++) {
-    sabados.push(new Date(d))
+  for (let i = 0; i < n; i++) {
+    result.push(new Date(d))
     d.setDate(d.getDate() + 7)
   }
-  return sabados
+  return result
 }
 
-/** Mes 4–8 (abril–agosto) es invierno para La Silla */
-function esInviernoLaSilla(fecha: Date): boolean {
-  const mes = fecha.getMonth() + 1 // 1-indexed
-  return mes >= 4 && mes <= 8
-}
-
-/** Devuelve el primer y tercer domingo del mes de una fecha dada */
-function primerYTercerDomingo(año: number, mes: number): Date[] {
-  const domingos: Date[] = []
-  const d = new Date(año, mes - 1, 1) // primer día del mes
-  // Avanzar al primer domingo
-  while (d.getDay() !== 0) d.setDate(d.getDate() + 1)
-  domingos.push(new Date(d))
-  // Tercer domingo = primer domingo + 14 días
-  const tercero = new Date(d)
-  tercero.setDate(tercero.getDate() + 14)
-  domingos.push(tercero)
-  return domingos
+function toUTCDate(d: Date): Date {
+  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
 }
 
 // ---------------------------------------------------------------------------
@@ -105,31 +90,57 @@ async function main() {
 
   // ── 3. Turnos de prueba ───────────────────────────────────────────────────
 
-  let turnosCreados = 0
+  const sabados = nextNSaturdays(16)
 
-  // — La Silla: próximos 8 sábados —
-  const sabados = proximosSabados(8)
+  // — La Silla: próximos 16 sábados, un solo turno por día (09:30–13:00) —
+  let laSillaCount = 0
 
   for (const fecha of sabados) {
-    const esinvierno = esInviernoLaSilla(fecha)
-    const turnosDia: Array<{ horaInicio: string; horaFin: string }> = [
-      { horaInicio: "09:30", horaFin: "13:00" },
-    ]
-    if (!esinvierno) {
-      turnosDia.push({ horaInicio: "13:30", horaFin: "17:00" })
+    const fechaUTC = toUTCDate(fecha)
+
+    const existing = await prisma.turno.findUnique({
+      where: {
+        observatorio_fecha_horaInicio: {
+          observatorio: "LA_SILLA",
+          fecha: fechaUTC,
+          horaInicio: "09:30",
+        },
+      },
+    })
+
+    if (!existing) {
+      await prisma.turno.create({
+        data: {
+          observatorio: "LA_SILLA",
+          fecha: fechaUTC,
+          horaInicio: "09:30",
+          horaFin: "13:00",
+          capacidadMax: 40,
+          cuposOcupados: 0,
+          activo: true,
+        },
+      })
+      laSillaCount++
     }
+  }
 
-    for (const t of turnosDia) {
-      // Normalizar a medianoche UTC para campo @db.Date
-      const fechaDate = new Date(
-        Date.UTC(fecha.getFullYear(), fecha.getMonth(), fecha.getDate()),
-      )
+  // — Paranal: próximos 16 sábados, dos turnos por día —
+  const turnosParanal = [
+    { horaInicio: "09:30", horaFin: "13:00" },
+    { horaInicio: "13:30", horaFin: "17:00" },
+  ]
 
+  let paranálCount = 0
+
+  for (const fecha of sabados) {
+    const fechaUTC = toUTCDate(fecha)
+
+    for (const t of turnosParanal) {
       const existing = await prisma.turno.findUnique({
         where: {
           observatorio_fecha_horaInicio: {
-            observatorio: "LA_SILLA",
-            fecha: fechaDate,
+            observatorio: "PARANAL",
+            fecha: fechaUTC,
             horaInicio: t.horaInicio,
           },
         },
@@ -138,74 +149,21 @@ async function main() {
       if (!existing) {
         await prisma.turno.create({
           data: {
-            observatorio: "LA_SILLA",
-            fecha: fechaDate,
+            observatorio: "PARANAL",
+            fecha: fechaUTC,
             horaInicio: t.horaInicio,
             horaFin: t.horaFin,
-            capacidadMax: 30,
+            capacidadMax: 60,
             cuposOcupados: 0,
             activo: true,
           },
         })
-        turnosCreados++
+        paranálCount++
       }
     }
   }
 
-  // — Paranal: primer y tercer domingo de cada uno de los próximos 2 meses —
-  const hoy = new Date()
-  const meses: Array<{ año: number; mes: number }> = []
-  for (let i = 0; i < 2; i++) {
-    const d = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1)
-    meses.push({ año: d.getFullYear(), mes: d.getMonth() + 1 })
-  }
-
-  const turnosParanal: Array<{ horaInicio: string; horaFin: string }> = [
-    { horaInicio: "09:30", horaFin: "13:00" },
-    { horaInicio: "13:30", horaFin: "17:00" },
-  ]
-
-  for (const { año, mes } of meses) {
-    const fechasParanal = primerYTercerDomingo(año, mes)
-
-    for (const fecha of fechasParanal) {
-      // Solo turnos futuros
-      if (fecha <= hoy) continue
-
-      for (const t of turnosParanal) {
-        const fechaDate = new Date(
-          Date.UTC(fecha.getFullYear(), fecha.getMonth(), fecha.getDate()),
-        )
-
-        const existing = await prisma.turno.findUnique({
-          where: {
-            observatorio_fecha_horaInicio: {
-              observatorio: "PARANAL",
-              fecha: fechaDate,
-              horaInicio: t.horaInicio,
-            },
-          },
-        })
-
-        if (!existing) {
-          await prisma.turno.create({
-            data: {
-              observatorio: "PARANAL",
-              fecha: fechaDate,
-              horaInicio: t.horaInicio,
-              horaFin: t.horaFin,
-              capacidadMax: 20,
-              cuposOcupados: 0,
-              activo: true,
-            },
-          })
-          turnosCreados++
-        }
-      }
-    }
-  }
-
-  console.log(`✓ Turnos creados: ${turnosCreados} (La Silla sábados + Paranal domingos)`)
+  console.log(`✓ La Silla: ${laSillaCount} turnos | Paranal: ${paranálCount} turnos`)
 }
 
 main()

@@ -56,8 +56,9 @@ El cliente gestiona acompañantes individualmente desde `/mi-reserva`:
 | Abril–Agosto (invierno) | Solo 09:30–13:00 | 09:30–13:00 y 13:30–17:00 |
 | Sept–Marzo (verano) | 09:30–13:00 y 13:30–17:00 | 09:30–13:00 y 13:30–17:00 |
 
-- **Días habilitados — invierno (ambos observatorios)**: solo sábados
-- **Días habilitados — verano**: el admin puede abrir o cerrar días de visita libremente desde el panel; no hay un día fijo
+- **La Silla días habilitados — invierno (abril–agosto)**: solo sábados, un turno (09:30–13:00)
+- **La Silla días habilitados — verano (sept–marzo)**: sábados (mismo turno) + domingos opcionales (09:30–13:00) que el admin activa o desactiva libremente
+- **Paranal días habilitados — todo el año**: todos los sábados, dos turnos (09:30–13:00 y 13:30–17:00); no hay días variables
 - **Cierre de reservas**: día anterior a la visita a `HORA_CIERRE_VIERNES` (default 16:00 Santiago)
 - Máximo 10 personas por reserva de cliente. 11+: redirigir al formulario grupal en `/contacto`
 
