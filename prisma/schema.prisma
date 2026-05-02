@@ -192,3 +192,45 @@ model ConfigSistema {
   updatedAt  DateTime @updatedAt
   updatedBy  String?  // email del admin que hizo el último cambio
 }
+
+// ---------------------------------------------------------------------------
+// Contacto — mensajes del formulario público (general y grupal)
+// ---------------------------------------------------------------------------
+
+enum TipoConsulta {
+  GENERAL
+  GRUPAL
+}
+
+enum EstadoMensaje {
+  NUEVO
+  LEIDO
+  RESPONDIDO
+  ARCHIVADO
+}
+
+model MensajeContacto {
+  id           String        @id @default(cuid())
+  tipo         TipoConsulta  @default(GENERAL)
+  nombre       String
+  email        String
+  telefono     String?
+  mensaje      String        @db.Text
+  organizacion String?
+  numPersonas  Int?
+  observatorio String?
+  fechasPref   String?
+
+  estado       EstadoMensaje @default(NUEVO)
+  ip           String?
+  userAgent    String?
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([tipo])
+  @@index([estado])
+  @@index([email])
+  @@index([createdAt])
+  @@index([ip, createdAt])
+}
