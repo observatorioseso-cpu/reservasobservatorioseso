@@ -16,32 +16,35 @@ interface ObservatoryCardProps {
   minAge: string
 }
 
-const accentColors = {
+const cardConfig = {
   LA_SILLA: {
-    outerShell: "bg-white/5 ring-1 ring-white/5",
-    gradient: "bg-gradient-to-br from-ocre-600/30 via-atacama-800 to-atacama-900",
-    border: "border border-ocre-500/25",
-    tag: "bg-ocre-400/10 text-ocre-300 border border-ocre-400/20",
-    cta: "bg-ocre-400 text-atacama-950 hover:bg-ocre-300",
-    glow: "rgba(212,153,58,0.08)",
-    glowRadial: "rgba(184,112,32,0.15)",
-    decorator: {
-      text: "1969",
-      className: "text-ocre-600/20",
-    },
+    photo: "/images/lasilla-eclipse.jpg",
+    photoAlt: "Eclipse solar total sobre el Observatorio La Silla, Región de Coquimbo, Chile",
+    year: "1969",
+    // Warm earth gradient for La Silla (ochre/brown tones of the Atacama terrain)
+    photoOverlay:
+      "linear-gradient(to top, rgba(107,58,12,0.85) 0%, rgba(74,40,8,0.40) 55%, transparent 100%)",
+    tagClass:
+      "bg-tierra-500/15 text-tierra-700 border border-tierra-400/30",
+    ctaClass:
+      "bg-tierra-700 text-arena-50 hover:bg-tierra-600 active:scale-[0.97]",
+    fallbackGradient:
+      "bg-gradient-to-br from-tierra-700 via-tierra-800 to-tinta-900",
   },
   PARANAL: {
-    outerShell: "bg-white/5 ring-1 ring-white/5",
-    gradient: "bg-gradient-to-br from-cielo-500/15 via-atacama-800 to-atacama-950",
-    border: "border border-cielo-400/20",
-    tag: "bg-cielo-400/10 text-cielo-300 border border-cielo-400/20",
-    cta: "bg-cielo-400 text-atacama-950 hover:bg-cielo-300",
-    glow: "rgba(127,175,192,0.06)",
-    glowRadial: "rgba(90,143,165,0.12)",
-    decorator: {
-      text: "VLT",
-      className: "text-cielo-500/15",
-    },
+    photo: "/images/paranal-dusk.jpg",
+    photoAlt:
+      "Los cuatro telescopios VLT del Observatorio Paranal al atardecer del desierto de Atacama",
+    year: "VLT",
+    // Cool dusk gradient for Paranal (sky-blue/navy of the Atacama twilight)
+    photoOverlay:
+      "linear-gradient(to top, rgba(30,58,79,0.88) 0%, rgba(21,42,58,0.40) 55%, transparent 100%)",
+    tagClass:
+      "bg-cielo-500/15 text-cielo-700 border border-cielo-400/30",
+    ctaClass:
+      "bg-tinta-800 text-arena-50 hover:bg-tinta-700 active:scale-[0.97]",
+    fallbackGradient:
+      "bg-gradient-to-br from-cielo-800 via-tinta-800 to-tinta-900",
   },
 }
 
@@ -55,107 +58,105 @@ export function ObservatoryCard({
   schedule,
   minAge,
 }: ObservatoryCardProps) {
-  const colors = accentColors[slug]
+  const cfg = cardConfig[slug]
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 28 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
-      transition={{ type: "spring", stiffness: 60, damping: 20 }}
-      className={cn(
-        "rounded-3xl p-1",
-        colors.outerShell
-      )}
-      style={{
-        boxShadow: `0 0 80px ${colors.glow}`,
-      }}
+      transition={{ type: "spring", stiffness: 55, damping: 18 }}
+      className="rounded-3xl overflow-hidden bg-white shadow-[0_8px_48px_rgba(26,18,5,0.10)] ring-1 ring-tierra-500/10 flex flex-col"
     >
-      {/* Inner core */}
+      {/* ── Photo header ──────────────────────────────── */}
       <div
         className={cn(
-          "relative overflow-hidden rounded-[calc(1.5rem-0.25rem)]",
-          colors.gradient,
-          colors.border,
-          size === "large" ? "p-8 lg:p-10" : "p-6 lg:p-8"
+          "relative overflow-hidden shrink-0",
+          size === "large" ? "h-64 lg:h-72" : "h-52"
         )}
       >
-        {/* Glow radial background */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: `radial-gradient(ellipse at top left, ${colors.glowRadial} 0%, transparent 65%)`,
-          }}
+        {/* Real observatory photo */}
+        <img
+          src={cfg.photo}
+          alt={cfg.photoAlt}
+          className="absolute inset-0 w-full h-full object-cover object-center"
+          loading="lazy"
         />
 
-        {/* Decorator number / text — floating in upper right corner */}
+        {/* Gradient overlay — ensures heading legibility */}
+        <div
+          className="absolute inset-0"
+          style={{ background: cfg.photoOverlay }}
+        />
+
+        {/* Observatory name over photo */}
+        <div className="absolute bottom-0 left-0 right-0 px-6 pb-5 z-10">
+          <h3
+            className={cn(
+              "font-playfair font-black text-white leading-none drop-shadow-md",
+              size === "large" ? "text-3xl lg:text-4xl" : "text-2xl"
+            )}
+          >
+            {name}
+          </h3>
+        </div>
+
+        {/* Year badge — top right, ghosted */}
         <span
-          className={cn(
-            "absolute top-4 right-5 text-6xl font-black select-none pointer-events-none leading-none font-playfair",
-            colors.decorator.className
-          )}
+          className="absolute top-4 right-4 font-playfair font-black text-white/20 leading-none select-none pointer-events-none z-10"
+          style={{ fontSize: size === "large" ? "4rem" : "3rem" }}
           aria-hidden="true"
         >
-          {colors.decorator.text}
+          {cfg.year}
+        </span>
+      </div>
+
+      {/* ── Info body ─────────────────────────────────── */}
+      <div
+        className={cn(
+          "flex flex-col flex-1",
+          size === "large" ? "p-7 lg:p-8" : "p-6"
+        )}
+      >
+        {/* Region tag */}
+        <span
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium mb-4 w-fit",
+            cfg.tagClass
+          )}
+        >
+          <MapPin className="size-3" />
+          {region}
         </span>
 
-        {/* Content */}
-        <div className="relative">
-          {/* Header */}
-          <div className="mb-5">
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium mb-3",
-                colors.tag
-              )}
-            >
-              <MapPin className="size-3" />
-              {region}
-            </span>
-            <h3
-              className={cn(
-                "font-playfair font-black text-caliche-50 leading-tight",
-                size === "large" ? "text-3xl lg:text-4xl" : "text-2xl"
-              )}
-            >
-              {name}
-            </h3>
-          </div>
+        {/* Description */}
+        <p className="text-tinta-600 text-sm leading-relaxed flex-1 mb-6">
+          {description}
+        </p>
 
-          {/* Description */}
-          <p
-            className={cn(
-              "text-caliche-500 leading-relaxed mb-6",
-              size === "large" ? "text-sm lg:text-base" : "text-sm"
-            )}
-          >
-            {description}
-          </p>
-
-          {/* Meta info */}
-          <div className="flex flex-wrap gap-4 mb-8 text-xs text-caliche-700">
-            <span className="flex items-center gap-1.5">
-              <Clock className="size-3.5 text-caliche-700" />
-              {schedule}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Users className="size-3.5 text-caliche-700" />
-              {minAge}
-            </span>
-          </div>
-
-          {/* CTA */}
-          <Link
-            href={`/reservar/${slug}`}
-            className={cn(
-              "group inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors",
-              colors.cta
-            )}
-          >
-            {reserveLabel}
-            <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </Link>
+        {/* Meta */}
+        <div className="flex flex-wrap gap-4 mb-6 text-xs text-tinta-400 border-t border-tierra-500/10 pt-4">
+          <span className="flex items-center gap-1.5">
+            <Clock className="size-3.5 text-tierra-400" />
+            {schedule}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Users className="size-3.5 text-tierra-400" />
+            {minAge}
+          </span>
         </div>
+
+        {/* CTA */}
+        <Link
+          href={`/reservar/${slug}`}
+          className={cn(
+            "group inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200",
+            cfg.ctaClass
+          )}
+        >
+          {reserveLabel}
+          <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+        </Link>
       </div>
     </motion.div>
   )
