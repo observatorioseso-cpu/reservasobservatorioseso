@@ -218,9 +218,12 @@ export default async function LandingPage({
                 </h2>
               </div>
               <p className="text-xs text-tinta-500 leading-relaxed max-w-lg">
-                Cursos universitarios, colegios, empresas — hasta 40 o más visitantes.
+                Cursos universitarios, colegios, empresas —{" "}
+                <strong className="text-tinta-700">hasta 40 cupos en La Silla</strong> y{" "}
+                <strong className="text-tinta-700">hasta 60 cupos en Paranal</strong>.
+                Las visitas grupales operan los sábados en temporada de invierno.
                 Descarga la planilla, complétala con los datos del grupo y envíala
-                solicitando tu fecha y observatorio. El equipo ESO coordinará directamente contigo.
+                solicitando tu fecha. El equipo ESO coordinará directamente contigo.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-2.5 shrink-0">
@@ -446,9 +449,9 @@ export default async function LandingPage({
               q="¿Qué diferencia hay entre Paranal y La Silla?"
               a={
                 <>
-                  <strong className="text-tinta-700">Paranal</strong> alberga el VLT (Very Large Telescope) — cuatro telescopios de 8,2 metros que operan como un solo instrumento. En 2024 detectó 32 protoestrellas en erupción y fotografió la supernova SN 2024ggi solo 26 horas después de su detección. Está en Antofagasta y opera sábados y domingos según calendario ESO.
+                  <strong className="text-tinta-700">Paranal</strong> alberga el VLT (Very Large Telescope) — cuatro telescopios de 8,2 metros que operan como un solo instrumento. En 2024 detectó 32 protoestrellas en erupción y fotografió la supernova SN 2024ggi solo 26 horas después de su detección. Hasta 60 cupos por visita. Opera los sábados en temporada de invierno; en verano el calendario es variable según lo que defina el equipo ESO.
                   <br /><br />
-                  <strong className="text-tinta-700">La Silla</strong> opera HARPS, el espectrógrafo más preciso para detectar exoplanetas de baja masa. En 2025 sumó SOXS, instrumento de nueva generación para el estudio de transitorios astrofísicos rápidos. Está en Coquimbo y opera solo los sábados.
+                  <strong className="text-tinta-700">La Silla</strong> opera HARPS, el espectrógrafo más preciso para detectar exoplanetas de baja masa. En 2025 sumó SOXS, instrumento de nueva generación para el estudio de transitorios astrofísicos rápidos. Hasta 40 cupos por visita. Opera los sábados en temporada de invierno; en verano el calendario puede abrirse a días adicionales según disponibilidad ESO.
                 </>
               }
             />

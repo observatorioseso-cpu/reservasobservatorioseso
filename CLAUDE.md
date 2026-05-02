@@ -56,10 +56,21 @@ El cliente gestiona acompañantes individualmente desde `/mi-reserva`:
 | Abril–Agosto (invierno) | Solo 09:30–13:00 | 09:30–13:00 y 13:30–17:00 |
 | Sept–Marzo (verano) | 09:30–13:00 y 13:30–17:00 | 09:30–13:00 y 13:30–17:00 |
 
-- La Silla: solo sábados habilitados
-- Paranal: días programados por ESO
+- **Días habilitados — invierno (ambos observatorios)**: solo sábados
+- **Días habilitados — verano**: el admin puede abrir o cerrar días de visita libremente desde el panel; no hay un día fijo
 - **Cierre de reservas**: día anterior a la visita a `HORA_CIERRE_VIERNES` (default 16:00 Santiago)
-- Máximo 10 personas por reserva de cliente. 11+: redirigir a reservas@observatorioseso.cl
+- Máximo 10 personas por reserva de cliente. 11+: redirigir al formulario grupal en `/contacto`
+
+## CAPACIDADES POR OBSERVATORIO
+
+| Observatorio | Cupos máximos por visita grupal |
+|---|---|
+| La Silla | 40 personas |
+| Paranal | 60 personas |
+
+- El límite de 10 personas aplica solo a reservas individuales del portal cliente
+- Grupos de 11+ usan el flujo grupal (`/contacto` → planilla CSV → coordinación ESO)
+- El admin puede crear/editar turnos superando el límite de 10 del portal cliente
 
 ---
 

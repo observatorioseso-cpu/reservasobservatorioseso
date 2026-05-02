@@ -183,6 +183,10 @@ export default async function ContactoPage({
                 Para grupos de 11 o más personas (colegios, universidades, empresas),
                 selecciona la pestaña{" "}
                 <strong className="text-tinta-700">Reserva grupal</strong> en el formulario.
+                Capacidad máxima:{" "}
+                <strong className="text-tinta-700">40 cupos en La Silla</strong> y{" "}
+                <strong className="text-tinta-700">60 cupos en Paranal</strong>.
+                Visitas los sábados en invierno; en verano el calendario lo define el equipo ESO.
                 Descarga la planilla de participantes y adjúntala al responder nuestro email.
               </p>
               <a
