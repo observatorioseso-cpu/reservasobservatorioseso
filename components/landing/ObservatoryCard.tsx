@@ -20,7 +20,7 @@ const cardConfig = {
   LA_SILLA: {
     photo: "/images/lasilla-eclipse.jpg",
     photoAlt: "Eclipse solar total sobre el Observatorio La Silla, Región de Coquimbo, Chile",
-    year: "1969",
+    year: "HARPS",
     // Warm earth gradient for La Silla (ochre/brown tones of the Atacama terrain)
     photoOverlay:
       "linear-gradient(to top, rgba(107,58,12,0.85) 0%, rgba(74,40,8,0.40) 55%, transparent 100%)",

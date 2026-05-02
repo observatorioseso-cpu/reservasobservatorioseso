@@ -1,0 +1,4 @@
+Tipo Documento (RUT/PASAPORTE),Número Documento,Apellido Paterno,Apellido Materno,Nombre(s),Fecha Nacimiento (DD/MM/AAAA),Email (solo titular del grupo)
+RUT,12345678-9,García,López,María José,15/03/1990,contacto@organizacion.cl
+PASAPORTE,A1234567,Smith,,John,20/07/1985,
+RUT,9876543-2,Muñoz,Reyes,Pedro Antonio,05/11/2001,
