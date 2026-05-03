@@ -66,8 +66,14 @@ export function ObservatoryCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ type: "spring", stiffness: 55, damping: 18 }}
-      className="rounded-3xl overflow-hidden bg-white shadow-[0_8px_48px_rgba(26,18,5,0.10)] ring-1 ring-tierra-500/10 flex flex-col"
+      className="relative rounded-3xl overflow-hidden bg-white shadow-[0_8px_48px_rgba(26,18,5,0.10)] ring-1 ring-tierra-500/10 flex flex-col"
     >
+      {/* Full-card link — accessible, keyboard-navigable */}
+      <Link
+        href={`/reservar/${slug}`}
+        className="absolute inset-0 z-10 rounded-3xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tierra-500/60"
+        aria-label={`${name} — ${reserveLabel}`}
+      />
       {/* ── Photo header ──────────────────────────────── */}
       <div
         className={cn(
@@ -146,17 +152,17 @@ export function ObservatoryCard({
           </span>
         </div>
 
-        {/* CTA */}
-        <Link
-          href={`/reservar/${slug}`}
+        {/* CTA — visual only; the overlay link above handles navigation */}
+        <div
+          aria-hidden="true"
           className={cn(
-            "group inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200",
+            "inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold",
             cfg.ctaClass
           )}
         >
           {reserveLabel}
-          <ChevronRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-        </Link>
+          <ChevronRight className="size-4" />
+        </div>
       </div>
     </motion.div>
   )

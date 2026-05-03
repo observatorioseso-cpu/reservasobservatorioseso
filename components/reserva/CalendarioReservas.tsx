@@ -64,7 +64,7 @@ const OBS_THEME = {
     daySelected:
       "bg-tierra-600 text-arena-50 font-semibold shadow-[0_2px_8px_rgba(107,58,12,0.30)]",
     // Días sin turno o pasados
-    dayDisabled: "text-tinta-200 cursor-not-allowed",
+    dayDisabled: "text-tinta-400 cursor-not-allowed",
     // Días agotados
     dayAgotado: "text-tinta-300 cursor-not-allowed",
     // Dots de disponibilidad
@@ -105,7 +105,7 @@ const OBS_THEME = {
     daySelected:
       "bg-cielo-700 text-white font-semibold shadow-[0_2px_8px_rgba(43,80,106,0.30)]",
     // Días sin turno o pasados
-    dayDisabled: "text-stone-200 cursor-not-allowed",
+    dayDisabled: "text-stone-400 cursor-not-allowed",
     // Días agotados
     dayAgotado: "text-stone-300 cursor-not-allowed",
     // Dots de disponibilidad
@@ -129,7 +129,7 @@ const OBS_THEME = {
   },
 } as const
 
-const DIAS_SEMANA_ES = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sá"]
+const DIAS_SEMANA_ES = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"]
 const MESES_ES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
@@ -214,7 +214,8 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
   }
 
   const dias = getDiasDelMes(viewYear, viewMonth)
-  const primerDia = new Date(viewYear, viewMonth, 1).getDay()
+  // Monday-first: JS getDay() returns 0=Sun…6=Sat; (d+6)%7 maps Mon→0…Sun→6
+  const primerDia = (new Date(viewYear, viewMonth, 1).getDay() + 6) % 7
   const blancos = Array.from({ length: primerDia })
 
   const handleSelectDate = (fecha: string) => {
@@ -225,7 +226,7 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
   const handleContinuar = () => {
     if (!selectedDate || !selectedTurnoId) return
     router.push(
-      `/reservar/${observatorio.toLowerCase().replace("_", "-")}/registro?turnoId=${selectedTurnoId}&fecha=${selectedDate}`
+      `/reservar/${observatorio}/registro?turnoId=${selectedTurnoId}&fecha=${selectedDate}`
     )
   }
 
