@@ -12,12 +12,14 @@ import {
   Menu,
   X,
   Telescope,
+  MessageSquare,
 } from "lucide-react"
 
 const NAV = [
   { href: "/admin/dashboard", label: "Dashboard",  icon: LayoutDashboard },
   { href: "/admin/turnos",    label: "Turnos",      icon: CalendarDays },
   { href: "/admin/reservas",  label: "Reservas",    icon: Users },
+  { href: "/admin/mensajes",  label: "Mensajes",    icon: MessageSquare },
   { href: "/admin/config",    label: "Config",      icon: Settings },
 ] as const
 
@@ -25,6 +27,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/dashboard": "Dashboard",
   "/admin/turnos":    "Gestión de Turnos",
   "/admin/reservas":  "Gestión de Reservas",
+  "/admin/mensajes":  "Mensajes de Contacto",
   "/admin/config":    "Configuración del Sistema",
 }
 

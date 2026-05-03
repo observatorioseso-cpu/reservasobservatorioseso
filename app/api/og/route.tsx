@@ -9,12 +9,6 @@ const titles: Record<string, string> = {
   paranal: "Observatorio Paranal VLT",
 }
 
-const titleFontSizes: Record<string, number> = {
-  home: 64,
-  "la-silla": 56,
-  paranal: 56,
-}
-
 const subtitles: Record<string, Record<string, string>> = {
   home: {
     es: "Reserva tu visita guiada gratuita",
@@ -30,16 +24,39 @@ const subtitles: Record<string, Record<string, string>> = {
   },
 }
 
+// Best photo for each obs context
+const photos: Record<string, string> = {
+  home: "/images/paranal-milkyway.jpg",
+  "la-silla": "/images/lasilla-sunset.jpg",
+  paranal: "/images/paranal-dusk.jpg",
+}
+
+async function loadImage(baseUrl: string, path: string): Promise<string> {
+  try {
+    const res = await fetch(`${baseUrl}${path}`)
+    if (!res.ok) throw new Error("photo fetch failed")
+    const buffer = await res.arrayBuffer()
+    const b64 = Buffer.from(buffer).toString("base64")
+    const mime = path.endsWith(".png") ? "image/png" : "image/jpeg"
+    return `data:${mime};base64,${b64}`
+  } catch {
+    return ""
+  }
+}
+
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
+  const { searchParams, origin } = new URL(request.url)
 
   const obs = searchParams.get("obs") ?? "home"
   const locale = searchParams.get("locale") ?? "es"
 
   const title = titles[obs] ?? titles.home
-  const titleFontSize = titleFontSizes[obs] ?? 64
   const subtitleMap = subtitles[obs] ?? subtitles.home
   const subtitle = subtitleMap[locale] ?? subtitleMap.es
+  const photoPath = photos[obs] ?? photos.home
+
+  // Load photo as data URL so ImageResponse (edge) can render it
+  const photoSrc = await loadImage(origin, photoPath)
 
   return new ImageResponse(
     (
@@ -47,72 +64,70 @@ export async function GET(request: NextRequest) {
         style={{
           width: "1200px",
           height: "630px",
-          background: "#0c0a09",
           display: "flex",
-          flexDirection: "column",
           position: "relative",
           overflow: "hidden",
+          background: "#0c0a09",
         }}
       >
-        {/* Top amber bar */}
+        {/* Background photo */}
+        {photoSrc && (
+          <img
+            src={photoSrc}
+            alt=""
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center",
+            }}
+          />
+        )}
+
+        {/* Left gradient overlay so text is legible */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(to right, rgba(12,10,9,0.92) 0%, rgba(12,10,9,0.80) 55%, rgba(12,10,9,0.20) 100%)",
+            display: "flex",
+          }}
+        />
+
+        {/* Top amber accent bar */}
         <div
           style={{
             position: "absolute",
             top: 0,
             left: 0,
             right: 0,
-            height: "6px",
+            height: "5px",
             background: "#f59e0b",
           }}
         />
 
-        {/* Decorative outer circle */}
+        {/* Content */}
         <div
           style={{
-            position: "absolute",
-            right: "-80px",
-            top: "50%",
-            marginTop: "-200px",
-            width: "400px",
-            height: "400px",
-            border: "2px solid rgba(245,158,11,0.2)",
-            borderRadius: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {/* Inner circle */}
-          <div
-            style={{
-              width: "280px",
-              height: "280px",
-              border: "1px solid rgba(245,158,11,0.15)",
-              borderRadius: "50%",
-              display: "flex",
-            }}
-          />
-        </div>
-
-        {/* Left content */}
-        <div
-          style={{
+            position: "relative",
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
-            paddingLeft: "60px",
-            paddingRight: "60px",
+            paddingLeft: "64px",
+            paddingRight: "640px",
             paddingTop: "60px",
             paddingBottom: "60px",
             height: "100%",
-            position: "relative",
           }}
         >
-          {/* Small label */}
+          {/* Label */}
           <div
             style={{
               color: "#f59e0b",
-              fontSize: "16px",
+              fontSize: "15px",
               letterSpacing: "3px",
               fontFamily: "Helvetica, Arial, sans-serif",
               fontWeight: 700,
@@ -124,45 +139,58 @@ export async function GET(request: NextRequest) {
             ESO OBSERVATORIOS CHILE
           </div>
 
-          {/* Main title */}
+          {/* Title */}
           <div
             style={{
               color: "#f5f5f4",
-              fontSize: `${titleFontSize}px`,
+              fontSize: obs === "home" ? "60px" : "52px",
               fontFamily: "Helvetica, Arial, sans-serif",
               fontWeight: 900,
               lineHeight: 1.05,
               display: "flex",
-              maxWidth: "700px",
+              maxWidth: "560px",
             }}
           >
             {title}
           </div>
 
+          {/* Separator */}
+          <div
+            style={{
+              width: "48px",
+              height: "3px",
+              background: "#f59e0b",
+              marginTop: "20px",
+              marginBottom: "20px",
+              borderRadius: "2px",
+              display: "flex",
+            }}
+          />
+
           {/* Subtitle */}
           <div
             style={{
-              color: "#a8a29e",
-              fontSize: "24px",
+              color: "#d6d3d1",
+              fontSize: "22px",
               fontFamily: "Helvetica, Arial, sans-serif",
               fontWeight: 400,
-              marginTop: "16px",
               display: "flex",
+              maxWidth: "520px",
             }}
           >
             {subtitle}
           </div>
 
-          {/* Bottom domain tag */}
+          {/* Domain */}
           <div
             style={{
               position: "absolute",
               bottom: "50px",
-              left: "60px",
-              color: "#f59e0b",
-              fontSize: "18px",
+              left: "64px",
+              color: "#a8a29e",
+              fontSize: "16px",
               fontFamily: "Helvetica, Arial, sans-serif",
-              fontWeight: 600,
+              fontWeight: 500,
               display: "flex",
             }}
           >
