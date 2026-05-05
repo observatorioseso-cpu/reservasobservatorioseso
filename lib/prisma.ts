@@ -19,6 +19,20 @@ function createPrismaClient() {
   })
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient()
+/**
+ * Lazy getter — el cliente Prisma se crea la primera vez que se accede a `prisma`,
+ * no al importar el módulo. Esto evita errores de build cuando DATABASE_URL no está
+ * configurado en el entorno de compilación (ej: Vercel build sin env vars).
+ */
+function getPrisma(): PrismaClient {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createPrismaClient()
+  }
+  return globalForPrisma.prisma
+}
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    return (getPrisma() as unknown as Record<string | symbol, unknown>)[prop]
+  },
+})

@@ -10,7 +10,7 @@ import type { Metadata, Viewport } from "next"
 import "../globals.css"
 
 const BASE_URL = (
-  process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
+  process.env.NEXT_PUBLIC_BASE_URL || "https://reservasobservatorioseso.cl"
 ).replace(/^﻿/, "").trim()
 
 export const metadata: Metadata = {

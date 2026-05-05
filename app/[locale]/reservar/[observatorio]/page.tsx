@@ -8,7 +8,7 @@ import { touristAttractionSchema, breadcrumbSchema } from "@/lib/jsonld"
 import { cn } from "@/lib/utils"
 
 const BASE_URL = (
-  process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
+  process.env.NEXT_PUBLIC_BASE_URL || "https://reservasobservatorioseso.cl"
 ).replace(/^﻿/, "").trim()
 
 type ObservatorioSlug = "LA_SILLA" | "PARANAL"

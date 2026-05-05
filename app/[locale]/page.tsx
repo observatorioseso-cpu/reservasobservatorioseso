@@ -21,7 +21,7 @@ import { LandingNav } from "@/components/landing/LandingNav"
 import { organizationSchema } from "@/lib/jsonld"
 
 const BASE_URL = (
-  process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
+  process.env.NEXT_PUBLIC_BASE_URL || "https://reservasobservatorioseso.cl"
 ).replace(/^﻿/, "").trim()
 
 const descriptions: Record<string, string> = {

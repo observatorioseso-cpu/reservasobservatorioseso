@@ -4,7 +4,7 @@
  */
 
 const BASE_URL = (
-  process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
+  process.env.NEXT_PUBLIC_BASE_URL || "https://reservasobservatorioseso.cl"
 ).replace(/^﻿/, "").trim()
 
 // ---------------------------------------------------------------------------
