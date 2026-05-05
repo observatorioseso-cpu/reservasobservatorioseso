@@ -250,8 +250,8 @@ export function ContactForm() {
         </div>
         {tipo === "GRUPAL" && (
           <a
-            href="/templates/grupo-reserva.csv"
-            download
+            href="/templates/grupo-reserva-ESO.xlsx"
+            download="grupo-reserva-ESO.xlsx"
             className="inline-flex items-center gap-2 rounded-full border border-tierra-600/30 bg-arena-50 px-5 py-2.5 text-sm font-medium text-tierra-700 hover:bg-arena-100 hover:border-tierra-500/50 transition-all"
           >
             <Download className="size-4" />

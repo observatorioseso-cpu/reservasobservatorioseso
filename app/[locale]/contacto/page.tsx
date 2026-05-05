@@ -187,8 +187,8 @@ export default async function ContactoPage({
                 {t("sidebar.groups.body").split(t("sidebar.groups.paranal"))[1]}
               </p>
               <a
-                href="/templates/grupo-reserva.csv"
-                download
+                href="/templates/grupo-reserva-ESO.xlsx"
+                download="grupo-reserva-ESO.xlsx"
                 className="inline-flex items-center gap-2 rounded-full border border-tierra-600/30 bg-arena-50 px-4 py-2 text-xs font-medium text-tierra-700 hover:bg-arena-100 hover:border-tierra-500/50 transition-all self-start"
               >
                 <Download className="size-3.5" />
