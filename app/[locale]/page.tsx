@@ -313,8 +313,8 @@ export default async function LandingPage({
                 {tHome("portalTitle")}
               </h2>
               <p className="text-tinta-500 text-sm leading-relaxed max-w-xl">
-                {tHome("portalSubtitle", {
-                  code: (
+                {tHome.rich("portalSubtitle", {
+                  code: () => (
                     <span className="font-mono text-tinta-700 bg-arena-100 px-1.5 py-0.5 rounded text-xs">
                       ESO-XXXXXXXX
                     </span>
@@ -416,9 +416,11 @@ export default async function LandingPage({
               {tHome("faqTitle")}
             </h2>
             <p className="text-tinta-500 text-xs mt-3 leading-relaxed">
-              {tHome("faqHelp").split("{chat}")[0]}
-              <span className="text-tierra-600 font-medium">{tHome("faqHelpChat")}</span>
-              {tHome("faqHelp").split("{chat}")[1]}
+              {tHome.rich("faqHelp", {
+                chat: () => (
+                  <span className="text-tierra-600 font-medium">{tHome("faqHelpChat")}</span>
+                ),
+              })}
             </p>
           </div>
 
