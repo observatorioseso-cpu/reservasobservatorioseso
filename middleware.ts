@@ -13,16 +13,26 @@ export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (pathname.startsWith("/admin")) {
-    const isPublic = pathname === "/admin" || pathname === "/admin/login"
     const token = request.cookies.get("eso_admin_session")?.value ?? null
     const session = token ? verifyAdminToken(token) : null
 
-    if (!isPublic && !session) {
-      return NextResponse.redirect(new URL("/admin/login", request.url))
+    // /admin (raíz) — siempre redirigir
+    if (pathname === "/admin") {
+      return NextResponse.redirect(
+        new URL(session ? "/admin/dashboard" : "/admin/login", request.url)
+      )
     }
-    if (isPublic && session) {
+
+    // /admin/login — si ya tiene sesión, ir al dashboard
+    if (pathname === "/admin/login" && session) {
       return NextResponse.redirect(new URL("/admin/dashboard", request.url))
     }
+
+    // Rutas protegidas — requerir sesión
+    if (pathname !== "/admin/login" && !session) {
+      return NextResponse.redirect(new URL("/admin/login", request.url))
+    }
+
     return NextResponse.next()
   }
 
