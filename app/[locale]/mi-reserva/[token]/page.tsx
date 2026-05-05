@@ -102,6 +102,7 @@ export default async function PortalPage({
         langSpanish: t("langSpanish"),
         langEnglish: t("langEnglish"),
         errorConnection: t("errorConnection"),
+        logout: t("logout"),
       }}
     />
   )

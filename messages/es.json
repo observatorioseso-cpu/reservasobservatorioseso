@@ -125,7 +125,7 @@
     "companionsCount": "Acompañantes ({count})",
     "companionsNone": "Solo el titular",
     "companionsManage": "Gestionar acompañantes",
-    "companionsAdd": "Agregar acompañantes",
+    "companionsAdd": "Modificar acompañantes",
     "actionWindowClosed": "La ventana de modificación ha cerrado.",
     "actionWindowClosedBody": "Solo el equipo ESO puede hacer cambios. Contacta a",
     "statusConfirmed": "Reserva confirmada",
@@ -141,7 +141,8 @@
     "langSpanish": "Español",
     "langEnglish": "English",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "logout": "Salir"
   },
   "nav": {
     "home": "Inicio",
@@ -333,5 +334,39 @@
       "sendAnother": "Enviar otro mensaje",
       "ariaForm": "Formulario de contacto"
     }
+  },
+  "acompanantes": {
+    "title": "Gestionar acompañantes",
+    "subtitle": "Modifica quiénes te acompañarán en la visita. Solo disponible antes del plazo de confirmación.",
+    "backToBooking": "Volver a mi reserva",
+    "holderLabel": "Titular",
+    "companionN": "Acompañante {n}",
+    "noCompanionsYet": "Sin acompañantes todavía",
+    "addCompanion": "Agregar acompañante",
+    "remove": "Eliminar",
+    "nombreLabel": "Nombre",
+    "nombrePlaceholder": "Ej: María",
+    "apellidoLabel": "Apellido",
+    "apellidoPlaceholder": "Ej: González",
+    "documentoLabel": "RUT o Pasaporte",
+    "documentoPlaceholder": "12.345.678-9 (opcional)",
+    "totalPersons": "{count} persona(s) en total (titular incluido)",
+    "maxPersons": "Máximo 10 personas por reserva",
+    "passwordLabel": "Contraseña de gestión",
+    "passwordPlaceholder": "Tu contraseña para confirmar cambios",
+    "save": "Guardar cambios",
+    "saving": "Guardando...",
+    "successTitle": "¡Cambios guardados!",
+    "successBody": "Tu lista de acompañantes fue actualizada. Recuerda confirmar tu asistencia antes del plazo.",
+    "backAfterSuccess": "Volver a mi reserva",
+    "errorInvalidPassword": "Contraseña incorrecta",
+    "errorNoCupos": "No hay cupos disponibles para agregar más personas a este turno",
+    "errorWindowClosed": "La ventana de modificación ha cerrado. Solo el equipo ESO puede hacer cambios.",
+    "errorMax": "Máximo 10 personas por reserva (titular + acompañantes)",
+    "errorGeneric": "Error al guardar. Intenta de nuevo.",
+    "windowClosedTitle": "Ventana de modificación cerrada",
+    "windowClosedBody": "El plazo de modificación ha vencido. Solo el equipo ESO puede hacer cambios. Escribe a reservas@observatorioseso.cl",
+    "cancelledTitle": "Reserva anulada",
+    "cancelledBody": "No es posible modificar los acompañantes de una reserva anulada."
   }
 }

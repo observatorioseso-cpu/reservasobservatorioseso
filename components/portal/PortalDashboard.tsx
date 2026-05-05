@@ -93,6 +93,7 @@ export interface PortalDashboardLabels {
   langSpanish: string
   langEnglish: string
   errorConnection: string
+  logout: string
 }
 
 interface PortalDashboardProps {
@@ -292,10 +293,16 @@ export function PortalDashboard({
             Mi reserva
           </span>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-3">
             <code className="text-xs font-mono text-tinta-300 bg-tinta-900 px-2.5 py-1 rounded-full border border-tinta-800">
               {reserva.shortId}
             </code>
+            <Link
+              href="/mi-reserva"
+              className="text-xs font-franklin text-tinta-500 hover:text-tierra-400 transition-colors"
+            >
+              {labels.logout}
+            </Link>
           </div>
         </div>
       </header>

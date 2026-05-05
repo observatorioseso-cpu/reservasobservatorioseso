@@ -125,7 +125,7 @@
     "companionsCount": "Companions ({count})",
     "companionsNone": "Lead visitor only",
     "companionsManage": "Manage companions",
-    "companionsAdd": "Add companions",
+    "companionsAdd": "Modify companions",
     "actionWindowClosed": "The modification window has closed.",
     "actionWindowClosedBody": "Only the ESO team can make changes. Contact",
     "statusConfirmed": "Booking confirmed",
@@ -141,7 +141,8 @@
     "langSpanish": "Spanish",
     "langEnglish": "English",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "logout": "Sign out"
   },
   "nav": {
     "home": "Home",
@@ -333,5 +334,39 @@
       "sendAnother": "Send another message",
       "ariaForm": "Contact form"
     }
+  },
+  "acompanantes": {
+    "title": "Manage companions",
+    "subtitle": "Update who will join you on the visit. Only available before the confirmation deadline.",
+    "backToBooking": "Back to my booking",
+    "holderLabel": "Lead visitor",
+    "companionN": "Companion {n}",
+    "noCompanionsYet": "No companions yet",
+    "addCompanion": "Add companion",
+    "remove": "Remove",
+    "nombreLabel": "First name",
+    "nombrePlaceholder": "E.g.: Maria",
+    "apellidoLabel": "Last name",
+    "apellidoPlaceholder": "E.g.: González",
+    "documentoLabel": "ID or Passport",
+    "documentoPlaceholder": "Passport no. (optional)",
+    "totalPersons": "{count} person(s) total (lead visitor included)",
+    "maxPersons": "Maximum 10 people per booking",
+    "passwordLabel": "Management password",
+    "passwordPlaceholder": "Your password to confirm changes",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "successTitle": "Changes saved!",
+    "successBody": "Your companion list has been updated. Remember to confirm your attendance before the deadline.",
+    "backAfterSuccess": "Back to my booking",
+    "errorInvalidPassword": "Incorrect password",
+    "errorNoCupos": "No spots available to add more people to this tour",
+    "errorWindowClosed": "The modification window has closed. Only the ESO team can make changes.",
+    "errorMax": "Maximum 10 people per booking (lead visitor + companions)",
+    "errorGeneric": "Error saving. Please try again.",
+    "windowClosedTitle": "Modification window closed",
+    "windowClosedBody": "The modification deadline has passed. Only the ESO team can make changes. Write to reservas@observatorioseso.cl",
+    "cancelledTitle": "Booking cancelled",
+    "cancelledBody": "It is not possible to modify companions on a cancelled booking."
   }
 }
