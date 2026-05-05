@@ -81,10 +81,12 @@ function FieldErrorMsg({ msg }: { msg?: string }) {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function ContactForm() {
+export function ContactForm({ locale = "es" }: { locale?: string }) {
   const t = useTranslations("contacto.form")
   const uid = useId()
   const id = (name: string) => `${uid}-${name}`
+  const templateHref = `/templates/grupo-reserva-ESO-${locale}.xlsx`
+  const templateFile = `grupo-reserva-ESO-${locale}.xlsx`
 
   const [tipo, setTipo] = useState<Tipo>("GENERAL")
   const [status, setStatus] = useState<Status>("idle")
@@ -250,8 +252,8 @@ export function ContactForm() {
         </div>
         {tipo === "GRUPAL" && (
           <a
-            href="/templates/grupo-reserva-ESO.xlsx"
-            download="grupo-reserva-ESO.xlsx"
+            href={templateHref}
+            download={templateFile}
             className="inline-flex items-center gap-2 rounded-full border border-tierra-600/30 bg-arena-50 px-5 py-2.5 text-sm font-medium text-tierra-700 hover:bg-arena-100 hover:border-tierra-500/50 transition-all"
           >
             <Download className="size-4" />

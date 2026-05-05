@@ -227,8 +227,8 @@ export default async function LandingPage({
             </div>
             <div className="flex flex-col sm:flex-row gap-2.5 shrink-0">
               <a
-                href="/templates/grupo-reserva-ESO.xlsx"
-                download="grupo-reserva-ESO.xlsx"
+                href={`/templates/grupo-reserva-ESO-${locale}.xlsx`}
+                download={`grupo-reserva-ESO-${locale}.xlsx`}
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-tierra-600/30 bg-arena-50 px-4 py-2.5 text-xs font-medium text-tierra-700 hover:bg-arena-100 hover:border-tierra-500/50 transition-all"
               >
                 <Download className="size-3.5" />
