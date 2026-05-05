@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { cookies } from "next/headers"
-import { CheckCircle2, Clock, XCircle, Users, CalendarDays } from "lucide-react"
+import Link from "next/link"
+import { CheckCircle2, Clock, XCircle, Users, CalendarDays, Telescope } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 import { verifyAdminToken } from "@/lib/adminAuth"
 import { AdminShell } from "@/components/admin/AdminShell"
@@ -76,6 +77,9 @@ export default async function DashboardPage() {
   const startOfMonth = startOfMonthSantiago()
 
   // ── DB queries (parallel) ───────────────────────────────────────────────
+  const startOfNextMonth = new Date(startOfMonth)
+  startOfNextMonth.setMonth(startOfNextMonth.getMonth() + 1)
+
   const [
     confirmadasTotal,
     pendientesTotal,
@@ -83,6 +87,8 @@ export default async function DashboardPage() {
     cuposMes,
     turnosProximos,
     reservasHoy,
+    reservasSillaMes,
+    reservasParnalMes,
   ] = await Promise.all([
     // 1. Total CONFIRMADAS (all time)
     prisma.reserva.count({ where: { estado: "CONFIRMADA" } }),
@@ -107,11 +113,14 @@ export default async function DashboardPage() {
       },
     }),
 
-    // 5. Próximos 5 turnos activos
+    // 5. Próximos 5 turnos activos — include reserva count
     prisma.turno.findMany({
       where:   { fecha: { gte: today }, activo: true },
       orderBy: { fecha: "asc" },
       take:    5,
+      include: {
+        _count: { select: { reservas: true } },
+      },
     }),
 
     // 6. Reservas del día (conteo simple)
@@ -119,6 +128,22 @@ export default async function DashboardPage() {
       where: {
         estado: { in: ["CONFIRMADA", "PENDIENTE_CONFIRMACION"] },
         turno:  { fecha: { gte: today, lt: new Date(today.getTime() + 86_400_000) } },
+      },
+    }),
+
+    // 7. Reservas La Silla este mes (CONFIRMADA + PENDIENTE)
+    prisma.reserva.count({
+      where: {
+        estado: { in: ["CONFIRMADA", "PENDIENTE_CONFIRMACION"] },
+        turno:  { observatorio: "LA_SILLA", fecha: { gte: startOfMonth, lt: startOfNextMonth } },
+      },
+    }),
+
+    // 8. Reservas Paranal este mes (CONFIRMADA + PENDIENTE)
+    prisma.reserva.count({
+      where: {
+        estado: { in: ["CONFIRMADA", "PENDIENTE_CONFIRMACION"] },
+        turno:  { observatorio: "PARANAL", fecha: { gte: startOfMonth, lt: startOfNextMonth } },
       },
     }),
   ])
@@ -188,6 +213,37 @@ export default async function DashboardPage() {
           ))}
         </div>
 
+        {/* ── Per-observatory breakdown this month ─────────────────── */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* La Silla */}
+          <div className="rounded-xl border border-amber-500/20 bg-stone-800 p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-stone-400">La Silla este mes</span>
+              <span className="inline-flex size-9 items-center justify-center rounded-lg bg-amber-400/10">
+                <Telescope className="size-5 text-amber-400" aria-hidden="true" />
+              </span>
+            </div>
+            <p className="text-3xl font-bold tracking-tight text-stone-100">
+              {reservasSillaMes.toLocaleString("es-CL")}
+            </p>
+            <p className="text-xs text-stone-500">reservas confirmadas + pendientes</p>
+          </div>
+
+          {/* Paranal */}
+          <div className="rounded-xl border border-sky-500/20 bg-stone-800 p-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-stone-400">Paranal este mes</span>
+              <span className="inline-flex size-9 items-center justify-center rounded-lg bg-sky-400/10">
+                <Telescope className="size-5 text-sky-400" aria-hidden="true" />
+              </span>
+            </div>
+            <p className="text-3xl font-bold tracking-tight text-stone-100">
+              {reservasParnalMes.toLocaleString("es-CL")}
+            </p>
+            <p className="text-xs text-stone-500">reservas confirmadas + pendientes</p>
+          </div>
+        </div>
+
         {/* ── Upcoming turns table ─────────────────────────────────────── */}
         <section aria-labelledby="upcoming-heading">
           <div className="mb-4 flex items-center gap-2">
@@ -200,11 +256,12 @@ export default async function DashboardPage() {
           {turnosProximos.length === 0 ? (
             <p className="text-sm text-stone-500">No hay turnos activos próximos.</p>
           ) : (
+            <div className="space-y-3">
             <div className="overflow-x-auto rounded-xl border border-stone-800">
               <table className="w-full min-w-[640px] text-sm" role="table">
                 <thead>
                   <tr className="border-b border-stone-800 bg-stone-900">
-                    {["Observatorio", "Fecha", "Horario", "Capacidad", "Cupos ocupados", "Ocupación"].map((col) => (
+                    {["Observatorio", "Fecha", "Horario", "Capacidad", "Cupos ocupados", "Reservas", "Ocupación"].map((col) => (
                       <th
                         key={col}
                         scope="col"
@@ -235,7 +292,12 @@ export default async function DashboardPage() {
                         ].join(" ")}
                       >
                         <td className="px-4 py-3 font-medium text-stone-200">
-                          {OBS_LABEL[turno.observatorio] ?? turno.observatorio}
+                          <Link
+                            href={`/admin/reservas?turnoId=${turno.id}`}
+                            className="hover:text-amber-400 transition-colors"
+                          >
+                            {OBS_LABEL[turno.observatorio] ?? turno.observatorio}
+                          </Link>
                         </td>
                         <td className="px-4 py-3 text-stone-300">
                           {fmtShort.format(new Date(turno.fecha))}
@@ -248,6 +310,9 @@ export default async function DashboardPage() {
                         </td>
                         <td className="px-4 py-3 text-stone-300">
                           {turno.cuposOcupados}
+                        </td>
+                        <td className="px-4 py-3 tabular-nums text-stone-300">
+                          {turno._count.reservas}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
@@ -275,6 +340,15 @@ export default async function DashboardPage() {
                   })}
                 </tbody>
               </table>
+            </div>
+            <div className="flex justify-end">
+              <Link
+                href="/admin/turnos"
+                className="text-sm text-stone-400 hover:text-amber-400 transition-colors"
+              >
+                Ver todos los turnos
+              </Link>
+            </div>
             </div>
           )}
         </section>

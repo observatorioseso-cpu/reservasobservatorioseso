@@ -2,10 +2,27 @@ export const dynamic = "force-dynamic"
 
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
+import { Ratelimit } from "@upstash/ratelimit"
+import { Redis } from "@upstash/redis"
 import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { modificacionAcompanantesSchema } from "@/lib/schemas"
 import { estaDentroDeVentanaModificacion } from "@/lib/confirmacion"
+
+let ratelimit: Ratelimit | null = null
+function getRatelimit(): Ratelimit | null {
+  if (ratelimit) return ratelimit
+  try {
+    ratelimit = new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(5, "5 m"),
+      prefix: "acompanantes",
+    })
+    return ratelimit
+  } catch {
+    return null
+  }
+}
 
 /**
  * PUT /api/reservas/[token]/acompanantes
@@ -25,6 +42,17 @@ export async function PUT(
   { params }: { params: Promise<{ token: string }> }
 ) {
   const { token } = await params
+
+  const rl = getRatelimit()
+  if (rl) {
+    const { success } = await rl.limit(`acompanantes:${token}`)
+    if (!success) {
+      return NextResponse.json(
+        { error: "Demasiados intentos. Espera unos minutos e intenta nuevamente." },
+        { status: 429 }
+      )
+    }
+  }
 
   // 1. Parsear body
   let body: unknown

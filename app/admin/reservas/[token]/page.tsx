@@ -207,7 +207,7 @@ export default function ReservaDetallePage({ params }: PageProps) {
     try {
       const res = await fetch(`/api/admin/reservas/${token}`)
       if (!res.ok) throw new Error("No se pudo cargar la reserva.")
-      const data: ReservaDetalle = await res.json()
+      const { data }: { data: ReservaDetalle } = await res.json()
       setReserva(data)
       setNota(data.notaAdmin ?? "")
     } catch (err) {

@@ -69,6 +69,13 @@ export const reservaSchema = z
       path: ["acompanantes"],
     }
   )
+  .refine(
+    (data) => !data.recibirWhatsapp || data.whatsappOptIn,
+    {
+      message: "Debes aceptar el opt-in de WhatsApp para recibir mensajes por ese canal",
+      path: ["whatsappOptIn"],
+    }
+  )
 
 export type ReservaInput = z.infer<typeof reservaSchema>
 

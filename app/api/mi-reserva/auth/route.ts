@@ -12,17 +12,20 @@ const bodySchema = z.object({
   password: z.string().min(1),
 })
 
-// Rate limiting: máx. 5 intentos de login por IP por minuto
+// Rate limiting: máx. 5 intentos por IP por minuto (lazy-init para evitar fallo en cold start)
 let ratelimit: Ratelimit | null = null
-try {
-  ratelimit = new Ratelimit({
-    redis: Redis.fromEnv(),
-    limiter: Ratelimit.slidingWindow(5, "1 m"),
-    prefix: "mi-reserva-auth",
-  })
-} catch {
-  // Si Redis no está configurado, el login sigue funcionando (fail-open)
-  ratelimit = null
+function getRatelimit(): Ratelimit | null {
+  if (ratelimit) return ratelimit
+  try {
+    ratelimit = new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(5, "1 m"),
+      prefix: "mi-reserva-auth",
+    })
+    return ratelimit
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -33,10 +36,11 @@ try {
  */
 export async function POST(request: Request) {
   // Rate limiting
-  if (ratelimit) {
+  const rl = getRatelimit()
+  if (rl) {
     const ip =
       request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown"
-    const { success } = await ratelimit.limit(`mi-reserva-auth:${ip}`)
+    const { success } = await rl.limit(`mi-reserva-auth:${ip}`)
     if (!success) {
       return NextResponse.json(
         { error: "Demasiados intentos. Espera un minuto e intenta nuevamente." },

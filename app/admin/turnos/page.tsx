@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import Link from "next/link"
 import {
   Plus,
   Pencil,
@@ -10,6 +11,8 @@ import {
   AlertCircle,
   X,
   Check,
+  Users,
+  Trash2,
 } from "lucide-react"
 import { AdminShell } from "@/components/admin/AdminShell"
 import { Button } from "@/components/ui/Button"
@@ -42,6 +45,12 @@ interface NuevoTurnoForm {
 
 interface AsistenciaForm {
   asistentes: string
+}
+
+interface EditarTurnoForm {
+  horaFin: string
+  capacidadMax: string
+  activo: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -352,6 +361,129 @@ function ModalAsistencia({ turnoId, onClose, onSaved }: ModalAsistenciaProps) {
 }
 
 // ---------------------------------------------------------------------------
+// Modal de editar turno
+// ---------------------------------------------------------------------------
+
+interface ModalEditarTurnoProps {
+  turno: Turno
+  onClose: () => void
+  onSaved: () => void
+}
+
+function ModalEditarTurno({ turno, onClose, onSaved }: ModalEditarTurnoProps) {
+  const [form, setForm] = useState<EditarTurnoForm>({
+    horaFin: turno.horaFin,
+    capacidadMax: String(turno.capacidadMax),
+    activo: turno.activo,
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+    const cap = parseInt(form.capacidadMax, 10)
+    if (isNaN(cap) || cap < 1) { setError("Capacidad mínima: 1."); return }
+
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/admin/turnos/${turno.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          horaFin: form.horaFin || undefined,
+          capacidadMax: cap,
+          activo: form.activo,
+        }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error ?? "Error al guardar.")
+      }
+      onSaved()
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/80 p-4 backdrop-blur-sm"
+      role="dialog" aria-modal="true" aria-labelledby="modal-editar-titulo">
+      <div className="w-full max-w-md rounded-xl border border-stone-800 bg-stone-900 p-6 shadow-2xl">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 id="modal-editar-titulo" className="text-lg font-semibold text-stone-100">
+            Editar turno
+          </h2>
+          <button type="button" onClick={onClose}
+            className="rounded-md p-1.5 text-stone-400 hover:bg-stone-800 hover:text-stone-100"
+            aria-label="Cerrar">
+            <X className="size-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        {/* Turno info */}
+        <div className="mb-4 rounded-lg bg-stone-800/50 px-4 py-3 text-sm">
+          <p className="font-medium text-stone-200">{OBS_LABELS[turno.observatorio]}</p>
+          <p className="text-stone-400">{formatFechaES(turno.fecha)} · {turno.horaInicio}–{turno.horaFin}</p>
+          <p className="mt-1 text-xs text-stone-500">{turno.cuposOcupados} cupos ocupados de {turno.capacidadMax}</p>
+        </div>
+
+        {error && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-500/10 px-3 py-2.5 text-sm text-red-400 ring-1 ring-red-500/20">
+            <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-stone-300" htmlFor="edit-horaFin">
+              Hora fin
+            </label>
+            <input id="edit-horaFin" type="time" value={form.horaFin}
+              onChange={(e) => setForm((p) => ({ ...p, horaFin: e.target.value }))}
+              className="w-full rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-sm text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-stone-300" htmlFor="edit-capacidad">
+              Capacidad máxima
+            </label>
+            <input id="edit-capacidad" type="number" min={turno.cuposOcupados || 1} value={form.capacidadMax}
+              onChange={(e) => setForm((p) => ({ ...p, capacidadMax: e.target.value }))}
+              className="w-full rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-sm text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500" />
+            {turno.cuposOcupados > 0 && (
+              <p className="mt-1 text-xs text-stone-500">
+                Mínimo: {turno.cuposOcupados} (cupos ya ocupados)
+              </p>
+            )}
+          </div>
+
+          <label className="flex cursor-pointer items-center gap-3">
+            <div className="relative">
+              <input type="checkbox" checked={form.activo}
+                onChange={(e) => setForm((p) => ({ ...p, activo: e.target.checked }))}
+                className="sr-only" role="switch" aria-checked={form.activo} />
+              <div className={`h-6 w-11 rounded-full transition-colors duration-200 ${form.activo ? "bg-amber-500" : "bg-stone-700"}`} aria-hidden="true" />
+              <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${form.activo ? "translate-x-5" : "translate-x-0.5"}`} aria-hidden="true" />
+            </div>
+            <span className="text-sm text-stone-300">{form.activo ? "Turno activo" : "Turno inactivo"}</span>
+          </label>
+
+          <div className="flex justify-end gap-3 pt-1">
+            <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={loading}>Cancelar</Button>
+            <Button type="submit" variant="primary" size="sm" loading={loading}>Guardar cambios</Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
@@ -363,7 +495,13 @@ export default function TurnosPage() {
   const [filtroActivo, setFiltroActivo] = useState<"" | "true" | "false">("")
   const [modalNuevo, setModalNuevo] = useState(false)
   const [modalAsistencia, setModalAsistencia] = useState<string | null>(null)
+  const [modalEditar, setModalEditar] = useState<Turno | null>(null)
   const [desactivandoId, setDesactivandoId] = useState<string | null>(null)
+  const [cleanupState, setCleanupState] = useState<{
+    loading: boolean
+    result: { eliminados: number; omitidos: number; detalle: string } | null
+    error: string | null
+  }>({ loading: false, result: null, error: null })
 
   const fetchTurnos = useCallback(async () => {
     setLoading(true)
@@ -401,17 +539,89 @@ export default function TurnosPage() {
     }
   }
 
+  async function handleCleanupDomingos() {
+    if (
+      !window.confirm(
+        "¿Eliminar los turnos de Paranal que cayeron en domingo?\n\nSolo se eliminarán turnos SIN reservas activas. Esta acción no se puede deshacer."
+      )
+    )
+      return
+    setCleanupState({ loading: true, result: null, error: null })
+    try {
+      const res = await fetch("/api/admin/cleanup-domingos", { method: "POST" })
+      const json = await res.json()
+      if (!res.ok || !json.ok) {
+        setCleanupState({ loading: false, result: null, error: json.error ?? "Error al limpiar." })
+        return
+      }
+      setCleanupState({
+        loading: false,
+        result: { eliminados: json.eliminados, omitidos: json.omitidos, detalle: json.detalle },
+        error: null,
+      })
+      if (json.eliminados > 0) await fetchTurnos()
+    } catch {
+      setCleanupState({ loading: false, result: null, error: "Error de conexión." })
+    }
+  }
+
   return (
     <AdminShell>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-xl font-semibold text-stone-100">Turnos</h2>
-          <Button variant="primary" size="sm" onClick={() => setModalNuevo(true)}>
-            <Plus className="size-4" aria-hidden="true" />
-            Nuevo turno
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleCleanupDomingos}
+              disabled={cleanupState.loading}
+              title="Purga turnos de Paranal en domingo que se crearon por error en el seed antiguo. Paranal nunca opera los domingos."
+            >
+              {cleanupState.loading ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Trash2 className="size-4" aria-hidden="true" />
+              )}
+              Purgar datos erróneos
+            </Button>
+            <Button variant="primary" size="sm" onClick={() => setModalNuevo(true)}>
+              <Plus className="size-4" aria-hidden="true" />
+              Nuevo turno
+            </Button>
+          </div>
         </div>
+
+        {/* Cleanup result banner */}
+        {cleanupState.error && (
+          <div className="flex items-center gap-2 rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-400 ring-1 ring-red-500/20">
+            <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
+            {cleanupState.error}
+          </div>
+        )}
+        {cleanupState.result && (
+          <div className="flex items-start justify-between gap-3 rounded-lg bg-green-500/10 px-4 py-3 text-sm text-green-400 ring-1 ring-green-500/20">
+            <div className="flex items-start gap-2">
+              <Check className="size-4 mt-0.5 shrink-0" aria-hidden="true" />
+              <div>
+                <span className="font-medium">
+                  {cleanupState.result.eliminados} turno{cleanupState.result.eliminados !== 1 ? "s" : ""} eliminado{cleanupState.result.eliminados !== 1 ? "s" : ""}
+                  {cleanupState.result.omitidos > 0 && ` · ${cleanupState.result.omitidos} omitido${cleanupState.result.omitidos !== 1 ? "s" : ""} (tienen reservas)`}
+                </span>
+                <p className="text-xs text-green-500 mt-0.5">{cleanupState.result.detalle}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setCleanupState({ loading: false, result: null, error: null })}
+              className="shrink-0 rounded p-0.5 hover:bg-green-500/20"
+              aria-label="Cerrar"
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
+          </div>
+        )}
 
         {/* Filtros */}
         <div className="flex flex-wrap gap-3">
@@ -507,8 +717,17 @@ export default function TurnosPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
+                        <Link
+                          href={`/admin/reservas?turnoId=${t.id}`}
+                          className="rounded-md p-1.5 text-stone-400 hover:bg-stone-700 hover:text-sky-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                          aria-label="Ver reservas de este turno"
+                          title="Ver reservas"
+                        >
+                          <Users className="size-4" aria-hidden="true" />
+                        </Link>
                         <button
                           type="button"
+                          onClick={() => setModalEditar(t)}
                           className="rounded-md p-1.5 text-stone-400 hover:bg-stone-700 hover:text-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
                           aria-label="Editar turno"
                           title="Editar"
@@ -558,6 +777,13 @@ export default function TurnosPage() {
         <ModalAsistencia
           turnoId={modalAsistencia}
           onClose={() => setModalAsistencia(null)}
+          onSaved={fetchTurnos}
+        />
+      )}
+      {modalEditar && (
+        <ModalEditarTurno
+          turno={modalEditar}
+          onClose={() => setModalEditar(null)}
           onSaved={fetchTurnos}
         />
       )}

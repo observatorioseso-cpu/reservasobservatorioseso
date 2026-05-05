@@ -69,6 +69,7 @@ export default async function FormularioPage({
         <FormularioReserva
           turnoId={turnoId}
           observatorio={slug}
+          fecha={fecha}
           labels={{
             nombre: t("nombre"),
             apellido: t("apellido"),

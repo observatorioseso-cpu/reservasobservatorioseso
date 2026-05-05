@@ -27,10 +27,8 @@ export function getTurnosDisponibles(
     return [{ horaInicio: "09:30", horaFin: "13:00", label: "Mañana" }]
   }
 
-  return [
-    { horaInicio: "09:30", horaFin: "13:00", label: "Mañana" },
-    { horaInicio: "13:30", horaFin: "17:00", label: "Tarde" },
-  ]
+  // La Silla siempre tiene un solo turno (09:30–13:00) independientemente de la temporada
+  return [{ horaInicio: "09:30", horaFin: "13:00", label: "Mañana" }]
 }
 
 export function getEdadMinima(

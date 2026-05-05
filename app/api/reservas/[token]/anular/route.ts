@@ -2,6 +2,8 @@ export const dynamic = "force-dynamic"
 
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
+import { Ratelimit } from "@upstash/ratelimit"
+import { Redis } from "@upstash/redis"
 import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { estaDentroDeVentanaModificacion } from "@/lib/confirmacion"
@@ -10,6 +12,21 @@ import { z } from "zod"
 const bodySchema = z.object({
   password: z.string().min(1),
 })
+
+let ratelimit: Ratelimit | null = null
+function getRatelimit(): Ratelimit | null {
+  if (ratelimit) return ratelimit
+  try {
+    ratelimit = new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(5, "5 m"),
+      prefix: "anular",
+    })
+    return ratelimit
+  } catch {
+    return null
+  }
+}
 
 /**
  * POST /api/reservas/[token]/anular
@@ -21,6 +38,17 @@ export async function POST(
   { params }: { params: Promise<{ token: string }> }
 ) {
   const { token } = await params
+
+  const rl = getRatelimit()
+  if (rl) {
+    const { success } = await rl.limit(`anular:${token}`)
+    if (!success) {
+      return NextResponse.json(
+        { error: "Demasiados intentos. Espera unos minutos e intenta nuevamente." },
+        { status: 429 }
+      )
+    }
+  }
 
   let body: unknown
   try {

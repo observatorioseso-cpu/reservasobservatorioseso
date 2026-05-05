@@ -15,20 +15,26 @@ interface ConfigMeta {
   label: string
   descripcion: string
   tipo: ConfigTipo
+  min?: number
+  max?: number
 }
 
 const CONFIG_META: Record<string, ConfigMeta> = {
   HORA_CIERRE_VIERNES: {
     label: "Hora de cierre el viernes",
     descripcion:
-      "Hora (0-23) en que se cierran las reservas el viernes previo a la visita. Zona horaria: Santiago.",
+      "Hora (14-20) en que se cierran las reservas el viernes previo a la visita. Zona horaria: Santiago.",
     tipo: "number",
+    min: 14,
+    max: 20,
   },
   MAX_PERSONAS_CLIENTE: {
     label: "Max. personas por reserva (cliente)",
     descripcion:
       "Limite de personas que puede reservar un cliente. El admin puede superar este limite.",
     tipo: "number",
+    min: 1,
+    max: 10,
   },
   EMAIL_CONTACTO: {
     label: "Email de contacto",
@@ -139,6 +145,8 @@ function ConfigField({ clave, meta, value, entry, onChange }: FieldProps) {
           type="number"
           value={value}
           onChange={(e) => onChange(clave, e.target.value)}
+          min={meta.min}
+          max={meta.max}
           className="w-40 rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-sm text-stone-100 tabular-nums focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
       ) : (
@@ -173,7 +181,7 @@ export default function ConfigPage() {
       try {
         const res = await fetch("/api/admin/config")
         if (!res.ok) throw new Error("Error al cargar la configuracion.")
-        const data: ConfigEntry[] = await res.json()
+        const { data }: { data: ConfigEntry[] } = await res.json()
 
         const map: ConfigMap = {}
         const vals: Record<string, string> = {}
@@ -217,7 +225,7 @@ export default function ConfigPage() {
       const res = await fetch("/api/admin/config", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ config: payload }),
+        body: JSON.stringify({ entries: payload }),
       })
 
       if (!res.ok) {
@@ -228,7 +236,7 @@ export default function ConfigPage() {
       // Refresh entries to get updated timestamps
       const refreshed = await fetch("/api/admin/config")
       if (refreshed.ok) {
-        const data: ConfigEntry[] = await refreshed.json()
+        const { data }: { data: ConfigEntry[] } = await refreshed.json()
         const map: ConfigMap = {}
         for (const entry of data) {
           map[entry.clave] = entry

@@ -13,13 +13,22 @@ function getRatelimit(): Ratelimit | null {
   try {
     ratelimit = new Ratelimit({
       redis: Redis.fromEnv(),
-      limiter: Ratelimit.slidingWindow(10, "1 m"),
+      limiter: Ratelimit.slidingWindow(5, "15 m"),
       prefix: "admin-login",
     })
     return ratelimit
   } catch {
     return null
   }
+}
+
+// Dummy hash para garantizar tiempo constante cuando el email no existe.
+// Se computa en el primer request y se cachea.
+let TIMING_DUMMY_HASH: string | null = null
+async function getDummyHash(): Promise<string> {
+  if (TIMING_DUMMY_HASH) return TIMING_DUMMY_HASH
+  TIMING_DUMMY_HASH = await bcrypt.hash("__eso_admin_timing_sentinel__", 12)
+  return TIMING_DUMMY_HASH
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -31,7 +40,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     const { success } = await rl.limit(ip)
     if (!success) {
       return NextResponse.json(
-        { error: "Demasiados intentos. Intenta nuevamente en un minuto." },
+        { error: "Demasiados intentos. Intenta nuevamente en 15 minutos." },
         { status: 429 }
       )
     }
@@ -52,8 +61,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   const admin = await prisma.admin.findUnique({ where: { email } })
 
-  const passwordValid =
-    admin !== null && (await bcrypt.compare(password, admin.passwordHash))
+  // Siempre ejecutar bcrypt.compare para prevenir timing attacks de enumeración de emails.
+  const hashToCompare = admin?.passwordHash ?? (await getDummyHash())
+  const passwordMatch = await bcrypt.compare(password, hashToCompare)
+  const passwordValid = admin !== null && passwordMatch
 
   if (!admin || !passwordValid) {
     return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 })

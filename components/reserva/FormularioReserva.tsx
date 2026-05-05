@@ -44,6 +44,7 @@ interface Labels {
 interface FormularioReservaProps {
   turnoId: string
   observatorio: "LA_SILLA" | "PARANAL"
+  fecha: string
   labels: Labels
   errorLabels: {
     required: string
@@ -59,6 +60,7 @@ interface FormularioReservaProps {
 export function FormularioReserva({
   turnoId,
   observatorio,
+  fecha,
   labels,
   errorLabels,
   locale,
@@ -121,6 +123,14 @@ export function FormularioReserva({
         setSubmitError(json.error ?? errorLabels.generic)
         return
       }
+      try {
+        sessionStorage.setItem("eso_ultima_reserva", JSON.stringify({
+          shortId: json.shortId,
+          token: json.token,
+          observatorio: observatorio,
+          fecha: fecha,
+        }))
+      } catch {}
       router.push(`/confirmar/${json.token}`)
     } catch {
       setSubmitError(errorLabels.generic)

@@ -101,6 +101,10 @@ export async function POST(request: Request) {
     )
   }
 
+  // 5a. Pre-computar hash y shortId fuera de la transacción (bcrypt toma ~300ms)
+  const passwordHash = await bcrypt.hash(data.password, 12)
+  const shortId = generarShortId()
+
   // 5. Transacción atómica: verificar cupos + ventana + crear reserva + decrementar cupos
   let reserva: { token: string; shortId: string; id: string }
   try {
@@ -129,9 +133,6 @@ export async function POST(request: Request) {
         where: { id: data.turnoId },
         data: { cuposOcupados: { increment: data.cantidadPersonas } },
       })
-
-      const passwordHash = await bcrypt.hash(data.password, 12)
-      const shortId = generarShortId()
 
       const nueva = await tx.reserva.create({
         data: {

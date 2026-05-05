@@ -6,7 +6,13 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 function createPrismaClient() {
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+  const url = process.env.DATABASE_URL
+  if (!url) {
+    throw new Error(
+      "[prisma] DATABASE_URL no está configurado. Revisa tus variables de entorno."
+    )
+  }
+  const adapter = new PrismaPg({ connectionString: url })
   return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],

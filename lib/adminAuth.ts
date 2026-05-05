@@ -38,7 +38,7 @@ export function setAdminCookie(res: NextResponse, token: string): void {
   res.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "strict",
     path: "/",
     maxAge: EXPIRY_MS / 1000,
   })
@@ -48,7 +48,7 @@ export function clearAdminCookie(res: NextResponse): void {
   res.cookies.set(COOKIE_NAME, "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "strict",
     path: "/",
     maxAge: 0,
   })

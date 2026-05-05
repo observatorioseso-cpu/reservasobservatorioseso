@@ -238,27 +238,27 @@ export default async function CalendarioPage({
           </div>
         </header>
 
-        {/* ── Photo hero — imagen del observatorio ── */}
-        <div className="relative h-56 sm:h-72 overflow-hidden">
+        {/* ── Photo hero — compacto ── */}
+        <div className="relative h-36 sm:h-44 overflow-hidden">
           <img
             src={cfg.photo}
             alt={cfg.photoAlt}
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
           <div className="absolute inset-0" style={{ background: cfg.photoOverlay }} />
-          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-7 max-w-5xl mx-auto">
+          <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-5 max-w-5xl mx-auto">
             <span
               className={cn(
-                "text-[10px] font-medium uppercase tracking-[0.25em] mb-1.5 block",
+                "text-[9px] font-medium uppercase tracking-[0.22em] mb-1 block",
                 cfg.heroLabel
               )}
             >
               Entrada gratuita · Visita guiada ESO
             </span>
-            <h1 className="font-playfair text-4xl sm:text-5xl font-black text-white leading-none">
+            <h1 className="font-playfair text-3xl sm:text-4xl font-black text-white leading-none">
               {cfg.heroTitle}
             </h1>
-            <p className="text-sm text-stone-400 mt-2">{cfg.chipRegion}</p>
+            <p className="text-xs text-stone-400 mt-1">{cfg.chipRegion}</p>
           </div>
         </div>
 

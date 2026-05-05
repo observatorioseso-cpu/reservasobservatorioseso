@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { Suspense, useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import {
   Search,
   Download,
@@ -10,6 +11,7 @@ import {
   Loader2,
   AlertCircle,
   ExternalLink,
+  X,
 } from "lucide-react"
 import { AdminShell } from "@/components/admin/AdminShell"
 import { StatusBadge } from "@/components/admin/StatusBadge"
@@ -74,7 +76,9 @@ function useDebounce<T>(value: T, delay: number): T {
 
 const PAGE_SIZE = 20
 
-export default function ReservasPage() {
+function ReservasPageInner() {
+  const searchParams = useSearchParams()
+
   const [reservas, setReservas] = useState<ReservaRow[]>([])
   const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
@@ -85,9 +89,16 @@ export default function ReservasPage() {
   const [q, setQ] = useState("")
   const [filtroObs, setFiltroObs] = useState<"" | Observatorio>("")
   const [filtroEstado, setFiltroEstado] = useState<"" | EstadoReserva>("")
+  const [filtroTurnoId, setFiltroTurnoId] = useState<string>("")
 
   const debouncedQ = useDebounce(q, 300)
   const abortRef = useRef<AbortController | null>(null)
+
+  // Hydrate filtroTurnoId from URL on mount
+  useEffect(() => {
+    const tid = searchParams.get("turnoId")
+    if (tid) setFiltroTurnoId(tid)
+  }, [searchParams])
 
   const fetchReservas = useCallback(async () => {
     abortRef.current?.abort()
@@ -99,10 +110,11 @@ export default function ReservasPage() {
     try {
       const params = new URLSearchParams()
       if (debouncedQ) params.set("q", debouncedQ)
-      if (filtroObs) params.set("observatorio", filtroObs)
+      if (filtroObs) params.set("obs", filtroObs)
       if (filtroEstado) params.set("estado", filtroEstado)
+      if (filtroTurnoId) params.set("turnoId", filtroTurnoId)
       params.set("page", String(page))
-      params.set("pageSize", String(PAGE_SIZE))
+      params.set("limit", String(PAGE_SIZE))
 
       const res = await fetch(`/api/admin/reservas?${params.toString()}`, {
         signal: controller.signal,
@@ -118,12 +130,12 @@ export default function ReservasPage() {
     } finally {
       setLoading(false)
     }
-  }, [debouncedQ, filtroObs, filtroEstado, page])
+  }, [debouncedQ, filtroObs, filtroEstado, filtroTurnoId, page])
 
   // Reset page when filters change
   useEffect(() => {
     setPage(1)
-  }, [debouncedQ, filtroObs, filtroEstado])
+  }, [debouncedQ, filtroObs, filtroEstado, filtroTurnoId])
 
   useEffect(() => {
     fetchReservas()
@@ -132,7 +144,7 @@ export default function ReservasPage() {
   function buildExportUrl() {
     const params = new URLSearchParams({ format: "xlsx" })
     if (debouncedQ) params.set("q", debouncedQ)
-    if (filtroObs) params.set("observatorio", filtroObs)
+    if (filtroObs) params.set("obs", filtroObs)
     if (filtroEstado) params.set("estado", filtroEstado)
     return `/api/export?${params.toString()}`
   }
@@ -194,6 +206,21 @@ export default function ReservasPage() {
             <option value="ANULADA">Anulada</option>
           </select>
         </div>
+
+        {/* Turno filter banner */}
+        {filtroTurnoId && (
+          <div className="flex items-center justify-between rounded-lg bg-sky-500/10 px-4 py-2.5 text-sm text-sky-300 ring-1 ring-sky-500/20">
+            <span>Filtrando por turno especifico</span>
+            <button
+              type="button"
+              onClick={() => setFiltroTurnoId("")}
+              className="ml-3 rounded p-0.5 hover:bg-sky-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+              aria-label="Quitar filtro de turno"
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
+          </div>
+        )}
 
         {/* Error */}
         {fetchError && (
@@ -315,5 +342,13 @@ export default function ReservasPage() {
         )}
       </div>
     </AdminShell>
+  )
+}
+
+export default function ReservasPage() {
+  return (
+    <Suspense>
+      <ReservasPageInner />
+    </Suspense>
   )
 }

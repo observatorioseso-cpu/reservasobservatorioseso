@@ -88,7 +88,24 @@ async function main() {
   })
   console.log("✓ Admin: admin@observatorioseso.cl / admin123")
 
-  // ── 3. Turnos de prueba ───────────────────────────────────────────────────
+  // ── 3. Limpiar turnos de Paranal en domingos (datos de seed antiguo) ─────
+  // Los domingos tienen getUTCDay() === 0
+  const paranálTurnosExistentes = await prisma.turno.findMany({
+    where: { observatorio: "PARANAL" },
+    select: { id: true, fecha: true },
+  })
+  const idsDomingosParanal = paranálTurnosExistentes
+    .filter((t) => t.fecha.getUTCDay() === 0)
+    .map((t) => t.id)
+
+  if (idsDomingosParanal.length > 0) {
+    await prisma.turno.deleteMany({
+      where: { id: { in: idsDomingosParanal } },
+    })
+    console.log(`✓ Eliminados ${idsDomingosParanal.length} turno(s) de Paranal en domingo`)
+  }
+
+  // ── 4. Turnos de prueba ───────────────────────────────────────────────────
 
   const sabados = nextNSaturdays(16)
 
@@ -163,7 +180,7 @@ async function main() {
     }
   }
 
-  console.log(`✓ La Silla: ${laSillaCount} turnos | Paranal: ${paranálCount} turnos`)
+  console.log(`✓ Turnos creados — La Silla: ${laSillaCount} | Paranal: ${paranálCount}`)
 }
 
 main()

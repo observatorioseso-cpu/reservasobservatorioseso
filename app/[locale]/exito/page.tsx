@@ -1,9 +1,11 @@
 import { getTranslations } from "next-intl/server"
 import type { Metadata } from "next"
+import { ExitoSummary } from "./ExitoSummary"
 
-export const metadata: Metadata = {
-  title: "Reserva confirmada",
-  robots: { index: false },
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: "exito" })
+  return { title: t("title"), robots: { index: false } }
 }
 
 export default async function ExitoPage() {
@@ -31,12 +33,14 @@ export default async function ExitoPage() {
 
         <p className="text-stone-400 mb-8">{t("subtitle")}</p>
 
+        <ExitoSummary />
+
         <div className="rounded-xl border border-stone-800 bg-stone-900 p-6 text-left text-sm text-stone-400">
           <p className="font-medium text-stone-200 mb-2">{t("instructions")}</p>
           <ul className="space-y-1 list-disc list-inside">
-            <li>Guarda el PDF adjunto en tu correo</li>
-            <li>Preséntalo al personal de seguridad al llegar</li>
-            <li>Llega 15 minutos antes de tu turno</li>
+            <li>{t("step1")}</li>
+            <li>{t("step2")}</li>
+            <li>{t("step3")}</li>
           </ul>
           <p className="mt-4 text-sky-400 text-xs">{t("contact")}</p>
         </div>
