@@ -313,13 +313,11 @@ export default async function LandingPage({
                 {tHome("portalTitle")}
               </h2>
               <p className="text-tinta-500 text-sm leading-relaxed max-w-xl">
-                {tHome.rich("portalSubtitle", {
-                  code: () => (
-                    <span className="font-mono text-tinta-700 bg-arena-100 px-1.5 py-0.5 rounded text-xs">
-                      ESO-XXXXXXXX
-                    </span>
-                  ),
-                })}
+                {tHome("portalSubtitlePre")}{" "}
+                <span className="font-mono text-tinta-700 bg-arena-100 px-1.5 py-0.5 rounded text-xs">
+                  ESO-XXXXXXXX
+                </span>{" "}
+                {tHome("portalSubtitlePost")}
               </p>
             </div>
             <Link
@@ -416,11 +414,9 @@ export default async function LandingPage({
               {tHome("faqTitle")}
             </h2>
             <p className="text-tinta-500 text-xs mt-3 leading-relaxed">
-              {tHome.rich("faqHelp", {
-                chat: () => (
-                  <span className="text-tierra-600 font-medium">{tHome("faqHelpChat")}</span>
-                ),
-              })}
+              {tHome("faqHelpPre")}{" "}
+              <span className="text-tierra-600 font-medium">{tHome("faqHelpChat")}</span>{" "}
+              {tHome("faqHelpPost")}
             </p>
           </div>
 

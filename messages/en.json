@@ -206,7 +206,6 @@
     "step3Desc": "You'll receive an automatic reminder. Confirm before Friday 12:00 to secure your spot.",
     "portalBadge": "Visitor portal",
     "portalTitle": "Already have a booking?",
-    "portalSubtitle": "Manage everything from one place with your {code} code you received by email. No login, no password — just your code and the last 4 digits of your ID.",
     "portalCta": "Access my booking",
     "cap1Title": "Check status",
     "cap1Desc": "See whether your booking is pending confirmation, confirmed, or cancelled.",
@@ -221,7 +220,6 @@
     "deadlineBody": "After that moment, the system automatically closes the modification window. Only the ESO team can make changes after that time. If you don't confirm, your spot is released to other visitors.",
     "faqBadge": "Frequently asked questions",
     "faqTitle": "Everything you need to know",
-    "faqHelp": "If you don't find your answer, use the contact form or the {chat} in the bottom right corner.",
     "faqHelpChat": "help chat",
     "faq1q": "How many people can I include in an individual booking?",
     "faq1a": "Maximum 10 people. If your group exceeds that number (courses, schools, corporate visits), use the group booking flow: download the template from the observatories section and request your visit through the group form.",
@@ -245,7 +243,11 @@
     "footerMyBooking": "My booking",
     "footerContactLink": "Contact",
     "footerPrivacy": "Privacy",
-    "footerTerms": "Terms"
+    "footerTerms": "Terms",
+    "portalSubtitlePre": "Manage everything from one place with your",
+    "portalSubtitlePost": "code you received by email. No login, no password — just your code and the last 4 digits of your ID.",
+    "faqHelpPre": "If you do not find your answer, use the contact form or the",
+    "faqHelpPost": "in the bottom right corner."
   },
   "contacto": {
     "meta": {

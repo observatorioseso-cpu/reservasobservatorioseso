@@ -206,7 +206,6 @@
     "step3Desc": "Recibirás un recordatorio automático. Confirma antes del viernes 12:00 para asegurar tu cupo.",
     "portalBadge": "Portal del visitante",
     "portalTitle": "¿Ya tienes una reserva?",
-    "portalSubtitle": "Gestiona todo desde un solo lugar con tu código {code} que recibiste por email. Sin login, sin contraseña — solo tu código y los últimos 4 dígitos de tu documento.",
     "portalCta": "Acceder a mi reserva",
     "cap1Title": "Ver estado",
     "cap1Desc": "Consulta si tu reserva está pendiente de confirmación, confirmada o anulada.",
@@ -221,7 +220,6 @@
     "deadlineBody": "Pasado ese momento, el sistema cierra la ventana de modificación automáticamente. Solo el equipo ESO puede hacer cambios después de esa hora. Si no confirmas, el cupo queda libre para otros visitantes.",
     "faqBadge": "Preguntas frecuentes",
     "faqTitle": "Todo lo que necesitas saber",
-    "faqHelp": "Si no encuentras tu respuesta, usa el formulario de contacto o el {chat} en la esquina inferior derecha.",
     "faqHelpChat": "chat de asistencia",
     "faq1q": "¿Cuántas personas puedo incluir en una reserva individual?",
     "faq1a": "Máximo 10 personas. Si tu grupo supera ese número (cursos, colegios, visitas empresariales), usa el flujo de reserva grupal: descarga la planilla desde la sección de observatorios y solicita tu visita a través del formulario de grupos.",
@@ -245,7 +243,11 @@
     "footerMyBooking": "Mi reserva",
     "footerContactLink": "Contacto",
     "footerPrivacy": "Privacidad",
-    "footerTerms": "Términos"
+    "footerTerms": "Términos",
+    "portalSubtitlePre": "Gestiona todo desde un solo lugar con tu código",
+    "portalSubtitlePost": "que recibiste por email. Sin login, sin contraseña — solo tu código y los últimos 4 dígitos de tu documento.",
+    "faqHelpPre": "Si no encuentras tu respuesta, usa el formulario de contacto o el",
+    "faqHelpPost": "en la esquina inferior derecha."
   },
   "contacto": {
     "meta": {
