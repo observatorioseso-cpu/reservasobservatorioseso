@@ -24,6 +24,7 @@ const staticPages: StaticPage[] = [
   { path: "/reservar/la-silla", priority: 0.9, changeFrequency: "monthly" },
   { path: "/reservar/paranal", priority: 0.9, changeFrequency: "monthly" },
   { path: "/mi-reserva", priority: 0.5, changeFrequency: "never" },
+  { path: "/contacto", priority: 0.7, changeFrequency: "monthly" },
 ]
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

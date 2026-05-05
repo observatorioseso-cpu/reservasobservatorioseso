@@ -246,5 +246,90 @@
     "footerContactLink": "Contact",
     "footerPrivacy": "Privacy",
     "footerTerms": "Terms"
+  },
+  "contacto": {
+    "meta": {
+      "title": "Contact | ESO Observatories Chile",
+      "description": "Contact the ESO Chile team for general enquiries or to request a group visit to La Silla or Paranal."
+    },
+    "header": {
+      "back": "Back to home",
+      "badge": "ESO Chile · Contact form",
+      "heading": "How can we help you?",
+      "subtitle": "Use the general enquiry form or request a visit for your group. We respond within 2 to 3 business days."
+    },
+    "sidebar": {
+      "response": {
+        "heading": "Response time",
+        "body": "The ESO team reviews messages Monday to Friday and responds within 2 to 3 business days.",
+        "highlight": "2 to 3 business days"
+      },
+      "groups": {
+        "heading": "Group visits",
+        "body": "For groups of 11 or more people (schools, universities, companies), select the Group booking tab in the form. Maximum capacity: 40 spots at La Silla and 60 spots at Paranal. Visits on Saturdays in winter; in summer the schedule is set by the ESO team. Download the participant template and attach it when replying to our email.",
+        "tab": "Group booking",
+        "silla": "40 spots at La Silla",
+        "paranal": "60 spots at Paranal",
+        "download": "Download template"
+      },
+      "individual": {
+        "body": "For individual bookings of up to 10 people, use the booking system directly. It is faster and you get instant confirmation.",
+        "linkText": "booking system"
+      }
+    },
+    "footer": {
+      "tagline": "ESO Observatories Chile",
+      "subtitle": "Contact form",
+      "privacy": "Privacy",
+      "terms": "Terms"
+    },
+    "form": {
+      "tabGeneral": "General enquiry",
+      "tabGroup": "Group booking",
+      "labelNombre": "Full name",
+      "labelEmail": "Email",
+      "labelTelefono": "Phone",
+      "labelMensaje": "Message",
+      "labelOrganizacion": "Organisation",
+      "labelNumPersonas": "Number of people",
+      "labelObservatorio": "Preferred observatory",
+      "labelFechas": "Preferred dates",
+      "labelFecha1": "Preferred date 1",
+      "labelFecha2": "Preferred date 2",
+      "labelFecha3": "Preferred date 3",
+      "labelMensajeAdicional": "Additional message",
+      "placeholderNombre": "Maria González",
+      "placeholderEmail": "maria@example.com",
+      "placeholderTelefono": "+56 9 1234 5678",
+      "placeholderMensaje": "Write your enquiry here (minimum 20 characters)...",
+      "placeholderOrganizacion": "School, university or company",
+      "placeholderMensajeAdicional": "Additional information you would like to share...",
+      "obsAny": "Any",
+      "obsNoPreference": "No preference",
+      "numPersonasHint": "For groups up to 10 use the standard system.",
+      "numPersonasHintLink": "standard system",
+      "downloadText": "Download the participant template and attach it when replying to our email.",
+      "downloadLink": "Download template",
+      "downloadSuccessLink": "Download participant template",
+      "required": "Fields marked with * are required.",
+      "submit": "Send message",
+      "submitting": "Sending...",
+      "errorNombre": "Enter your full name (minimum 2 characters).",
+      "errorEmail": "Invalid email address.",
+      "errorMensajeMin": "The message must be at least 20 characters.",
+      "errorMensajeMax": "The message cannot exceed 2000 characters.",
+      "errorOrganizacion": "Enter your organisation name.",
+      "errorNumPersonas": "Minimum 11 people. For smaller groups use the standard system.",
+      "errorFechaPref1": "Please indicate at least one preferred date.",
+      "serverRateLimit": "Too many messages. Wait a few minutes before trying again.",
+      "serverInvalid": "Invalid data. Please review the form and try again.",
+      "serverGeneric": "Could not send the message. Please try again.",
+      "serverConnection": "Connection error. Check your internet and try again.",
+      "successHeading": "Message sent",
+      "successBody": "The ESO team will review it and reply within 2 to 3 business days to the email you provided.",
+      "successBodyHighlight": "2 to 3 business days",
+      "sendAnother": "Send another message",
+      "ariaForm": "Contact form"
+    }
   }
 }

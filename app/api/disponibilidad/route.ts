@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   const inicio = new Date(Date.UTC(year, month - 1, 1))
   const fin = new Date(Date.UTC(year, month, 0, 23, 59, 59))
 
-  const turnos = await prisma.turno.findMany({
+  const turnosRaw = await prisma.turno.findMany({
     where: {
       observatorio,
       fecha: { gte: inicio, lte: fin },
@@ -47,6 +47,11 @@ export async function GET(request: Request) {
     },
     orderBy: [{ fecha: "asc" }, { horaInicio: "asc" }],
   })
+
+  // Paranal only operates on Saturdays; filter out any legacy Sunday turnos
+  const turnos = observatorio === "PARANAL"
+    ? turnosRaw.filter((t) => t.fecha.getUTCDay() === 6)
+    : turnosRaw
 
   type TurnoDisponible = {
     id: string

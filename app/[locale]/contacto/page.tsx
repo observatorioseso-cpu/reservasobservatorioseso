@@ -11,6 +11,8 @@ import {
 import { LandingNav } from "@/components/landing/LandingNav"
 import { ContactForm } from "@/components/contacto/ContactForm"
 
+export const dynamic = "force-dynamic"
+
 const BASE_URL = (
   process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
 ).replace(/^﻿/, "").trim()
@@ -19,23 +21,18 @@ const BASE_URL = (
 // Metadata
 // ---------------------------------------------------------------------------
 
-const descriptions: Record<string, string> = {
-  es: "Contacta al equipo ESO Chile para consultas generales o para solicitar una visita grupal a La Silla o Paranal.",
-  en: "Contact the ESO Chile team for general enquiries or to request a group visit to La Silla or Paranal.",
-}
-
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ locale: string }>
 }): Promise<Metadata> {
   const { locale } = await params
-  const description = descriptions[locale] ?? descriptions.es
+  const t = await getTranslations({ locale, namespace: "contacto.meta" })
   const canonicalUrl = `${BASE_URL}/${locale}/contacto`
 
   return {
-    title: "Contacto | ESO Observatorios Chile",
-    description,
+    title: t("title"),
+    description: t("description"),
     alternates: {
       canonical: canonicalUrl,
       languages: {
@@ -44,8 +41,8 @@ export async function generateMetadata({
       },
     },
     openGraph: {
-      title: "Contacto | ESO Observatorios Chile",
-      description,
+      title: t("title"),
+      description: t("description"),
       url: canonicalUrl,
       siteName: "ESO Observatorios Chile",
       locale: locale === "en" ? "en_US" : "es_CL",
@@ -55,7 +52,7 @@ export async function generateMetadata({
 }
 
 // ---------------------------------------------------------------------------
-// Decorative Diaguita rule — reused from landing, kept local
+// Decorative Diaguita rule
 // ---------------------------------------------------------------------------
 
 function DiaguitaRule() {
@@ -103,6 +100,7 @@ export default async function ContactoPage({
 }) {
   const { locale } = await params
   const tNav = await getTranslations({ locale, namespace: "nav" })
+  const t = await getTranslations({ locale, namespace: "contacto" })
 
   return (
     <div className="min-h-[100dvh] bg-arena-50 text-tinta-900">
@@ -124,7 +122,7 @@ export default async function ContactoPage({
             className="inline-flex items-center gap-1.5 text-xs text-tinta-400 hover:text-tierra-700 transition-colors mb-4"
           >
             <ChevronLeft className="size-3.5" />
-            Volver al inicio
+            {t("header.back")}
           </Link>
           <div className="flex items-center gap-2 mb-2">
             <span
@@ -132,15 +130,14 @@ export default async function ContactoPage({
               aria-hidden="true"
             />
             <p className="text-tierra-500 text-xs uppercase tracking-[0.2em] font-franklin">
-              ESO Chile · Formulario de contacto
+              {t("header.badge")}
             </p>
           </div>
           <h1 className="font-playfair text-3xl lg:text-4xl font-black text-tinta-900 leading-tight">
-            ¿Cómo podemos ayudarte?
+            {t("header.heading")}
           </h1>
           <p className="text-tinta-500 text-sm mt-2 max-w-md leading-relaxed">
-            Usa el formulario de consulta general o solicita una visita para tu grupo.
-            Respondemos en 2 a 3 días hábiles.
+            {t("header.subtitle")}
           </p>
         </div>
       </section>
@@ -158,12 +155,13 @@ export default async function ContactoPage({
               <div className="flex items-center gap-2">
                 <Clock className="size-4 text-tierra-500 shrink-0" />
                 <h2 className="text-sm font-semibold text-tinta-800">
-                  Tiempo de respuesta
+                  {t("sidebar.response.heading")}
                 </h2>
               </div>
               <p className="text-sm text-tinta-500 leading-relaxed">
-                El equipo ESO revisa los mensajes de lunes a viernes y responde en{" "}
-                <strong className="text-tinta-700">2 a 3 días hábiles</strong>.
+                {t("sidebar.response.body").split(t("sidebar.response.highlight"))[0]}
+                <strong className="text-tinta-700">{t("sidebar.response.highlight")}</strong>
+                {t("sidebar.response.body").split(t("sidebar.response.highlight"))[1]}
               </p>
               <div className="flex items-center gap-1.5 text-xs text-tinta-400">
                 <Mail className="size-3.5 text-tierra-400" />
@@ -176,18 +174,17 @@ export default async function ContactoPage({
               <div className="flex items-center gap-2">
                 <Users className="size-4 text-tierra-500 shrink-0" />
                 <h2 className="text-sm font-semibold text-tinta-800">
-                  Visitas grupales
+                  {t("sidebar.groups.heading")}
                 </h2>
               </div>
               <p className="text-sm text-tinta-500 leading-relaxed">
-                Para grupos de 11 o más personas (colegios, universidades, empresas),
-                selecciona la pestaña{" "}
-                <strong className="text-tinta-700">Reserva grupal</strong> en el formulario.
-                Capacidad máxima:{" "}
-                <strong className="text-tinta-700">40 cupos en La Silla</strong> y{" "}
-                <strong className="text-tinta-700">60 cupos en Paranal</strong>.
-                Visitas los sábados en invierno; en verano el calendario lo define el equipo ESO.
-                Descarga la planilla de participantes y adjúntala al responder nuestro email.
+                {t("sidebar.groups.body").split(t("sidebar.groups.tab"))[0]}
+                <strong className="text-tinta-700">{t("sidebar.groups.tab")}</strong>
+                {t("sidebar.groups.body").split(t("sidebar.groups.tab"))[1]?.split(t("sidebar.groups.silla"))[0]}
+                <strong className="text-tinta-700">{t("sidebar.groups.silla")}</strong>
+                {t("sidebar.groups.body").split(t("sidebar.groups.silla"))[1]?.split(t("sidebar.groups.paranal"))[0]}
+                <strong className="text-tinta-700">{t("sidebar.groups.paranal")}</strong>
+                {t("sidebar.groups.body").split(t("sidebar.groups.paranal"))[1]}
               </p>
               <a
                 href="/templates/grupo-reserva.csv"
@@ -195,27 +192,27 @@ export default async function ContactoPage({
                 className="inline-flex items-center gap-2 rounded-full border border-tierra-600/30 bg-arena-50 px-4 py-2 text-xs font-medium text-tierra-700 hover:bg-arena-100 hover:border-tierra-500/50 transition-all self-start"
               >
                 <Download className="size-3.5" />
-                Descargar planilla
+                {t("sidebar.groups.download")}
               </a>
             </div>
 
             {/* Individual bookings reminder */}
             <div className="rounded-2xl border border-cielo-500/20 bg-cielo-100/40 p-5">
               <p className="text-xs text-tinta-500 leading-relaxed">
-                Para reservas individuales de hasta 10 personas, usa directamente el{" "}
+                {t("sidebar.individual.body").split(t("sidebar.individual.linkText"))[0]}
                 <Link
                   href="/"
                   className="text-tierra-700 font-medium underline underline-offset-2 hover:text-tierra-600 transition-colors"
                 >
-                  sistema de reservas
+                  {t("sidebar.individual.linkText")}
                 </Link>
-                . Es mas rapido y recibes confirmacion instantanea.
+                {t("sidebar.individual.body").split(t("sidebar.individual.linkText"))[1]}
               </p>
             </div>
           </aside>
 
           {/* ── Form panel ── */}
-          <section aria-label="Formulario de contacto">
+          <section aria-label={t("form.ariaForm")}>
             <ContactForm />
           </section>
         </div>
@@ -226,24 +223,24 @@ export default async function ContactoPage({
         <div className="mx-auto max-w-6xl flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="font-playfair font-bold text-arena-100 mb-1">
-              Observatorios ESO Chile
+              {t("footer.tagline")}
             </p>
             <p className="text-xs text-arena-500">
-              Formulario de contacto
+              {t("footer.subtitle")}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-5 text-xs text-arena-500">
             <Link href="/" className="hover:text-arena-200 transition-colors">
-              Inicio
+              {tNav("home")}
             </Link>
             <Link href="/mi-reserva" className="hover:text-arena-200 transition-colors">
-              Mi reserva
+              {tNav("myBooking")}
             </Link>
             <Link href="/privacidad" className="hover:text-arena-200 transition-colors">
-              Privacidad
+              {t("footer.privacy")}
             </Link>
             <Link href="/terminos" className="hover:text-arena-200 transition-colors">
-              Terminos
+              {t("footer.terms")}
             </Link>
             <span className="text-arena-500/40">
               &copy; {new Date().getFullYear()} ESO Chile

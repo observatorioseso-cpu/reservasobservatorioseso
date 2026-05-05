@@ -246,5 +246,90 @@
     "footerContactLink": "Contacto",
     "footerPrivacy": "Privacidad",
     "footerTerms": "Términos"
+  },
+  "contacto": {
+    "meta": {
+      "title": "Contacto | ESO Observatorios Chile",
+      "description": "Contacta al equipo ESO Chile para consultas generales o para solicitar una visita grupal a La Silla o Paranal."
+    },
+    "header": {
+      "back": "Volver al inicio",
+      "badge": "ESO Chile · Formulario de contacto",
+      "heading": "¿Cómo podemos ayudarte?",
+      "subtitle": "Usa el formulario de consulta general o solicita una visita para tu grupo. Respondemos en 2 a 3 días hábiles."
+    },
+    "sidebar": {
+      "response": {
+        "heading": "Tiempo de respuesta",
+        "body": "El equipo ESO revisa los mensajes de lunes a viernes y responde en 2 a 3 días hábiles.",
+        "highlight": "2 a 3 días hábiles"
+      },
+      "groups": {
+        "heading": "Visitas grupales",
+        "body": "Para grupos de 11 o más personas (colegios, universidades, empresas), selecciona la pestaña Reserva grupal en el formulario. Capacidad máxima: 40 cupos en La Silla y 60 cupos en Paranal. Visitas los sábados en invierno; en verano el calendario lo define el equipo ESO. Descarga la planilla de participantes y adjúntala al responder nuestro email.",
+        "tab": "Reserva grupal",
+        "silla": "40 cupos en La Silla",
+        "paranal": "60 cupos en Paranal",
+        "download": "Descargar planilla"
+      },
+      "individual": {
+        "body": "Para reservas individuales de hasta 10 personas, usa directamente el sistema de reservas. Es más rápido y recibes confirmación instantánea.",
+        "linkText": "sistema de reservas"
+      }
+    },
+    "footer": {
+      "tagline": "Observatorios ESO Chile",
+      "subtitle": "Formulario de contacto",
+      "privacy": "Privacidad",
+      "terms": "Términos"
+    },
+    "form": {
+      "tabGeneral": "Consulta general",
+      "tabGroup": "Reserva grupal",
+      "labelNombre": "Nombre completo",
+      "labelEmail": "Email",
+      "labelTelefono": "Teléfono",
+      "labelMensaje": "Mensaje",
+      "labelOrganizacion": "Organización",
+      "labelNumPersonas": "Número de personas",
+      "labelObservatorio": "Observatorio preferido",
+      "labelFechas": "Fechas preferidas",
+      "labelFecha1": "Fecha preferida 1",
+      "labelFecha2": "Fecha preferida 2",
+      "labelFecha3": "Fecha preferida 3",
+      "labelMensajeAdicional": "Mensaje adicional",
+      "placeholderNombre": "María González",
+      "placeholderEmail": "maria@ejemplo.cl",
+      "placeholderTelefono": "+56 9 1234 5678",
+      "placeholderMensaje": "Escribe tu consulta aquí (mínimo 20 caracteres)...",
+      "placeholderOrganizacion": "Colegio, universidad o empresa",
+      "placeholderMensajeAdicional": "Información extra que quieras compartir...",
+      "obsAny": "Cualquiera",
+      "obsNoPreference": "Sin preferencia",
+      "numPersonasHint": "Para grupos hasta 10 usa el sistema estándar.",
+      "numPersonasHintLink": "sistema estándar",
+      "downloadText": "Descarga la planilla de participantes y adjúntala al responder nuestro email.",
+      "downloadLink": "Descargar planilla",
+      "downloadSuccessLink": "Descargar planilla de participantes",
+      "required": "Los campos marcados con * son obligatorios.",
+      "submit": "Enviar mensaje",
+      "submitting": "Enviando...",
+      "errorNombre": "Introduce tu nombre completo (mínimo 2 caracteres).",
+      "errorEmail": "Email inválido.",
+      "errorMensajeMin": "El mensaje debe tener al menos 20 caracteres.",
+      "errorMensajeMax": "El mensaje no puede superar los 2000 caracteres.",
+      "errorOrganizacion": "Indica el nombre de tu organización.",
+      "errorNumPersonas": "Mínimo 11 personas. Para grupos menores usa el sistema estándar.",
+      "errorFechaPref1": "Indica al menos una fecha preferida.",
+      "serverRateLimit": "Demasiados mensajes. Espera unos minutos antes de intentarlo de nuevo.",
+      "serverInvalid": "Datos inválidos. Revisa el formulario e inténtalo de nuevo.",
+      "serverGeneric": "No se pudo enviar el mensaje. Intenta de nuevo.",
+      "serverConnection": "Error de conexión. Verifica tu internet e inténtalo de nuevo.",
+      "successHeading": "Mensaje enviado",
+      "successBody": "El equipo ESO lo revisará y te responderá en 2 a 3 días hábiles al email que indicaste.",
+      "successBodyHighlight": "2 a 3 días hábiles",
+      "sendAnother": "Enviar otro mensaje",
+      "ariaForm": "Formulario de contacto"
+    }
   }
 }
