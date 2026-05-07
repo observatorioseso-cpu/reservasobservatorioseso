@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Loader2, AlertCircle, Save, CheckCircle2 } from "lucide-react"
+import { Loader2, AlertCircle, Save, CheckCircle2, CalendarCog } from "lucide-react"
 import { AdminShell } from "@/components/admin/AdminShell"
 import { Button } from "@/components/ui/Button"
 
@@ -45,6 +45,15 @@ const CONFIG_META: Record<string, ConfigMeta> = {
     label: "WhatsApp habilitado",
     descripcion: "Activa o desactiva el envio de notificaciones por WhatsApp.",
     tipo: "boolean",
+  },
+  VENTANA_RESERVA_DIAS: {
+    label: "Ventana de reserva (dias)",
+    descripcion:
+      "El sistema mantiene turnos disponibles este numero de dias hacia adelante. " +
+      "El cron los genera automaticamente 2 veces al dia. 0 = desactivar generacion automatica.",
+    tipo: "number",
+    min: 0,
+    max: 360,
   },
 }
 
@@ -173,6 +182,8 @@ export default function ConfigPage() {
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState<{ text: string; type: "error" | "success" } | null>(null)
+  const [generating, setGenerating] = useState(false)
+  const [genMsg, setGenMsg] = useState<{ text: string; type: "error" | "success" } | null>(null)
 
   useEffect(() => {
     async function fetchConfig() {
@@ -255,6 +266,31 @@ export default function ConfigPage() {
     }
   }
 
+  async function handleGenerar() {
+    setGenerating(true)
+    setGenMsg(null)
+
+    try {
+      const res = await fetch("/api/admin/turnos/generar", { method: "POST" })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error ?? "Error al generar turnos.")
+      }
+      const data: { creados: number; laSilla: number; paranal: number } = await res.json()
+      setGenMsg({
+        text: `${data.creados} turno(s) creado(s) — La Silla: ${data.laSilla}, Paranal: ${data.paranal}.`,
+        type: "success",
+      })
+    } catch (err) {
+      setGenMsg({
+        text: err instanceof Error ? err.message : "Error desconocido.",
+        type: "error",
+      })
+    } finally {
+      setGenerating(false)
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
@@ -281,43 +317,88 @@ export default function ConfigPage() {
         )}
 
         {!loading && !fetchError && (
-          <form onSubmit={handleSave} className="space-y-4">
-            {Object.entries(CONFIG_META).map(([clave, meta]) => (
-              <ConfigField
-                key={clave}
-                clave={clave}
-                meta={meta}
-                value={values[clave] ?? ""}
-                entry={entries[clave]}
-                onChange={handleChange}
-              />
-            ))}
+          <>
+            <form onSubmit={handleSave} className="space-y-4">
+              {Object.entries(CONFIG_META).map(([clave, meta]) => (
+                <ConfigField
+                  key={clave}
+                  clave={clave}
+                  meta={meta}
+                  value={values[clave] ?? ""}
+                  entry={entries[clave]}
+                  onChange={handleChange}
+                />
+              ))}
 
-            {/* Save message */}
-            {saveMsg && (
-              <div
-                className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm ring-1 ${
-                  saveMsg.type === "error"
-                    ? "bg-red-500/10 text-red-400 ring-red-500/20"
-                    : "bg-green-500/10 text-green-400 ring-green-500/20"
-                }`}
-              >
-                {saveMsg.type === "error" ? (
-                  <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
-                ) : (
-                  <CheckCircle2 className="size-4 shrink-0" aria-hidden="true" />
-                )}
-                {saveMsg.text}
+              {/* Save message */}
+              {saveMsg && (
+                <div
+                  className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm ring-1 ${
+                    saveMsg.type === "error"
+                      ? "bg-red-500/10 text-red-400 ring-red-500/20"
+                      : "bg-green-500/10 text-green-400 ring-green-500/20"
+                  }`}
+                >
+                  {saveMsg.type === "error" ? (
+                    <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
+                  ) : (
+                    <CheckCircle2 className="size-4 shrink-0" aria-hidden="true" />
+                  )}
+                  {saveMsg.text}
+                </div>
+              )}
+
+              <div className="flex justify-end pt-2">
+                <Button type="submit" variant="primary" size="md" loading={saving}>
+                  <Save className="size-4" aria-hidden="true" />
+                  Guardar cambios
+                </Button>
               </div>
-            )}
+            </form>
 
-            <div className="flex justify-end pt-2">
-              <Button type="submit" variant="primary" size="md" loading={saving}>
-                <Save className="size-4" aria-hidden="true" />
-                Guardar cambios
+            {/* ── Regenerar calendario ─────────────────────────────────────── */}
+            <div className="rounded-xl border border-stone-700 bg-stone-900 p-5">
+              <div className="mb-1 flex items-center gap-2">
+                <CalendarCog className="size-4 text-amber-500" aria-hidden="true" />
+                <h3 className="text-sm font-semibold text-stone-100">
+                  Regenerar calendario ahora
+                </h3>
+              </div>
+              <p className="mb-4 text-xs text-stone-500">
+                Crea los turnos de sabados que falten dentro de la ventana configurada. El cron lo
+                hace automaticamente 2 veces al dia; usa este boton para forzarlo de inmediato tras
+                cambiar la ventana o ante cualquier incidencia.
+              </p>
+
+              {genMsg && (
+                <div
+                  className={`mb-4 flex items-center gap-2 rounded-lg px-4 py-3 text-sm ring-1 ${
+                    genMsg.type === "error"
+                      ? "bg-red-500/10 text-red-400 ring-red-500/20"
+                      : "bg-green-500/10 text-green-400 ring-green-500/20"
+                  }`}
+                >
+                  {genMsg.type === "error" ? (
+                    <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
+                  ) : (
+                    <CheckCircle2 className="size-4 shrink-0" aria-hidden="true" />
+                  )}
+                  {genMsg.text}
+                </div>
+              )}
+
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                loading={generating}
+                onClick={handleGenerar}
+              >
+                <CalendarCog className="size-4" aria-hidden="true" />
+                Generar turnos faltantes
               </Button>
             </div>
-          </form>
+          </>
         )}
       </div>
     </AdminShell>

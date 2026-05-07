@@ -4,11 +4,15 @@
  * Activación: Vercel Cron 2× al día via GET /api/agentes/recordatorio
  *
  * Responsabilidades:
+ * 0. generarTurnosFaltantes — crea turnos de sábados futuros que aún no existan
+ *    en la BD, usando la ventana VENTANA_RESERVA_DIAS de ConfigSistema.
  * 1. ejecutarAutoAnulaciones — anula reservas PENDIENTE_CONFIRMACION vencidas,
  *    decrementa cuposOcupados del turno y registra log AUTOANULACION.
  * 2. ejecutarRecordatorios — envía email de recordatorio a titulares con
  *    visita en los próximos 3 días que aún no confirmaron, evitando duplicados.
  */
+
+export { generarTurnosFaltantes } from "@/lib/generadorTurnos"
 
 import { prisma } from "@/lib/prisma"
 import { resend, EMAIL_FROM } from "@/lib/email"

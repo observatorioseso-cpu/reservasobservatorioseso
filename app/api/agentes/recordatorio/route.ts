@@ -12,7 +12,11 @@
 export const dynamic = "force-dynamic"
 
 import { NextResponse } from "next/server"
-import { ejecutarAutoAnulaciones, ejecutarRecordatorios } from "@/agents/recordatorio"
+import {
+  generarTurnosFaltantes,
+  ejecutarAutoAnulaciones,
+  ejecutarRecordatorios,
+} from "@/agents/recordatorio"
 
 export async function GET(request: Request): Promise<NextResponse> {
   // Verificar que la petición viene de Vercel Cron.
@@ -30,6 +34,21 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   const inicio = Date.now()
 
+  // --- Paso 0: generar turnos faltantes (nunca interrumpe el cron) ----------
+  let resultadoGenerador: Awaited<ReturnType<typeof generarTurnosFaltantes>> | { error: string } = {
+    creados: 0,
+    laSilla: 0,
+    paranal: 0,
+  }
+  try {
+    resultadoGenerador = await generarTurnosFaltantes()
+  } catch (err) {
+    const mensaje = err instanceof Error ? err.message : String(err)
+    console.error("[cron/recordatorio] error en generarTurnosFaltantes:", mensaje)
+    resultadoGenerador = { error: mensaje }
+  }
+
+  // --- Pasos 1 y 2: auto-anulaciones y recordatorios (paralelos) ------------
   const [resultadoAnulaciones, resultadoRecordatorios] = await Promise.allSettled([
     ejecutarAutoAnulaciones(),
     ejecutarRecordatorios(),
@@ -38,6 +57,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   return NextResponse.json({
     timestamp: new Date().toISOString(),
     duracionMs: Date.now() - inicio,
+    generador: resultadoGenerador,
     anulaciones:
       resultadoAnulaciones.status === "fulfilled"
         ? resultadoAnulaciones.value

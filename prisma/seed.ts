@@ -63,6 +63,14 @@ async function main() {
         "Máximo de personas por reserva individual de cliente. " +
         "El admin puede superar este límite desde el panel.",
     },
+    {
+      clave: "VENTANA_RESERVA_DIAS",
+      valor: "90",
+      descripcion:
+        "Días hacia adelante que el sistema mantiene turnos disponibles (ventana rodante). " +
+        "El cron 2× al día crea automáticamente los sábados faltantes dentro de esta ventana. " +
+        "0 = desactivar generación automática. Rango válido: 0–360.",
+    },
   ]
 
   for (const item of config) {
