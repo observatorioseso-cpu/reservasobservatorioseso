@@ -12,7 +12,7 @@
 import { prisma } from "@/lib/prisma"
 import { resend, EMAIL_FROM } from "@/lib/email"
 import { formatearFechaLimite } from "@/lib/confirmacion"
-import { emailConfirmacionHTML } from "@/components/email/templates"
+import { emailConfirmacionHTML, emailAnulacionHTML } from "@/components/email/templates"
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
 
@@ -131,6 +131,72 @@ async function enviarEmailConfirmacion(params: EmailConfirmacionParams): Promise
         tipo: "EMAIL",
         reservaId: params.reservaId,
         resultado: "ERROR: fallo al enviar email",
+        metadata: { error: err instanceof Error ? err.message : "unknown" },
+      },
+    })
+  }
+}
+
+// ─── Email de anulación ───────────────────────────────────────────────────────
+
+interface EmailAnulacionParams {
+  reservaId: string
+  email: string
+  nombre: string
+  shortId: string
+  token: string
+  observatorio: string
+  fecha: string
+  horaInicio: string
+  horaFin: string
+  locale: "es" | "en"
+  motivo: "portal" | "auto"
+}
+
+export async function enviarEmailAnulacion(params: EmailAnulacionParams): Promise<void> {
+  const obsNombre = params.observatorio === "LA_SILLA" ? "La Silla" : "Paranal (VLT)"
+  const isES = params.locale === "es"
+  const portalUrl = `${BASE_URL}/${params.locale}/mi-reserva/${params.token}`
+
+  const subject = isES
+    ? `Reserva anulada — ${obsNombre} · ${params.fecha}`
+    : `Booking cancelled — ${obsNombre} · ${params.fecha}`
+
+  const html = emailAnulacionHTML({
+    nombre: params.nombre,
+    shortId: params.shortId,
+    observatorio: params.observatorio,
+    fecha: params.fecha,
+    horaInicio: params.horaInicio,
+    horaFin: params.horaFin,
+    portalUrl,
+    locale: params.locale,
+    motivo: params.motivo,
+  })
+
+  try {
+    const result = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: params.email,
+      subject,
+      html,
+    })
+
+    await prisma.logAgente.create({
+      data: {
+        tipo: "EMAIL",
+        reservaId: params.reservaId,
+        resultado: `Email anulación enviado: ${subject}`,
+        metadata: { resendId: result.data?.id ?? null, motivo: params.motivo },
+      },
+    })
+  } catch (err) {
+    console.error(`[comunicaciones/anulacion] error para ${params.reservaId}:`, err)
+    await prisma.logAgente.create({
+      data: {
+        tipo: "ERROR",
+        reservaId: params.reservaId,
+        resultado: "ERROR: fallo al enviar email de anulación",
         metadata: { error: err instanceof Error ? err.message : "unknown" },
       },
     })

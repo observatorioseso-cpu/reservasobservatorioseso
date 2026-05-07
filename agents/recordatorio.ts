@@ -14,6 +14,7 @@ import { prisma } from "@/lib/prisma"
 import { resend, EMAIL_FROM } from "@/lib/email"
 import { formatearFechaLimite } from "@/lib/confirmacion"
 import { emailRecordatorioHTML } from "@/components/email/templates"
+import { enviarEmailAnulacion } from "@/agents/comunicaciones"
 import type { Prisma } from "@prisma/client"
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
@@ -34,9 +35,21 @@ export async function ejecutarAutoAnulaciones(): Promise<{ anuladas: number; ids
     select: {
       id: true,
       shortId: true,
+      token: true,
+      nombre: true,
+      email: true,
+      locale: true,
       cantidadPersonas: true,
       turnoId: true,
       fechaLimiteConfirmacion: true,
+      turno: {
+        select: {
+          fecha: true,
+          horaInicio: true,
+          horaFin: true,
+          observatorio: true,
+        },
+      },
     },
     take: 100,
   })
@@ -79,6 +92,21 @@ export async function ejecutarAutoAnulaciones(): Promise<{ anuladas: number; ids
       })
 
       ids.push(reserva.shortId)
+
+      // Notificar al titular que su reserva fue anulada automáticamente
+      enviarEmailAnulacion({
+        reservaId: reserva.id,
+        email: reserva.email,
+        nombre: reserva.nombre,
+        shortId: reserva.shortId,
+        token: reserva.token,
+        observatorio: reserva.turno.observatorio,
+        fecha: reserva.turno.fecha.toISOString().split("T")[0],
+        horaInicio: reserva.turno.horaInicio,
+        horaFin: reserva.turno.horaFin,
+        locale: (reserva.locale as "es" | "en") ?? "es",
+        motivo: "auto",
+      }).catch((e) => console.error(`[recordatorio/autoanulacion/email] ${reserva.shortId}:`, e))
     } catch (err) {
       console.error(`[recordatorio/autoanulacion] error en reserva ${reserva.shortId}:`, err)
 

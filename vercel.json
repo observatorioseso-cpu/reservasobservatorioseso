@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/agentes/recordatorio",
-      "schedule": "0 21 * * *"
+      "schedule": "0 12,21 * * *"
     }
   ]
 }

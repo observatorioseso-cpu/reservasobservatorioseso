@@ -24,11 +24,15 @@ export function getTurnosDisponibles(
   }
 
   if (esInviernoLaSilla(fecha)) {
+    // Invierno (abr–ago): solo turno de mañana
     return [{ horaInicio: "09:30", horaFin: "13:00", label: "Mañana" }]
   }
 
-  // La Silla siempre tiene un solo turno (09:30–13:00) independientemente de la temporada
-  return [{ horaInicio: "09:30", horaFin: "13:00", label: "Mañana" }]
+  // Verano (sep–mar): dos turnos posibles — el admin decide cuáles activar en BD
+  return [
+    { horaInicio: "09:30", horaFin: "13:00", label: "Mañana" },
+    { horaInicio: "13:30", horaFin: "17:00", label: "Tarde" },
+  ]
 }
 
 export function getEdadMinima(

@@ -112,6 +112,25 @@ export async function POST(
     })
   })
 
+  // Enviar email de confirmación de anulación (async, no bloquea la respuesta)
+  import("@/agents/comunicaciones")
+    .then(({ enviarEmailAnulacion }) =>
+      enviarEmailAnulacion({
+        reservaId: reserva.id,
+        email: reserva.email,
+        nombre: reserva.nombre,
+        shortId: reserva.shortId,
+        token: reserva.token,
+        observatorio: reserva.observatorio,
+        fecha: reserva.turno.fecha.toISOString().split("T")[0],
+        horaInicio: reserva.turno.horaInicio,
+        horaFin: reserva.turno.horaFin,
+        locale: (reserva.locale as "es" | "en") ?? "es",
+        motivo: "portal",
+      }).catch((e) => console.error("[anular/email] error:", e))
+    )
+    .catch(() => {})
+
   return NextResponse.json({
     ok: true,
     estado: "ANULADA",

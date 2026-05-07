@@ -138,6 +138,116 @@ export function emailConfirmacionHTML(data: EmailConfirmacionData): string {
 </html>`
 }
 
+export interface EmailAnulacionData {
+  nombre: string
+  shortId: string
+  observatorio: string
+  fecha: string
+  horaInicio: string
+  horaFin: string
+  portalUrl: string
+  locale: "es" | "en"
+  motivo?: "portal" | "auto" // portal = el propio usuario; auto = vencimiento de plazo
+}
+
+export function emailAnulacionHTML(data: EmailAnulacionData): string {
+  const obsNombre = data.observatorio === "LA_SILLA" ? "La Silla" : "Paranal (VLT)"
+  const isES = data.locale === "es"
+  const esAuto = data.motivo === "auto"
+
+  const heading = isES
+    ? esAuto ? "Reserva anulada por falta de confirmación" : "Reserva cancelada"
+    : esAuto ? "Booking cancelled — confirmation not received" : "Booking cancelled"
+
+  const intro = isES
+    ? esAuto
+      ? `${data.nombre}, tu reserva <strong style="color:#a8a29e;">${data.shortId}</strong> a <strong style="color:#a8a29e;">${obsNombre}</strong> fue anulada automáticamente porque no recibimos tu confirmación antes del plazo.`
+      : `${data.nombre}, hemos procesado la cancelación de tu reserva <strong style="color:#a8a29e;">${data.shortId}</strong> a <strong style="color:#a8a29e;">${obsNombre}</strong>. Los cupos han sido liberados.`
+    : esAuto
+      ? `${data.nombre}, your booking <strong style="color:#a8a29e;">${data.shortId}</strong> at <strong style="color:#a8a29e;">${obsNombre}</strong> was automatically cancelled because we did not receive your confirmation before the deadline.`
+      : `${data.nombre}, your booking <strong style="color:#a8a29e;">${data.shortId}</strong> at <strong style="color:#a8a29e;">${obsNombre}</strong> has been cancelled. The spots have been released.`
+
+  const rebookText = isES
+    ? `Si deseas volver a reservar, puedes hacerlo en cualquier momento desde la página principal.`
+    : `If you'd like to rebook, you can do so at any time from the home page.`
+
+  const rebookLink = data.portalUrl.replace(/\/mi-reserva\/.*/, "")
+
+  return `<!DOCTYPE html>
+<html lang="${data.locale}">
+<head><meta charset="UTF-8"><title>${heading}</title></head>
+<body style="${BASE_STYLES}">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding: 40px 16px;">
+      <table width="560" cellpadding="0" cellspacing="0" style="max-width: 560px; width: 100%;">
+
+        <!-- Header -->
+        <tr><td style="padding-bottom: 28px;">
+          <p style="margin: 0 0 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #78716c;">
+            ESO Observatorios Chile
+          </p>
+          <h1 style="margin: 8px 0 0; font-family: Georgia, serif; font-size: 24px; font-weight: 900; color: #f5f5f4; line-height: 1.2;">
+            ${heading}
+          </h1>
+        </td></tr>
+
+        <!-- Details card -->
+        <tr><td style="${CARD_STYLE}">
+          <p style="margin: 0 0 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #78716c;">
+            N.° ${data.shortId}
+          </p>
+          <table cellpadding="0" cellspacing="0" width="100%" style="margin-top: 12px;">
+            <tr>
+              <td style="${MUTED_STYLE} padding-bottom: 8px;">
+                <strong style="color: #a8a29e;">${isES ? "Observatorio" : "Observatory"}</strong><br>
+                ${obsNombre}
+              </td>
+              <td style="${MUTED_STYLE} padding-bottom: 8px;">
+                <strong style="color: #a8a29e;">${isES ? "Fecha" : "Date"}</strong><br>
+                ${data.fecha}
+              </td>
+            </tr>
+            <tr>
+              <td style="${MUTED_STYLE}">
+                <strong style="color: #a8a29e;">${isES ? "Turno" : "Time slot"}</strong><br>
+                ${data.horaInicio} – ${data.horaFin}
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <!-- Body text -->
+        <tr><td style="padding: 8px 0 20px;">
+          <p style="${MUTED_STYLE} line-height: 1.6;">${intro}</p>
+          <p style="${MUTED_STYLE} line-height: 1.6; margin-top: 12px;">${rebookText}</p>
+        </td></tr>
+
+        <!-- CTA -->
+        <tr><td style="padding-bottom: 28px; text-align: center;">
+          <a href="${rebookLink}"
+             style="display: inline-block; background-color: #292524; color: #f5f5f4; font-weight: 600; font-size: 14px; text-decoration: none; padding: 12px 28px; border-radius: 10px; border: 1px solid #44403c;">
+            ${isES ? "Volver a reservar" : "Book again"}
+          </a>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="border-top: 1px solid #292524; padding-top: 20px; text-align: center;">
+          <p style="${MUTED_STYLE} margin: 0;">
+            ${isES
+              ? `¿Preguntas? <a href="mailto:reservas@observatorioseso.cl" style="color: #7dd3fc;">reservas@observatorioseso.cl</a>`
+              : `Questions? <a href="mailto:reservas@observatorioseso.cl" style="color: #7dd3fc;">reservas@observatorioseso.cl</a>`
+            }
+          </p>
+          <p style="margin: 8px 0 0; font-size: 11px; color: #44403c;">© ESO Chile — La Silla & Paranal</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+}
+
 export interface EmailRecordatorioData {
   nombre: string
   shortId: string
