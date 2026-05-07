@@ -70,7 +70,22 @@ export async function generarTurnosFaltantes(): Promise<GeneracionResult> {
     return { creados: 0, laSilla: 0, paranal: 0 }
   }
 
-  // --- 4. Construir lotes por observatorio ----------------------------------
+  // --- 4. Fetch active bloqueos to avoid activating turnos in blocked periods
+  const bloqueos = await prisma.bloqueoCalendario.findMany({
+    where: { fechaFin: { gte: mananaUTC } },
+    select: { observatorio: true, fechaInicio: true, fechaFin: true },
+  })
+
+  function esBloqueado(obs: string, fecha: Date): boolean {
+    return bloqueos.some(
+      (b) =>
+        (b.observatorio === null || b.observatorio === obs) &&
+        fecha >= b.fechaInicio &&
+        fecha <= b.fechaFin
+    )
+  }
+
+  // --- 5. Construir lotes por observatorio ----------------------------------
   type TurnoData = Prisma.TurnoCreateManyInput
 
   const loteLaSilla: TurnoData[] = []
@@ -103,7 +118,7 @@ export async function generarTurnosFaltantes(): Promise<GeneracionResult> {
           horaFin: horario.horaFin,
           capacidadMax: CAPACIDAD[obs],
           cuposOcupados: 0,
-          activo: !esTardeVeranoLaSilla,
+          activo: !esTardeVeranoLaSilla && !esBloqueado(obs, fechaTurno),
         }
 
         if (obs === "LA_SILLA") {
@@ -115,7 +130,7 @@ export async function generarTurnosFaltantes(): Promise<GeneracionResult> {
     }
   }
 
-  // --- 5. Insertar en batch (idempotente) -----------------------------------
+  // --- 6. Insertar en batch (idempotente) -----------------------------------
   const [resLS, resP] = await Promise.all([
     loteLaSilla.length > 0
       ? prisma.turno.createMany({ data: loteLaSilla, skipDuplicates: true })

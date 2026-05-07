@@ -248,6 +248,123 @@ export function emailAnulacionHTML(data: EmailAnulacionData): string {
 </html>`
 }
 
+export interface EmailCierreEmergenciaData {
+  nombre: string
+  shortId: string
+  observatorio: string
+  fecha: string
+  horaInicio: string
+  horaFin: string
+  portalUrl: string
+  locale: "es" | "en"
+  motivo: string
+  cancelada: boolean
+}
+
+export function emailCierreEmergenciaHTML(data: EmailCierreEmergenciaData): string {
+  const obsNombre = data.observatorio === "LA_SILLA" ? "La Silla" : "Paranal (VLT)"
+  const isES = data.locale === "es"
+
+  const heading = isES
+    ? data.cancelada
+      ? "Visita cancelada por cierre de emergencia"
+      : "Aviso importante sobre tu visita"
+    : data.cancelada
+      ? "Visit cancelled — emergency closure"
+      : "Important notice about your visit"
+
+  const intro = isES
+    ? data.cancelada
+      ? `${data.nombre}, lamentamos informarte que tu reserva <strong style="color:#a8a29e;">${data.shortId}</strong> al Observatorio ${obsNombre} del día <strong style="color:#a8a29e;">${data.fecha}</strong> ha sido cancelada debido a un cierre de emergencia.`
+      : `${data.nombre}, te informamos que el Observatorio ${obsNombre} permanecerá cerrado el día <strong style="color:#a8a29e;">${data.fecha}</strong>. Tu reserva <strong style="color:#a8a29e;">${data.shortId}</strong> podría verse afectada.`
+    : data.cancelada
+      ? `${data.nombre}, we regret to inform you that your booking <strong style="color:#a8a29e;">${data.shortId}</strong> at ${obsNombre} Observatory on <strong style="color:#a8a29e;">${data.fecha}</strong> has been cancelled due to an emergency closure.`
+      : `${data.nombre}, please be advised that ${obsNombre} Observatory will be closed on <strong style="color:#a8a29e;">${data.fecha}</strong>. Your booking <strong style="color:#a8a29e;">${data.shortId}</strong> may be affected.`
+
+  const rebookLink = data.portalUrl.replace(/\/mi-reserva\/.*/, "")
+
+  return `<!DOCTYPE html>
+<html lang="${data.locale}">
+<head><meta charset="UTF-8"><title>${heading}</title></head>
+<body style="${BASE_STYLES}">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding: 40px 16px;">
+      <table width="560" cellpadding="0" cellspacing="0" style="max-width: 560px; width: 100%;">
+
+        <!-- Header -->
+        <tr><td style="padding-bottom: 28px;">
+          <p style="margin: 0 0 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #78716c;">
+            ESO Observatorios Chile
+          </p>
+          <h1 style="margin: 8px 0 0; font-family: Georgia, serif; font-size: 24px; font-weight: 900; color: #f5f5f4; line-height: 1.2;">
+            ${heading}
+          </h1>
+        </td></tr>
+
+        <!-- Details card -->
+        <tr><td style="${CARD_STYLE}">
+          <p style="margin: 0 0 4px; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #78716c;">
+            N.° ${data.shortId}
+          </p>
+          <table cellpadding="0" cellspacing="0" width="100%" style="margin-top: 12px;">
+            <tr>
+              <td style="${MUTED_STYLE} padding-bottom: 8px;">
+                <strong style="color: #a8a29e;">${isES ? "Observatorio" : "Observatory"}</strong><br>
+                ${obsNombre}
+              </td>
+              <td style="${MUTED_STYLE} padding-bottom: 8px;">
+                <strong style="color: #a8a29e;">${isES ? "Fecha" : "Date"}</strong><br>
+                ${data.fecha}
+              </td>
+            </tr>
+            <tr>
+              <td style="${MUTED_STYLE}">
+                <strong style="color: #a8a29e;">${isES ? "Turno" : "Time slot"}</strong><br>
+                ${data.horaInicio} – ${data.horaFin}
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <!-- Motivo -->
+        <tr><td style="background-color: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+          <p style="margin: 0; color: #fca5a5; font-size: 13px; line-height: 1.5;">
+            <strong>${isES ? "Motivo:" : "Reason:"}</strong> ${data.motivo}
+          </p>
+        </td></tr>
+
+        <!-- Body text -->
+        <tr><td style="padding: 16px 0 20px;">
+          <p style="${MUTED_STYLE} line-height: 1.6;">${intro}</p>
+          ${data.cancelada ? `<p style="${MUTED_STYLE} line-height: 1.6; margin-top: 12px;">${isES ? "Los cupos han sido liberados y puedes hacer una nueva reserva en cuanto haya disponibilidad." : "Spots have been freed and you may make a new booking as soon as availability opens."}</p>` : ""}
+        </td></tr>
+
+        <!-- CTA -->
+        <tr><td style="padding-bottom: 28px; text-align: center;">
+          <a href="${rebookLink}"
+             style="display: inline-block; background-color: #292524; color: #f5f5f4; font-weight: 600; font-size: 14px; text-decoration: none; padding: 12px 28px; border-radius: 10px; border: 1px solid #44403c;">
+            ${isES ? "Ir al sitio de reservas" : "Go to booking site"}
+          </a>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="border-top: 1px solid #292524; padding-top: 20px; text-align: center;">
+          <p style="${MUTED_STYLE} margin: 0;">
+            ${isES
+              ? `¿Preguntas? <a href="mailto:reservas@observatorioseso.cl" style="color: #7dd3fc;">reservas@observatorioseso.cl</a>`
+              : `Questions? <a href="mailto:reservas@observatorioseso.cl" style="color: #7dd3fc;">reservas@observatorioseso.cl</a>`
+            }
+          </p>
+          <p style="margin: 8px 0 0; font-size: 11px; color: #44403c;">© ESO Chile — La Silla & Paranal</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+}
+
 export interface EmailRecordatorioData {
   nombre: string
   shortId: string

@@ -12,7 +12,11 @@
 import { prisma } from "@/lib/prisma"
 import { resend, EMAIL_FROM } from "@/lib/email"
 import { formatearFechaLimite } from "@/lib/confirmacion"
-import { emailConfirmacionHTML, emailAnulacionHTML } from "@/components/email/templates"
+import {
+  emailConfirmacionHTML,
+  emailAnulacionHTML,
+  emailCierreEmergenciaHTML,
+} from "@/components/email/templates"
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
 
@@ -213,6 +217,164 @@ interface WhatsappParams {
   fecha: string
   horaInicio: string
   portalUrl: string
+}
+
+// ─── Email de cierre de emergencia ───────────────────────────────────────────
+
+export interface EmailCierreEmergenciaParams {
+  reservaId: string
+  email: string
+  nombre: string
+  shortId: string
+  token: string
+  observatorio: string
+  fecha: string
+  horaInicio: string
+  horaFin: string
+  locale: "es" | "en"
+  motivo: string
+  cancelada: boolean
+  telefono?: string | null // present only if whatsapp opt-in is active
+}
+
+export async function enviarEmailCierreEmergencia(
+  params: EmailCierreEmergenciaParams
+): Promise<void> {
+  const obsNombre = params.observatorio === "LA_SILLA" ? "La Silla" : "Paranal (VLT)"
+  const isES = params.locale === "es"
+  const portalUrl = `${BASE_URL}/${params.locale}/mi-reserva/${params.token}`
+
+  const subject = isES
+    ? params.cancelada
+      ? `Visita cancelada — ${obsNombre} · ${params.fecha}`
+      : `Aviso importante — ${obsNombre} · ${params.fecha}`
+    : params.cancelada
+      ? `Visit cancelled — ${obsNombre} · ${params.fecha}`
+      : `Important notice — ${obsNombre} · ${params.fecha}`
+
+  const html = emailCierreEmergenciaHTML({
+    nombre: params.nombre,
+    shortId: params.shortId,
+    observatorio: params.observatorio,
+    fecha: params.fecha,
+    horaInicio: params.horaInicio,
+    horaFin: params.horaFin,
+    portalUrl,
+    locale: params.locale,
+    motivo: params.motivo,
+    cancelada: params.cancelada,
+  })
+
+  try {
+    const result = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: params.email,
+      subject,
+      html,
+    })
+
+    await prisma.logAgente.create({
+      data: {
+        tipo: "EMAIL",
+        reservaId: params.reservaId,
+        resultado: `Email cierre emergencia enviado: ${subject}`,
+        metadata: { resendId: result.data?.id ?? null, motivo: params.motivo },
+      },
+    })
+  } catch (err) {
+    console.error(`[comunicaciones/emergencia] error para ${params.reservaId}:`, err)
+    await prisma.logAgente.create({
+      data: {
+        tipo: "ERROR",
+        reservaId: params.reservaId,
+        resultado: "ERROR: fallo al enviar email de cierre de emergencia",
+        metadata: { error: err instanceof Error ? err.message : "unknown" },
+      },
+    })
+  }
+
+  // WhatsApp notification if opted in
+  if (params.telefono) {
+    await enviarWhatsappEmergencia({
+      telefono: params.telefono,
+      nombre: params.nombre,
+      shortId: params.shortId,
+      observatorio: params.observatorio,
+      fecha: params.fecha,
+      horaInicio: params.horaInicio,
+      motivo: params.motivo,
+      cancelada: params.cancelada,
+    }).catch((e) =>
+      console.error(`[comunicaciones/emergencia/whatsapp] ${params.shortId}:`, e)
+    )
+  }
+}
+
+// ─── WhatsApp de cierre de emergencia ────────────────────────────────────────
+
+interface WhatsappEmergenciaParams {
+  telefono: string
+  nombre: string
+  shortId: string
+  observatorio: string
+  fecha: string
+  horaInicio: string
+  motivo: string
+  cancelada: boolean
+}
+
+async function enviarWhatsappEmergencia(params: WhatsappEmergenciaParams): Promise<void> {
+  const token = process.env.WHATSAPP_TOKEN
+  const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID
+
+  if (!token || !phoneId) {
+    console.warn("[comunicaciones/whatsapp/emergencia] WHATSAPP_TOKEN o PHONE_NUMBER_ID no configurados")
+    return
+  }
+
+  const obsNombre = params.observatorio === "LA_SILLA" ? "La Silla" : "Paranal (VLT)"
+  const telefono = params.telefono.replace(/[\s\+\-\(\)]/g, "")
+  const templateName = params.cancelada ? "visita_cancelada_emergencia" : "aviso_cierre_emergencia"
+
+  try {
+    const res = await fetch(
+      `https://graph.facebook.com/v21.0/${phoneId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: telefono,
+          type: "template",
+          template: {
+            name: templateName,
+            language: { code: "es_CL" },
+            components: [
+              {
+                type: "body",
+                parameters: [
+                  { type: "text", text: params.nombre },
+                  { type: "text", text: params.shortId },
+                  { type: "text", text: `${obsNombre} · ${params.fecha} ${params.horaInicio}` },
+                  { type: "text", text: params.motivo },
+                ],
+              },
+            ],
+          },
+        }),
+      }
+    )
+
+    if (!res.ok) {
+      const body = await res.text()
+      console.error(`[comunicaciones/whatsapp/emergencia] error ${res.status}:`, body)
+    }
+  } catch (err) {
+    console.error("[comunicaciones/whatsapp/emergencia] error de red:", err)
+  }
 }
 
 async function enviarWhatsapp(params: WhatsappParams): Promise<void> {
