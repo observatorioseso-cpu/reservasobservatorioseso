@@ -14,6 +14,7 @@ import {
   Telescope,
   MessageSquare,
   CalendarOff,
+  HardDriveDownload,
 } from "lucide-react"
 
 const NAV = [
@@ -22,6 +23,7 @@ const NAV = [
   { href: "/admin/reservas",  label: "Reservas",    icon: Users },
   { href: "/admin/mensajes",  label: "Mensajes",    icon: MessageSquare },
   { href: "/admin/bloqueos",  label: "Cierres",     icon: CalendarOff },
+  { href: "/admin/backup",    label: "Backup",      icon: HardDriveDownload },
   { href: "/admin/config",    label: "Config",      icon: Settings },
 ] as const
 
@@ -31,6 +33,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/admin/reservas":  "Gestión de Reservas",
   "/admin/mensajes":  "Mensajes de Contacto",
   "/admin/bloqueos":  "Cierres y Alertas de Emergencia",
+  "/admin/backup":    "Backup y Recuperación",
   "/admin/config":    "Configuración del Sistema",
 }
 

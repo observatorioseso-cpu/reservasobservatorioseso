@@ -212,6 +212,27 @@ model BloqueoCalendario {
 }
 
 // ---------------------------------------------------------------------------
+// BackupJob — historial de backups diarios del sistema
+// ---------------------------------------------------------------------------
+
+model BackupJob {
+  id          String   @id @default(cuid())
+  status      String   // "EN_PROGRESO" | "COMPLETADO" | "ERROR"
+  triggeredBy String   @default("cron")  // "cron" | admin email
+  blobUrl     String?  // URL en Vercel Blob (si está configurado)
+  sizeBytes   Int      @default(0)
+  checksum    String   @default("")
+  stats       Json     @default("{}")
+  datosJson   Json?    // Backup completo en BD si Blob no está configurado
+  error       String?
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([createdAt])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
 // Contacto — mensajes del formulario público (general y grupal)
 // ---------------------------------------------------------------------------
 
