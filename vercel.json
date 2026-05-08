@@ -2,11 +2,7 @@
   "crons": [
     {
       "path": "/api/agentes/recordatorio",
-      "schedule": "0 12,21 * * *"
-    },
-    {
-      "path": "/api/agentes/backup",
-      "schedule": "0 3 * * *"
+      "schedule": "0 21 * * *"
     }
   ]
 }
