@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { getTranslations } from "next-intl/server"
+import { estaDentroDeVentanaModificacion } from "@/lib/confirmacion"
 import type { Metadata } from "next"
 import { AcompanantesForm } from "@/components/portal/AcompanantesForm"
 
@@ -28,7 +29,7 @@ export default async function AcompanantesPage({
 
   const dentroVentana =
     reserva.estado !== "ANULADA" &&
-    new Date() < new Date(reserva.fechaLimiteConfirmacion)
+    estaDentroDeVentanaModificacion(reserva.fechaLimiteConfirmacion)
 
   return (
     <AcompanantesForm
