@@ -132,7 +132,7 @@ async function subirABlob(
     const filename = `backups/eso-backup-${fecha}-${jobId}.json`
 
     const blob = await put(filename, json, {
-      access: "private",
+      access: "public",
       contentType: "application/json",
       token,
     })
