@@ -153,26 +153,35 @@ When prompted:
 You can set variables via the Vercel dashboard (**Project Settings > Environment Variables**) or via CLI:
 
 ```bash
+# Required
 vercel env add DATABASE_URL production
 vercel env add NEXT_PUBLIC_BASE_URL production
 vercel env add ADMIN_SECRET_KEY production
 vercel env add ANTHROPIC_API_KEY production
 vercel env add RESEND_API_KEY production
 vercel env add RESEND_FROM_EMAIL production
+vercel env add CRON_SECRET production
+
+# Optional — rate limiting (fail-open if absent)
 vercel env add UPSTASH_REDIS_REST_URL production
 vercel env add UPSTASH_REDIS_REST_TOKEN production
-vercel env add CRON_SECRET production
-```
 
-Each `vercel env add` command will prompt you for the value interactively (the value is not echoed to the terminal).
-
-For WhatsApp (optional — skip if not using Twilio):
-
-```bash
+# Optional — WhatsApp (fail-open if absent)
 vercel env add TWILIO_ACCOUNT_SID production
 vercel env add TWILIO_AUTH_TOKEN production
 vercel env add TWILIO_WHATSAPP_FROM production
+
+# Optional — Vercel Blob for backups (falls back to database if absent)
+vercel env add BLOB_READ_WRITE_TOKEN production
+
+# Optional — backup summary email (defaults to reservas@observatorioseso.cl)
+vercel env add BACKUP_REPORT_EMAIL production
+
+# Optional — Sentry error tracking
+vercel env add NEXT_PUBLIC_SENTRY_DSN production
 ```
+
+Each `vercel env add` command will prompt you for the value interactively (the value is not echoed to the terminal).
 
 ### Required values
 
@@ -184,10 +193,21 @@ vercel env add TWILIO_WHATSAPP_FROM production
 | `ANTHROPIC_API_KEY` | Key from Step 5 |
 | `RESEND_API_KEY` | Key from Step 4 |
 | `RESEND_FROM_EMAIL` | `noreply@reservasobservatorioseso.cl` |
-| `UPSTASH_REDIS_REST_URL` | URL from Step 3 |
-| `UPSTASH_REDIS_REST_TOKEN` | Token from Step 3 |
 | `CRON_SECRET` | 32-char hex from Step 6 |
 | `NODE_ENV` | `production` (Vercel sets this automatically) |
+
+### Optional values
+
+| Variable | Default if absent | Purpose |
+|---|---|---|
+| `UPSTASH_REDIS_REST_URL` | Rate limiting disabled | Redis for chat rate limiting |
+| `UPSTASH_REDIS_REST_TOKEN` | Rate limiting disabled | Redis auth token |
+| `TWILIO_ACCOUNT_SID` | WhatsApp disabled | WhatsApp notifications |
+| `TWILIO_AUTH_TOKEN` | WhatsApp disabled | WhatsApp auth |
+| `TWILIO_WHATSAPP_FROM` | WhatsApp disabled | e.g. `whatsapp:+14155238886` |
+| `BLOB_READ_WRITE_TOKEN` | Backups stored in DB | Vercel Blob for daily backups |
+| `BACKUP_REPORT_EMAIL` | `reservas@observatorioseso.cl` | Email for backup summaries |
+| `NEXT_PUBLIC_SENTRY_DSN` | No error tracking | Sentry DSN |
 
 ### Framework settings
 
@@ -201,34 +221,30 @@ In **Project Settings > General**:
 
 ---
 
-## Step 8 — Run Prisma migrations against the production database
+## Step 8 — Apply the Prisma schema to the production database
 
-Migrations must run before the first request hits the server.
+This project uses `prisma db push` (no migrations directory). Schema changes are applied directly.
 
-### Option A — Run locally pointing at production DB
+### Apply schema
 
 Temporarily set your local `DATABASE_URL` to the production connection string, then run:
 
 ```bash
-npx prisma migrate deploy
+npx prisma generate
+npx prisma db push
 npx prisma db seed
 ```
 
-Important: after running the seed, revert your local `.env` so you do not accidentally write to production from your development machine.
-
-### Option B — Add a build script (recommended for CI)
-
-Add a `vercel-build` script to `package.json` so migrations run automatically on every Vercel deployment:
+The `vercel-build` script in `package.json` also runs `prisma db push` automatically on each Vercel deployment:
 
 ```json
-"scripts": {
-  "vercel-build": "prisma migrate deploy && next build"
-}
+"vercel-build": "prisma generate && prisma db push && next build"
 ```
 
-If you use this approach, also set the Vercel Build Command to `npm run vercel-build`.
-
-Note: for Supabase, use the **direct connection URL** (port 5432, not the pooler) only for `prisma migrate deploy`. The pooler URL does not support DDL statements. You can set `DIRECT_URL` in your Prisma schema and use it only for migrations.
+Important:
+- After running the seed against production, revert your local `.env` immediately.
+- Do **not** run `prisma migrate deploy` — there is no migrations directory in this project.
+- The seed creates the initial admin (`admin@observatorioseso.cl` / `admin123`) and default `ConfigSistema`. **Change the admin password immediately after first login.**
 
 ### What the seed creates
 
@@ -287,11 +303,12 @@ If you get `503` with `"db": "unreachable"`, the database is not reachable — s
 ### Cron jobs
 
 1. In the Vercel dashboard, go to your project and open **Settings > Crons**
-2. Verify the following cron job is listed:
-   - `/api/agentes/recordatorio` — runs at `0 12,21 * * *` (12:00 and 21:00 UTC daily)
-3. Trigger a manual run by clicking **Run Now** and confirm it returns `200`
+2. Verify the following cron jobs are listed:
+   - `/api/agentes/recordatorio` — runs at `0 21 * * *` (21:00 UTC daily) — confirmation reminders and auto-cancellation
+   - `/api/agentes/backup` — runs at `0 3 * * *` (03:00 UTC daily) — full system backup
+3. Trigger a manual run of each by clicking **Run Now** and confirm it returns `200`
 
-Note: Vercel Cron sends an `Authorization: Bearer [CRON_SECRET]` header. Make sure `CRON_SECRET` matches what you set in Step 6.
+Note: Vercel Cron sends an `Authorization: Bearer [CRON_SECRET]` header. Both endpoints are fail-CLOSED — they return `401` if `CRON_SECRET` is not configured.
 
 ---
 

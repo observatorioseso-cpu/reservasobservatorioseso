@@ -175,7 +175,8 @@
     "save": "Guardar",
     "close": "Cerrar",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "skipToMain": "Saltar al contenido principal"
   },
   "home": {
     "badge": "ESO Chile · Entrada gratuita",

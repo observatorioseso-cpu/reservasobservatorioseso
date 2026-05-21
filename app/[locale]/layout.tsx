@@ -1,6 +1,6 @@
 import { Playfair_Display, Libre_Franklin } from "next/font/google"
 import { NextIntlClientProvider } from "next-intl"
-import { getMessages } from "next-intl/server"
+import { getMessages, getTranslations } from "next-intl/server"
 import { notFound } from "next/navigation"
 import { routing } from "@/i18n/routing"
 import { ChatWidget } from "@/components/chat/ChatWidget"
@@ -47,7 +47,10 @@ export default async function LocaleLayout({
     notFound()
   }
 
-  const messages = await getMessages()
+  const [messages, t] = await Promise.all([
+    getMessages(),
+    getTranslations("common"),
+  ])
 
   return (
     <html
@@ -60,7 +63,7 @@ export default async function LocaleLayout({
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-amber-500 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-stone-950 focus:outline-none focus:ring-2 focus:ring-amber-300"
         >
-          {locale === "en" ? "Skip to main content" : "Saltar al contenido principal"}
+          {t("skipToMain")}
         </a>
         <NextIntlClientProvider messages={messages}>
           <div id="main">
