@@ -9,5 +9,5 @@ if (!process.env.RESEND_API_KEY) {
 
 export const resend = new Resend(resendKey)
 
-export const EMAIL_FROM = process.env.EMAIL_FROM ?? "ESO Chile <reservas@observatorioseso.cl>"
+export const EMAIL_FROM = process.env.RESEND_FROM_EMAIL ?? "ESO Chile <reservas@observatorioseso.cl>"
 export const EMAIL_CONTACTO = "reservas@observatorioseso.cl"
