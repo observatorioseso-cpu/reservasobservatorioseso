@@ -3,9 +3,6 @@ import { routing } from "./i18n/routing"
 import { NextRequest, NextResponse } from "next/server"
 import { verifyAdminToken } from "@/lib/adminAuth"
 
-// Node.js runtime required for crypto (createHmac, timingSafeEqual) in adminAuth.
-export const runtime = "nodejs"
-
 const intlMiddleware = createMiddleware(routing)
 
 export function proxy(request: NextRequest) {
