@@ -5,6 +5,10 @@
       "schedule": "0 21 * * *"
     },
     {
+      "path": "/api/agentes/recordatorio/viernes",
+      "schedule": "45 14 * * 5"
+    },
+    {
       "path": "/api/agentes/backup",
       "schedule": "0 3 * * *"
     }

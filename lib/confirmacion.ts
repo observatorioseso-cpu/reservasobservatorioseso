@@ -19,6 +19,15 @@ export function formatearFechaLimite(fechaLimite: Date, locale: "es" | "en"): st
   return `el viernes ${format(enSantiago, "d 'de' MMMM", { locale: es })} a las 12:00`
 }
 
+/** Returns just the time portion of a deadline in Santiago timezone. */
+export function formatearHoraLimite(fechaLimite: Date, locale: "es" | "en"): string {
+  const enSantiago = toZonedTime(fechaLimite, TIMEZONE)
+  if (locale === "en") {
+    return format(enSantiago, "h:mm a")
+  }
+  return format(enSantiago, "HH:mm")
+}
+
 /**
  * Verifica si una reserva está dentro de la ventana de modificación.
  *

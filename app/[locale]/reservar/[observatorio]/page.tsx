@@ -59,6 +59,7 @@ const obsConfig = {
     // Foto
     photo: "/images/lasilla-eclipse.jpg",
     photoAlt: "Eclipse solar sobre el Observatorio La Silla, Región de Coquimbo, Chile",
+    photoPosition: "object-[center_25%]",
     photoOverlay:
       "linear-gradient(to top, rgba(13,8,4,0.92) 0%, rgba(13,8,4,0.45) 55%, rgba(13,8,4,0.10) 100%)",
     // Página — fondo arena cálido
@@ -87,6 +88,7 @@ const obsConfig = {
     // Foto
     photo: "/images/paranal-night.jpg",
     photoAlt: "El Very Large Telescope bajo el cielo nocturno del desierto de Atacama, Paranal",
+    photoPosition: "object-center",
     photoOverlay:
       "linear-gradient(to top, rgba(6,11,18,0.95) 0%, rgba(6,11,18,0.45) 55%, rgba(6,11,18,0.08) 100%)",
     // Página — fondo stone neutro frío
@@ -243,7 +245,7 @@ export default async function CalendarioPage({
           <img
             src={cfg.photo}
             alt={cfg.photoAlt}
-            className="absolute inset-0 w-full h-full object-cover object-center"
+            className={`absolute inset-0 w-full h-full object-cover ${cfg.photoPosition}`}
           />
           <div className="absolute inset-0" style={{ background: cfg.photoOverlay }} />
           <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-5 max-w-5xl mx-auto">

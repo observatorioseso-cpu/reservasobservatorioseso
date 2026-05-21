@@ -1,12 +1,14 @@
 /**
  * GET /api/agentes/recordatorio
  *
- * Invocado por Vercel Cron 2× al día (vercel.json: "0 12,21 * * *").
+ * Invocado por Vercel Cron (vercel.json: "0 21 * * *") — todos los días a las 21:00 UTC (18:00 Chile).
  * Protegido con CRON_SECRET (header Authorization: Bearer <secret>).
  *
  * Ejecuta en paralelo:
- * - ejecutarAutoAnulaciones — anula reservas vencidas y libera cupos
- * - ejecutarRecordatorios — envía emails de recordatorio a pendientes
+ * - ejecutarAutoAnulaciones      — anula reservas vencidas y libera cupos
+ * - ejecutarRecordatorios        — recordatorio 72h (pendientes en próximos 3 días)
+ * - ejecutarRecordatorios24h     — recordatorio 24h con botones confirmar/anular
+ * - ejecutarRecordatoriosJueves  — recordatorio amigable cuando el plazo vence mañana (viernes)
  */
 
 export const dynamic = "force-dynamic"
@@ -16,6 +18,8 @@ import {
   generarTurnosFaltantes,
   ejecutarAutoAnulaciones,
   ejecutarRecordatorios,
+  ejecutarRecordatorios24h,
+  ejecutarRecordatoriosJueves,
 } from "@/agents/recordatorio"
 
 export async function GET(request: Request): Promise<NextResponse> {
@@ -48,10 +52,17 @@ export async function GET(request: Request): Promise<NextResponse> {
     resultadoGenerador = { error: mensaje }
   }
 
-  // --- Pasos 1 y 2: auto-anulaciones y recordatorios (paralelos) ------------
-  const [resultadoAnulaciones, resultadoRecordatorios] = await Promise.allSettled([
+  // --- Pasos 1–4: auto-anulaciones, recordatorio 72h, 24h y jueves (paralelos) ---
+  const [
+    resultadoAnulaciones,
+    resultadoRecordatorios,
+    resultadoRecordatorios24h,
+    resultadoRecordatoriosJueves,
+  ] = await Promise.allSettled([
     ejecutarAutoAnulaciones(),
     ejecutarRecordatorios(),
+    ejecutarRecordatorios24h(),
+    ejecutarRecordatoriosJueves(),
   ])
 
   return NextResponse.json({
@@ -66,5 +77,13 @@ export async function GET(request: Request): Promise<NextResponse> {
       resultadoRecordatorios.status === "fulfilled"
         ? resultadoRecordatorios.value
         : { error: String(resultadoRecordatorios.reason) },
+    recordatorios24h:
+      resultadoRecordatorios24h.status === "fulfilled"
+        ? resultadoRecordatorios24h.value
+        : { error: String(resultadoRecordatorios24h.reason) },
+    recordatoriosJueves:
+      resultadoRecordatoriosJueves.status === "fulfilled"
+        ? resultadoRecordatoriosJueves.value
+        : { error: String(resultadoRecordatoriosJueves.reason) },
   })
 }

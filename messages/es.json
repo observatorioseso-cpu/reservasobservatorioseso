@@ -179,11 +179,11 @@
     "skipToMain": "Saltar al contenido principal"
   },
   "home": {
-    "badge": "ESO Chile · Entrada gratuita",
-    "heroTitle": "Reserva tu visita guiada",
-    "heroSubtitle": "Selecciona un observatorio, elige tu fecha y completa el registro. Todo el proceso tarda menos de 3 minutos.",
+    "badge": "Jornada Nocturna · 30 mayo · La Silla y Paranal",
+    "heroTitle": "Reserva tu visita nocturna",
+    "heroSubtitle": "Visitas especiales nocturnas el 30 de mayo en La Silla y Paranal. Selecciona tu observatorio y asegura tu cupo — máximo 4 personas por reserva.",
     "myBookingBtn": "Ver mi reserva",
-    "ruleMaxPersons": "Máx. 10 personas por reserva individual",
+    "ruleMaxPersons": "Máx. 4 personas por reserva individual",
     "ruleDeadline": "Confirmar antes del viernes 12:00 Santiago",
     "ruleModifiable": "Modificable hasta el viernes 12:00",
     "obsStep": "Paso 1 de 3 — Selecciona el observatorio",

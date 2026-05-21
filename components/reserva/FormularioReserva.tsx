@@ -55,6 +55,7 @@ interface FormularioReservaProps {
   }
   backLabel: string
   locale: string
+  maxPersonas?: number
 }
 
 export function FormularioReserva({
@@ -64,6 +65,7 @@ export function FormularioReserva({
   labels,
   errorLabels,
   locale,
+  maxPersonas = 10,
 }: FormularioReservaProps) {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
@@ -268,7 +270,7 @@ export function FormularioReserva({
             </span>
             <button
               type="button"
-              onClick={() => handleCantidadChange(Math.min(10, cantidadPersonas + 1))}
+              onClick={() => handleCantidadChange(Math.min(maxPersonas, cantidadPersonas + 1))}
               className="size-10 rounded-lg border border-stone-300 bg-stone-50 text-stone-700 hover:bg-stone-100 font-bold text-lg flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
               aria-label={labels.aumentarPersonas}
             >

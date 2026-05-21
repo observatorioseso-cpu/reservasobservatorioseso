@@ -82,7 +82,7 @@ export function LandingNav({ homeLabel: _, myBookingLabel, locale, lightBg = fal
                   scrolled ? "text-tinta-900" : "text-white"
                 )}
               >
-                ESO Observatorios
+                Jornada Nocturna ESO
               </span>
             </Link>
 

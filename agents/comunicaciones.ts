@@ -14,11 +14,15 @@ import { resend, EMAIL_FROM } from "@/lib/email"
 import { formatearFechaLimite } from "@/lib/confirmacion"
 import {
   emailConfirmacionHTML,
+  emailConfirmadaHTML,
   emailAnulacionHTML,
   emailCierreEmergenciaHTML,
+  emailStaffConfirmadaHTML,
+  emailStaffAnulacionHTML,
 } from "@/components/email/templates"
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
+const EMAIL_STAFF = process.env.STAFF_EMAIL ?? "reservas@observatorioseso.cl"
 
 export async function orquestarComunicacionesPostReserva(reservaId: string): Promise<void> {
   const reserva = await prisma.reserva.findUnique({
@@ -205,6 +209,125 @@ export async function enviarEmailAnulacion(params: EmailAnulacionParams): Promis
       },
     })
   }
+}
+
+// ─── Email reserva confirmada (ESO Email 1) ──────────────────────────────────
+
+interface EmailConfirmadaParams {
+  reservaId: string
+  email: string
+  nombre: string
+  apellido: string
+  shortId: string
+  token: string
+  observatorio: string
+  fecha: string
+  horaInicio: string
+  horaFin: string
+  cantidadPersonas: number
+  locale: "es" | "en"
+}
+
+export async function enviarEmailConfirmada(params: EmailConfirmadaParams): Promise<void> {
+  const obsNombre = params.observatorio === "LA_SILLA" ? "La Silla" : "Paranal (VLT)"
+  const isES = params.locale === "es"
+  const portalUrl = `${BASE_URL}/${params.locale}/mi-reserva/${params.token}`
+
+  const subject = isES
+    ? `Reserva confirmada — ${obsNombre} · ${params.fecha}`
+    : `Booking confirmed — ${obsNombre} · ${params.fecha}`
+
+  const html = emailConfirmadaHTML({
+    nombre: params.nombre,
+    apellido: params.apellido,
+    shortId: params.shortId,
+    observatorio: params.observatorio,
+    fecha: params.fecha,
+    horaInicio: params.horaInicio,
+    horaFin: params.horaFin,
+    cantidadPersonas: params.cantidadPersonas,
+    portalUrl,
+    locale: params.locale,
+  })
+
+  try {
+    const result = await resend.emails.send({ from: EMAIL_FROM, to: params.email, subject, html })
+    await prisma.logAgente.create({
+      data: {
+        tipo: "EMAIL",
+        reservaId: params.reservaId,
+        resultado: `Email confirmada enviado: ${subject}`,
+        metadata: { resendId: result.data?.id ?? null },
+      },
+    })
+  } catch (err) {
+    console.error(`[comunicaciones/confirmada] error para ${params.reservaId}:`, err)
+    await prisma.logAgente.create({
+      data: {
+        tipo: "ERROR",
+        reservaId: params.reservaId,
+        resultado: "ERROR: fallo al enviar email de confirmada",
+        metadata: { error: err instanceof Error ? err.message : "unknown" },
+      },
+    })
+  }
+}
+
+// ─── Notificaciones internas al staff ────────────────────────────────────────
+
+interface StaffNotificacionParams {
+  reservaId: string
+  nombre: string
+  shortId: string
+  observatorio: string
+  fecha: string
+  horaInicio: string
+  horaFin: string
+  cantidadPersonas: number
+  telefono: string | null
+  email: string
+}
+
+async function enviarEmailStaff(subject: string, html: string, reservaId: string): Promise<void> {
+  try {
+    await resend.emails.send({ from: EMAIL_FROM, to: EMAIL_STAFF, subject, html })
+  } catch (err) {
+    console.error(`[comunicaciones/staff] error para ${reservaId}:`, err)
+  }
+}
+
+export async function notificarStaffConfirmada(params: StaffNotificacionParams): Promise<void> {
+  const obsNombre = params.observatorio === "LA_SILLA" ? "La Silla" : "Paranal (VLT)"
+  const subject = `Visita confirmada — ${obsNombre} · ${params.fecha}`
+  const html = emailStaffConfirmadaHTML({
+    nombre: params.nombre,
+    shortId: params.shortId,
+    observatorio: params.observatorio,
+    fecha: params.fecha,
+    horaInicio: params.horaInicio,
+    horaFin: params.horaFin,
+    cantidadPersonas: params.cantidadPersonas,
+    telefono: params.telefono,
+    email: params.email,
+  })
+  await enviarEmailStaff(subject, html, params.reservaId)
+}
+
+export async function notificarStaffAnulacion(params: StaffNotificacionParams): Promise<void> {
+  const obsNombre = params.observatorio === "LA_SILLA" ? "La Silla" : "Paranal (VLT)"
+  const subject = `Visita cancelada — ${obsNombre} · ${params.fecha}`
+  const html = emailStaffAnulacionHTML({
+    nombre: params.nombre,
+    shortId: params.shortId,
+    observatorio: params.observatorio,
+    fecha: params.fecha,
+    horaInicio: params.horaInicio,
+    horaFin: params.horaFin,
+    cantidadPersonas: params.cantidadPersonas,
+    telefono: params.telefono,
+    email: params.email,
+  })
+  await enviarEmailStaff(subject, html, params.reservaId)
 }
 
 // ─── WhatsApp (Meta Business Cloud API) ──────────────────────────────────────

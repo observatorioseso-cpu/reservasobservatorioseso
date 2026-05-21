@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation"
 import type { Metadata } from "next"
 import { ChevronLeft, Telescope } from "lucide-react"
 import { FormularioReserva } from "@/components/reserva/FormularioReserva"
+import { prisma } from "@/lib/prisma"
 
 type ObservatorioSlug = "LA_SILLA" | "PARANAL"
 const NOMBRES: Record<ObservatorioSlug, string> = {
@@ -40,6 +41,9 @@ export default async function FormularioPage({
   const tErrors = await getTranslations({ locale, namespace: "errors" })
   const nombre = NOMBRES[slug]
 
+  const configMax = await prisma.configSistema.findUnique({ where: { clave: "MAX_PERSONAS_CLIENTE" } })
+  const maxPersonas = configMax ? Math.min(parseInt(configMax.valor, 10) || 10, 10) : 10
+
   return (
     <div className="min-h-[100dvh] bg-stone-50">
       {/* Header — modo claro forzado (regla 5) */}
@@ -63,7 +67,11 @@ export default async function FormularioPage({
           <h1 className="font-playfair text-2xl font-black text-stone-900">
             {t("title")}
           </h1>
-          <p className="mt-1 text-sm text-stone-500">{t("maxPersons")}</p>
+          <p className="mt-1 text-sm text-stone-500">
+            {locale === "en"
+              ? `Up to ${maxPersonas} people per booking`
+              : `Máximo ${maxPersonas} personas por reserva`}
+          </p>
         </div>
 
         <FormularioReserva
@@ -107,6 +115,7 @@ export default async function FormularioPage({
           }}
           backLabel={tCommon("back")}
           locale={locale}
+          maxPersonas={maxPersonas}
         />
       </main>
     </div>

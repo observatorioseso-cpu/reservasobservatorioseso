@@ -118,12 +118,38 @@ export async function POST(
     return r
   })
 
-  // Notificar al titular (email/WhatsApp) — async, no bloquea
+  // Email ESO Email 1 al titular + notificación staff (async, no bloquea)
+  const fechaStr = reserva.turno.fecha.toISOString().split("T")[0]
   import("@/agents/comunicaciones")
-    .then(({ orquestarComunicacionesPostReserva }) =>
-      orquestarComunicacionesPostReserva(reserva.id).catch((e) =>
-        console.error("[comunicaciones/confirmacion] error:", e)
-      )
+    .then(({ enviarEmailConfirmada, notificarStaffConfirmada }) =>
+      Promise.allSettled([
+        enviarEmailConfirmada({
+          reservaId: reserva.id,
+          email: reserva.email,
+          nombre: reserva.nombre,
+          apellido: reserva.apellido,
+          shortId: reserva.shortId,
+          token: reserva.token,
+          observatorio: reserva.observatorio,
+          fecha: fechaStr,
+          horaInicio: reserva.turno.horaInicio,
+          horaFin: reserva.turno.horaFin,
+          cantidadPersonas: reserva.cantidadPersonas,
+          locale: (reserva.locale as "es" | "en") ?? "es",
+        }),
+        notificarStaffConfirmada({
+          reservaId: reserva.id,
+          nombre: `${reserva.nombre} ${reserva.apellido}`,
+          shortId: reserva.shortId,
+          observatorio: reserva.observatorio,
+          fecha: fechaStr,
+          horaInicio: reserva.turno.horaInicio,
+          horaFin: reserva.turno.horaFin,
+          cantidadPersonas: reserva.cantidadPersonas,
+          telefono: reserva.telefono ?? null,
+          email: reserva.email,
+        }),
+      ]).catch((e) => console.error("[comunicaciones/confirmacion] error:", e))
     )
     .catch(() => {})
 

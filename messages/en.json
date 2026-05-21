@@ -179,11 +179,11 @@
     "skipToMain": "Skip to main content"
   },
   "home": {
-    "badge": "ESO Chile · Free admission",
-    "heroTitle": "Book your guided tour",
-    "heroSubtitle": "Choose an observatory, pick a date, and complete your registration. The whole process takes less than 3 minutes.",
+    "badge": "Nocturnal Experience · May 30 · La Silla & Paranal",
+    "heroTitle": "Book your nocturnal visit",
+    "heroSubtitle": "Special nocturnal visits on May 30 at La Silla and Paranal. Choose your observatory and secure your spot — max. 4 people per booking.",
     "myBookingBtn": "View my booking",
-    "ruleMaxPersons": "Max. 10 people per individual booking",
+    "ruleMaxPersons": "Max. 4 people per individual booking",
     "ruleDeadline": "Confirm by Friday 12:00 Santiago time",
     "ruleModifiable": "Modifiable until Friday 12:00",
     "obsStep": "Step 1 of 3 — Choose your observatory",
