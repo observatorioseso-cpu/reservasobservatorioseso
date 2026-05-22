@@ -465,6 +465,10 @@ export default async function LandingPage({
               q={tHome("faq7q")}
               a={tHome("faq7a")}
             />
+            <FaqItem
+              q={tHome("faq8q")}
+              a={tHome("faq8a")}
+            />
           </div>
         </div>
       </section>
