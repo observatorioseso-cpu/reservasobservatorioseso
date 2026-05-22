@@ -56,8 +56,8 @@ export function AdminChatWidget() {
   const { theme } = useAdminTheme()
   const isLight = theme === "light"
 
-  const [open, setOpen]       = useState(false)
-  const [input, setInput]     = useState("")
+  const [open, setOpen]         = useState(false)
+  const [input, setInput]       = useState("")
   const [messages, setMessages] = useState<Message[]>([])
   const [streaming, setStreaming] = useState(false)
 
@@ -83,7 +83,7 @@ export function AdminChatWidget() {
 
     const userMsg: Message = { role: "user", content: text.trim() }
     const next = [...messages, userMsg]
-    setMessages(next)
+    setMessages([...next, { role: "assistant", content: "" }])
     setInput("")
     setStreaming(true)
 
@@ -101,45 +101,29 @@ export function AdminChatWidget() {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        setMessages(prev => [...prev, { role: "assistant", content: err.error ?? "Error al conectar con el asistente." }])
+        setMessages(prev => {
+          const copy = [...prev]
+          copy[copy.length - 1] = { role: "assistant", content: err.error ?? "Error al conectar con el asistente." }
+          return copy
+        })
         return
       }
 
       const reader = res.body?.getReader()
       if (!reader) return
 
-      let assistantText = ""
-      setMessages(prev => [...prev, { role: "assistant", content: "" }])
-
       const decoder = new TextDecoder()
-      let buffer = ""
+      let assistantText = ""
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split("\n")
-        buffer = lines.pop() ?? ""
-
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue
-          const data = line.slice(6)
-          if (data === "[DONE]") continue
-          try {
-            const parsed = JSON.parse(data)
-            if (parsed.type === "content_block_delta" && parsed.delta?.type === "text_delta") {
-              assistantText += parsed.delta.text
-              setMessages(prev => {
-                const copy = [...prev]
-                copy[copy.length - 1] = { role: "assistant", content: assistantText }
-                return copy
-              })
-            }
-          } catch {
-            // ignore malformed SSE chunk
-          }
-        }
+        assistantText += decoder.decode(value, { stream: true })
+        setMessages(prev => {
+          const copy = [...prev]
+          copy[copy.length - 1] = { role: "assistant", content: assistantText }
+          return copy
+        })
       }
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") return
@@ -168,7 +152,7 @@ export function AdminChatWidget() {
     setInput("")
   }
 
-  // ── Styles ──────────────────────────────────────────────────────────────
+  // ── Estilos ──────────────────────────────────────────────────────────────
   const bubble = isLight
     ? "bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-200/50"
     : "bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-900/40"
@@ -186,9 +170,7 @@ export function AdminChatWidget() {
 
   const msgArea = isLight ? "bg-[#faf4e8]" : "bg-stone-950/40"
 
-  const userBubble = isLight
-    ? "bg-amber-500 text-white ml-auto"
-    : "bg-amber-500 text-white ml-auto"
+  const userBubble = "bg-amber-500 text-white ml-auto"
 
   const aiBubble = isLight
     ? "bg-white border border-[#e4d0b8] text-tinta-800"

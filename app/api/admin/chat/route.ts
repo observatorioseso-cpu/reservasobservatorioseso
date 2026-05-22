@@ -1,10 +1,9 @@
 export const dynamic = "force-dynamic"
 
-import Anthropic from "@anthropic-ai/sdk"
+import { streamText } from "ai"
+import { anthropic } from "@ai-sdk/anthropic"
 import { NextResponse } from "next/server"
 import { getAdminFromRequest } from "@/lib/adminAuth"
-
-const client = new Anthropic()
 
 const ADMIN_SYSTEM_PROMPT = `Eres Astra, la asistente de IA del panel de administración de los Observatorios ESO Chile. Apoyas exclusivamente a Bernardita y al equipo de administración. Eres experta en todas las operaciones del sistema de reservas.
 
@@ -86,7 +85,7 @@ Orientas a la administradora en el uso del panel, resuelves dudas operativas, ex
   - **VENTANA_RESERVA_DIAS**: cuántos días hacia adelante el cron crea turnos disponibles (actualmente: 60)
   - **WHATSAPP_ENABLED**: activa/desactiva notificaciones por WhatsApp (actualmente: false)
 - Cualquier cambio en Config toma efecto inmediatamente.
-- ⚠️ Después del 30 de mayo: cambiar MAX_PERSONAS_CLIENTE de 4 a 10.
+- Después del 30 de mayo: cambiar MAX_PERSONAS_CLIENTE de 4 a 10.
 
 ---
 
@@ -156,18 +155,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "messages requerido" }, { status: 400 })
   }
 
-  const historial = messages
-    .slice(-12)
-    .filter((m) => m.role === "user" || m.role === "assistant") as Array<{
-    role: "user" | "assistant"
-    content: string
-  }>
+  const all = messages
+    .filter((m) => m.role === "user" || m.role === "assistant")
+    .slice(-12) as Array<{ role: "user" | "assistant"; content: string }>
 
-  if (historial.length === 0 || historial[0].role !== "user") {
+  const firstUserIdx = all.findIndex((m) => m.role === "user")
+  if (firstUserIdx === -1) {
     return NextResponse.json({ error: "Se requiere al menos un mensaje de usuario" }, { status: 400 })
   }
+  const historial = all.slice(firstUserIdx)
 
-  // Inject current page context into the last user message if available
+  // Inyectar contexto de la página actual en el último mensaje del usuario
   const messagesWithContext = page
     ? historial.map((m, i) =>
         i === historial.length - 1 && m.role === "user"
@@ -176,29 +174,12 @@ export async function POST(request: Request) {
       )
     : historial
 
-  try {
-    const stream = client.messages.stream({
-      model: "claude-sonnet-4-6-20251001",
-      max_tokens: 1024,
-      system: [
-        {
-          type: "text",
-          text: ADMIN_SYSTEM_PROMPT,
-          cache_control: { type: "ephemeral" },
-        },
-      ],
-      messages: messagesWithContext,
-    })
+  const result = streamText({
+    model: anthropic("claude-sonnet-4-6-20251001"),
+    system: ADMIN_SYSTEM_PROMPT,
+    messages: messagesWithContext,
+    maxOutputTokens: 1024,
+  })
 
-    return new Response(stream.toReadableStream(), {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    })
-  } catch (error) {
-    console.error("[admin/chat/route] Error al llamar a Anthropic:", error)
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
-  }
+  return result.toTextStreamResponse()
 }

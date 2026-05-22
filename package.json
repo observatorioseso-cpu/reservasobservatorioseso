@@ -16,6 +16,7 @@
     "seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.78",
     "@anthropic-ai/sdk": "^0.90.0",
     "@auth/prisma-adapter": "^2.11.2",
     "@hookform/resolvers": "^5.2.2",
@@ -29,6 +30,7 @@
     "@vercel/analytics": "^2.0.1",
     "@vercel/blob": "^0.27.3",
     "@vercel/speed-insights": "^2.0.0",
+    "ai": "^6.0.190",
     "axios": "^1.15.2",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",

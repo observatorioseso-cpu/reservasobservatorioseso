@@ -1,11 +1,10 @@
 export const dynamic = "force-dynamic"
 
-import Anthropic from "@anthropic-ai/sdk"
+import { streamText } from "ai"
+import { anthropic } from "@ai-sdk/anthropic"
 import { NextResponse } from "next/server"
 
-const client = new Anthropic()
-
-// System prompt bilingüe — se cacheará con prompt caching (> 1024 tokens)
+// System prompt bilingüe — estático y largo (>1024 tokens) → elegible para prompt caching
 const SYSTEM_PROMPT = `Eres el asistente virtual de los Observatorios ESO Chile. Ayudas a los visitantes a reservar visitas guiadas gratuitas a La Silla y Paranal.
 
 ## Sobre los observatorios
@@ -82,49 +81,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Body inválido" }, { status: 400 })
   }
 
-  const { messages, locale = "es" } = body
+  const { messages } = body
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return NextResponse.json({ error: "messages requerido" }, { status: 400 })
   }
 
-  // Limitar historial a últimos 10 mensajes para evitar tokens excesivos
-  const historial = messages
-    .slice(-10)
-    .filter((m) => m.role === "user" || m.role === "assistant") as Array<{
-    role: "user" | "assistant"
-    content: string
-  }>
+  // Filtrar solo roles válidos y tomar últimos 10
+  const all = messages
+    .filter((m) => m.role === "user" || m.role === "assistant")
+    .slice(-10) as Array<{ role: "user" | "assistant"; content: string }>
 
-  // Validar que hay al menos un mensaje de usuario
-  if (historial.length === 0 || historial[0].role !== "user") {
+  // Asegurar que el historial empiece con un mensaje de usuario
+  // (el mensaje inicial de bienvenida es assistant y se incluye desde el cliente)
+  const firstUserIdx = all.findIndex((m) => m.role === "user")
+  if (firstUserIdx === -1) {
     return NextResponse.json({ error: "Se requiere al menos un mensaje de usuario" }, { status: 400 })
   }
+  const historial = all.slice(firstUserIdx)
 
-  try {
-    const stream = client.messages.stream({
-      model: "claude-sonnet-4-6-20251001",
-      max_tokens: 1024,
-      system: [
-        {
-          type: "text",
-          text: SYSTEM_PROMPT,
-          // Prompt caching: el system prompt es estático y grande — cachearlo
-          cache_control: { type: "ephemeral" },
-        },
-      ],
-      messages: historial,
-    })
+  const result = streamText({
+    model: anthropic("claude-sonnet-4-6-20251001"),
+    system: SYSTEM_PROMPT,
+    messages: historial,
+    maxOutputTokens: 1024,
+  })
 
-    return new Response(stream.toReadableStream(), {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    })
-  } catch (error) {
-    console.error("[chat/route] Error al llamar a Anthropic:", error)
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
-  }
+  return result.toTextStreamResponse()
 }

@@ -17,17 +17,16 @@ const MENSAJE_INICIAL: Mensaje = {
 }
 
 export function ChatWidget() {
+  // ── Todos los hooks ANTES de cualquier return condicional ──────────────
+  const pathname = usePathname()
+  const esAdmin = pathname?.includes("/admin") ?? false
+
   const [abierto, setAbierto] = useState(false)
   const [mensajes, setMensajes] = useState<Mensaje[]>([])
   const [input, setInput] = useState("")
   const [cargando, setCargando] = useState(false)
   const mensajesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
-  const pathname = usePathname()
-
-  // No mostrar el widget en páginas de admin
-  const esAdmin = pathname?.includes("/admin")
-  if (esAdmin) return null
 
   // Mostrar mensaje inicial la primera vez que se abre
   useEffect(() => {
@@ -50,30 +49,31 @@ export function ChatWidget() {
     }
   }, [abierto])
 
-  const enviar = useCallback(async () => {
-    if (!input.trim() || cargando) return
+  // ── Return condicional DESPUÉS de todos los hooks ──────────────────────
+  if (esAdmin) return null
 
-    const userMsg: Mensaje = { role: "user", content: input.trim() }
+  const enviar = async () => {
+    const texto = input.trim()
+    if (!texto || cargando) return
+
+    const userMsg: Mensaje = { role: "user", content: texto }
     const nuevosMensajes = [...mensajes, userMsg]
-    setMensajes(nuevosMensajes)
+    setMensajes([...nuevosMensajes, { role: "assistant", content: "" }])
     setInput("")
     setCargando(true)
-
-    // Agregar placeholder de assistant mientras carga
-    setMensajes([...nuevosMensajes, { role: "assistant", content: "" }])
 
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: nuevosMensajes, locale: "es" }),
+        body: JSON.stringify({ messages: nuevosMensajes }),
       })
 
       if (!res.ok || !res.body) {
         throw new Error(`Error HTTP ${res.status}`)
       }
 
-      // Leer stream SSE del SDK de Anthropic
+      // Leer stream de texto plano (toTextStreamResponse)
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
       let respuesta = ""
@@ -81,39 +81,14 @@ export function ChatWidget() {
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-
-        const chunk = decoder.decode(value, { stream: true })
-        const lines = chunk.split("\n")
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(line.slice(6))
-              if (
-                data.type === "content_block_delta" &&
-                data.delta?.type === "text_delta"
-              ) {
-                respuesta += data.delta.text
-                setMensajes([
-                  ...nuevosMensajes,
-                  { role: "assistant", content: respuesta },
-                ])
-              }
-            } catch {
-              // ignorar líneas no parseables (ping, etc.)
-            }
-          }
-        }
+        respuesta += decoder.decode(value, { stream: true })
+        setMensajes([...nuevosMensajes, { role: "assistant", content: respuesta }])
       }
 
-      // Si no se recibió contenido, mostrar error genérico
       if (!respuesta) {
         setMensajes([
           ...nuevosMensajes,
-          {
-            role: "assistant",
-            content: "Lo siento, no pude procesar tu mensaje. Por favor intenta de nuevo.",
-          },
+          { role: "assistant", content: "Lo siento, no pude procesar tu mensaje. Por favor intenta de nuevo." },
         ])
       }
     } catch {
@@ -121,15 +96,14 @@ export function ChatWidget() {
         ...nuevosMensajes,
         {
           role: "assistant",
-          content:
-            "Lo siento, ocurrió un error al conectar. Por favor intenta de nuevo o escríbenos a reservas@observatorioseso.cl",
+          content: "Lo siento, ocurrió un error al conectar. Por favor intenta de nuevo o escríbenos a reservas@observatorioseso.cl",
         },
       ])
     } finally {
       setCargando(false)
       setTimeout(() => inputRef.current?.focus(), 100)
     }
-  }, [input, cargando, mensajes])
+  }
 
   const manejarKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -145,7 +119,6 @@ export function ChatWidget() {
         <div
           className={cn(
             "fixed bottom-24 right-6 z-50",
-            "w-80 sm:w-80",
             "w-[calc(100vw-2rem)] sm:w-80",
             "h-96",
             "bg-stone-900 border border-stone-700 rounded-2xl shadow-2xl",
@@ -194,7 +167,7 @@ export function ChatWidget() {
                       : "bg-stone-800 text-stone-100",
                   )}
                 >
-                  {msg.content === "" && cargando ? (
+                  {msg.content === "" && cargando && i === mensajes.length - 1 ? (
                     <span
                       className="inline-flex gap-1 items-center text-stone-400"
                       aria-label="El asistente está escribiendo"
@@ -266,7 +239,6 @@ export function ChatWidget() {
           "flex items-center justify-center",
           "transition-all duration-200",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-950",
-          abierto && "rotate-0",
         )}
         aria-label={abierto ? "Cerrar asistente" : "Abrir asistente ESO"}
         aria-expanded={abierto}
