@@ -110,6 +110,7 @@ export default async function ContactoPage({
       <LandingNav
         homeLabel={tNav("home")}
         myBookingLabel={tNav("myBooking")}
+        brandLabel={tNav("brand")}
         locale={locale}
         lightBg
       />
