@@ -99,7 +99,7 @@ async function enviarEmailConfirmacion(params: EmailConfirmacionParams): Promise
 
   const subject = isES
     ? `Reserva registrada — ${obsNombre} · ${params.fecha}`
-    : `Booking confirmed — ${obsNombre} · ${params.fecha}`
+    : `Booking registered — ${obsNombre} · ${params.fecha}`
 
   const html = emailConfirmacionHTML({
     nombre: params.nombre,

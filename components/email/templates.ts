@@ -433,7 +433,7 @@ export function emailRecordatorioHTML(data: EmailRecordatorioData): string {
 
   const rows = `
   <tr><td style="padding-bottom: 28px;">
-    <p style="margin: 0; ${EYEBROW}">ESO Observatorios &#8212; Recordatorio</p>
+    <p style="margin: 0; ${EYEBROW}">ESO Observatorios &#8212; ${isES ? "Recordatorio" : "Reminder"}</p>
     <h1 style="${H1_SM}">${isES ? "&#191;Confirmas tu visita?" : "Please confirm your visit"}</h1>
     <p style="margin: 10px 0 0; ${MUTED_S}">
       ${isES
@@ -846,7 +846,7 @@ export function emailRecordatorio24hHTML(data: EmailRecordatorio24hData): string
 
   const rows = `
   <tr><td style="padding-bottom: 28px;">
-    <p style="margin: 0; ${EYEBROW}">ESO Observatorios &#8212; Recordatorio urgente</p>
+    <p style="margin: 0; ${EYEBROW}">ESO Observatorios &#8212; ${isES ? "Recordatorio urgente" : "Urgent reminder"}</p>
     <h1 style="${H1_SM}">${isES ? "Tu visita es ma&#241;ana" : "Your visit is tomorrow"}</h1>
     <p style="margin: 10px 0 0; ${MUTED_S}">
       ${isES
@@ -920,7 +920,7 @@ export function emailRecordatorioJuevesHTML(data: EmailRecordatorioJuevesData): 
 
   const rows = `
   <tr><td style="padding-bottom: 28px;">
-    <p style="margin: 0; ${EYEBROW}">ESO Observatorios &#8212; Recordatorio</p>
+    <p style="margin: 0; ${EYEBROW}">ESO Observatorios &#8212; ${isES ? "Recordatorio" : "Reminder"}</p>
     <h1 style="${H1_SM}">${isES ? "&#161;Confirma ma&#241;ana antes de las 12:00!" : "Confirm tomorrow before 12:00 PM!"}</h1>
     <p style="margin: 10px 0 0; ${MUTED_S}">
       ${isES
@@ -999,7 +999,7 @@ export function emailRecordatorioViernesHTML(data: EmailRecordatorioViernesData)
 
   const rows = `
   <tr><td style="padding-bottom: 20px;">
-    <p style="margin: 0; ${EYEBROW}">ESO Observatorios &#8212; &#9888;&#65039; &#218;ltimo aviso</p>
+    <p style="margin: 0; ${EYEBROW}">ESO Observatorios &#8212; ${isES ? "&#9888;&#65039; &#218;ltimo aviso" : "&#9888;&#65039; Last notice"}</p>
     <h1 style="${H1_SM}">${isES
       ? `Tienes hasta las <strong style="color: ${AMBER_C};">${esc(data.horaLimite)}</strong> para confirmar`
       : `Confirm before <strong style="color: ${AMBER_C};">${esc(data.horaLimite)}</strong> today`}</h1>
