@@ -101,7 +101,7 @@ export async function POST(request: Request) {
   const historial = all.slice(firstUserIdx)
 
   const result = streamText({
-    model: anthropic("claude-sonnet-4-6-20251001"),
+    model: anthropic("claude-sonnet-4-6"),
     system: SYSTEM_PROMPT,
     messages: historial,
     maxOutputTokens: 1024,

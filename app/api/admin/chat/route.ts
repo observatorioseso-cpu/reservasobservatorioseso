@@ -175,7 +175,7 @@ export async function POST(request: Request) {
     : historial
 
   const result = streamText({
-    model: anthropic("claude-sonnet-4-6-20251001"),
+    model: anthropic("claude-sonnet-4-6"),
     system: ADMIN_SYSTEM_PROMPT,
     messages: messagesWithContext,
     maxOutputTokens: 1024,
