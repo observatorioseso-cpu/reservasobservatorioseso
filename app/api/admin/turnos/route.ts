@@ -12,6 +12,8 @@ const crearTurnoSchema = z.object({
   horaInicio: z.string().regex(/^\d{2}:\d{2}$/),
   horaFin: z.string().regex(/^\d{2}:\d{2}$/),
   capacidadMax: z.number().int().min(1).max(200),
+  tipo: z.enum(["REGULAR", "NOCTURNA"]).default("REGULAR"),
+  maxPersonasPorReserva: z.number().int().min(1).max(50).optional().nullable(),
 })
 
 export async function GET(request: Request): Promise<NextResponse> {
@@ -77,7 +79,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     )
   }
 
-  const { observatorio, fecha, horaInicio, horaFin, capacidadMax } = parsed.data
+  const { observatorio, fecha, horaInicio, horaFin, capacidadMax, tipo, maxPersonasPorReserva } = parsed.data
 
   const hoy = new Date()
   hoy.setUTCHours(0, 0, 0, 0)
@@ -97,6 +99,8 @@ export async function POST(request: Request): Promise<NextResponse> {
         horaInicio,
         horaFin,
         capacidadMax,
+        tipo,
+        maxPersonasPorReserva: maxPersonasPorReserva ?? null,
       },
     })
     return NextResponse.json(turno, { status: 201 })

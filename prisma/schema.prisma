@@ -26,6 +26,11 @@ enum IdiomaVisita {
   EN
 }
 
+enum TipoTurno {
+  REGULAR
+  NOCTURNA
+}
+
 enum TipoLogAgente {
   VALIDACION
   COMUNICACION
@@ -58,6 +63,11 @@ model Turno {
   capacidadMax Int
   cuposOcupados Int         @default(0)
   activo       Boolean      @default(true)
+
+  // Tipo de visita: REGULAR (sábados programados) o NOCTURNA (evento especial, bus ESO)
+  tipo                  TipoTurno @default(REGULAR)
+  // Override del máximo de personas por reserva individual. null = usa ConfigSistema global.
+  maxPersonasPorReserva Int?
 
   // Campos de asistencia real (para reportes mensuales)
   asistentesReales         Int?

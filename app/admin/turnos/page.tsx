@@ -13,6 +13,7 @@ import {
   Check,
   Users,
   Trash2,
+  Moon,
 } from "lucide-react"
 import { AdminShell } from "@/components/admin/AdminShell"
 import { Button } from "@/components/ui/Button"
@@ -22,6 +23,8 @@ import { Button } from "@/components/ui/Button"
 // ---------------------------------------------------------------------------
 
 type Observatorio = "LA_SILLA" | "PARANAL"
+
+type TipoTurno = "REGULAR" | "NOCTURNA"
 
 interface Turno {
   id: string
@@ -33,6 +36,8 @@ interface Turno {
   cuposOcupados: number
   activo: boolean
   asistentesReales: number | null
+  tipo: TipoTurno
+  maxPersonasPorReserva: number | null
 }
 
 interface NuevoTurnoForm {
@@ -41,6 +46,8 @@ interface NuevoTurnoForm {
   horaInicio: string
   horaFin: string
   capacidadMax: string
+  tipo: TipoTurno
+  maxPersonasPorReserva: string
 }
 
 interface AsistenciaForm {
@@ -97,6 +104,8 @@ function ModalNuevoTurno({ onClose, onCreated }: ModalNuevoTurnoProps) {
     horaInicio: "",
     horaFin: "",
     capacidadMax: "",
+    tipo: "REGULAR",
+    maxPersonasPorReserva: "4",
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -117,6 +126,10 @@ function ModalNuevoTurno({ onClose, onCreated }: ModalNuevoTurnoProps) {
       setError("La capacidad máxima debe ser al menos 1.")
       return
     }
+    if (form.tipo === "NOCTURNA" && (!form.maxPersonasPorReserva || parseInt(form.maxPersonasPorReserva, 10) < 1)) {
+      setError("Especifica el máximo de personas por reserva para turno nocturno.")
+      return
+    }
 
     setLoading(true)
     try {
@@ -129,6 +142,11 @@ function ModalNuevoTurno({ onClose, onCreated }: ModalNuevoTurnoProps) {
           horaInicio: form.horaInicio,
           horaFin: form.horaFin,
           capacidadMax: parseInt(form.capacidadMax, 10),
+          tipo: form.tipo,
+          maxPersonasPorReserva:
+            form.tipo === "NOCTURNA" && form.maxPersonasPorReserva
+              ? parseInt(form.maxPersonasPorReserva, 10)
+              : null,
         }),
       })
       if (!res.ok) {
@@ -231,7 +249,7 @@ function ModalNuevoTurno({ onClose, onCreated }: ModalNuevoTurnoProps) {
 
           <div>
             <label className="mb-1.5 block text-sm font-medium text-stone-300" htmlFor="capacidadMax">
-              Capacidad maxima
+              Capacidad total del turno
             </label>
             <input
               id="capacidadMax"
@@ -240,9 +258,45 @@ function ModalNuevoTurno({ onClose, onCreated }: ModalNuevoTurnoProps) {
               value={form.capacidadMax}
               onChange={(e) => set("capacidadMax", e.target.value)}
               className="w-full rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-sm text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
-              placeholder="Ej: 50"
+              placeholder="Ej: 40"
             />
           </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-stone-300" htmlFor="tipo">
+              Tipo de visita
+            </label>
+            <select
+              id="tipo"
+              value={form.tipo}
+              onChange={(e) => set("tipo", e.target.value as TipoTurno)}
+              className="w-full rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-sm text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            >
+              <option value="REGULAR">Regular (sábados programados)</option>
+              <option value="NOCTURNA">Nocturna (evento especial, bus ESO)</option>
+            </select>
+          </div>
+
+          {form.tipo === "NOCTURNA" && (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-stone-300" htmlFor="maxPorReserva">
+                Máx. personas por reserva individual
+              </label>
+              <input
+                id="maxPorReserva"
+                type="number"
+                min={1}
+                max={50}
+                value={form.maxPersonasPorReserva}
+                onChange={(e) => set("maxPersonasPorReserva", e.target.value)}
+                className="w-full rounded-lg border border-amber-600/40 bg-stone-800 px-3 py-2 text-sm text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                placeholder="Ej: 4"
+              />
+              <p className="mt-1 text-xs text-stone-500">
+                Independiente del límite global en Config. Aplica solo a este turno.
+              </p>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-1">
             <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={loading}>
@@ -689,13 +743,24 @@ export default function TurnosPage() {
                 {turnos.map((t) => (
                   <tr key={t.id} className="bg-stone-900 hover:bg-stone-800 transition-colors">
                     <td className="px-4 py-3 font-medium text-stone-100">
-                      {OBS_LABELS[t.observatorio]}
+                      <div className="flex items-center gap-2">
+                        {OBS_LABELS[t.observatorio]}
+                        {t.tipo === "NOCTURNA" && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-400 ring-1 ring-amber-500/20">
+                            <Moon className="size-2.5" aria-hidden="true" />
+                            Nocturna
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 tabular-nums text-stone-300">
                       {formatFechaES(t.fecha)}
                     </td>
                     <td className="px-4 py-3 tabular-nums text-stone-300">
                       {t.horaInicio}–{t.horaFin}
+                      {t.maxPersonasPorReserva != null && (
+                        <span className="ml-2 text-xs text-amber-500">máx.{t.maxPersonasPorReserva}p/res</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 tabular-nums text-stone-300">
                       {t.cuposOcupados}/{t.capacidadMax}

@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Sun, Sunset, Users, CheckCircle2 } from "lucide-react"
+import { Sun, Sunset, Moon, Users, CheckCircle2, Bus } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // ---------------------------------------------------------------------------
@@ -68,6 +68,8 @@ interface TurnoCardProps {
   selected: boolean
   onSelect: (id: string) => void
   observatorio: "LA_SILLA" | "PARANAL"
+  tipo?: string
+  maxPersonasPorReserva?: number | null
 }
 
 export function TurnoCard({
@@ -79,11 +81,20 @@ export function TurnoCard({
   selected,
   onSelect,
   observatorio,
+  tipo = "REGULAR",
+  maxPersonasPorReserva,
 }: TurnoCardProps) {
   const theme = CARD_THEME[observatorio]
-  const isMañana = parseInt(horaInicio) < 12
+  const esNocturna = tipo === "NOCTURNA"
+  const isMañana = !esNocturna && parseInt(horaInicio) < 12
   const agotado = cuposLibres === 0
   const ocupacion = Math.round(((capacidadMax - cuposLibres) / capacidadMax) * 100)
+
+  const turnoLabel = esNocturna
+    ? "Turno nocturno"
+    : isMañana
+    ? "Turno mañana"
+    : "Turno tarde"
 
   return (
     <motion.button
@@ -96,7 +107,11 @@ export function TurnoCard({
         "relative w-full rounded-xl p-5 text-left transition-all duration-150",
         "focus-visible:outline-none focus-visible:ring-2",
         theme.focusRing,
-        agotado
+        esNocturna && !agotado
+          ? selected
+            ? "ring-2 ring-amber-500/50 bg-amber-50/80 shadow-[0_2px_16px_rgba(245,158,11,0.12)]"
+            : "ring-1 ring-amber-400/30 bg-white hover:ring-amber-400/50 hover:shadow-sm"
+          : agotado
           ? cn(theme.agotadoRing, "opacity-50 cursor-not-allowed")
           : selected
           ? cn(theme.selectedRing, theme.selectedGlow)
@@ -106,9 +121,24 @@ export function TurnoCard({
       {/* Check seleccionado */}
       {selected && !agotado && (
         <CheckCircle2
-          className={cn("absolute top-4 right-4 size-5", theme.checkIcon)}
+          className={cn(
+            "absolute top-4 right-4 size-5",
+            esNocturna ? "text-amber-500" : theme.checkIcon
+          )}
           aria-hidden="true"
         />
+      )}
+
+      {/* Badge NOCTURNA */}
+      {esNocturna && (
+        <div className="absolute top-3 right-3">
+          {!selected && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+              <Moon className="size-2.5" aria-hidden="true" />
+              Nocturno
+            </span>
+          )}
+        </div>
       )}
 
       <div className="flex items-start gap-3.5">
@@ -118,12 +148,22 @@ export function TurnoCard({
             "rounded-lg p-2.5 shrink-0",
             agotado
               ? "bg-stone-100"
+              : esNocturna
+              ? selected ? "bg-amber-100" : "bg-amber-50"
               : selected
               ? theme.selectedIconBg
               : theme.idleIconBg
           )}
         >
-          {isMañana ? (
+          {esNocturna ? (
+            <Moon
+              className={cn(
+                "size-5",
+                agotado ? theme.agotadoText : selected ? "text-amber-600" : "text-amber-500"
+              )}
+              aria-hidden="true"
+            />
+          ) : isMañana ? (
             <Sun
               className={cn(
                 "size-5",
@@ -146,7 +186,13 @@ export function TurnoCard({
           <p
             className={cn(
               "font-semibold text-sm",
-              agotado ? theme.agotadoText : selected ? theme.selectedHora : theme.idleHora
+              agotado
+                ? theme.agotadoText
+                : esNocturna
+                ? selected ? "text-amber-700" : "text-stone-800"
+                : selected
+                ? theme.selectedHora
+                : theme.idleHora
             )}
           >
             {horaInicio} – {horaFin}
@@ -154,13 +200,37 @@ export function TurnoCard({
           <p
             className={cn(
               "text-xs mt-0.5",
-              agotado ? theme.agotadoText : selected ? theme.selectedLabel : theme.idleLabel
+              agotado
+                ? theme.agotadoText
+                : esNocturna
+                ? selected ? "text-amber-600" : "text-stone-400"
+                : selected
+                ? theme.selectedLabel
+                : theme.idleLabel
             )}
           >
-            {isMañana ? "Turno mañana" : "Turno tarde"}
+            {turnoLabel}
           </p>
+          {/* Máx. personas override */}
+          {maxPersonasPorReserva != null && !agotado && (
+            <p className="mt-0.5 flex items-center gap-1 text-[10px] text-amber-600">
+              <Users className="size-2.5" aria-hidden="true" />
+              Máx. {maxPersonasPorReserva} personas por reserva
+            </p>
+          )}
         </div>
       </div>
+
+      {/* Bus notice para nocturna */}
+      {esNocturna && !agotado && (
+        <div className={cn(
+          "mt-3 flex items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px]",
+          selected ? "bg-amber-100/80 text-amber-800" : "bg-amber-50 text-amber-700"
+        )}>
+          <Bus className="size-3 shrink-0" aria-hidden="true" />
+          Solo en bus oficial ESO · No se permite vehículo propio
+        </div>
+      )}
 
       {/* Cupos y barra */}
       <div className="mt-4">
@@ -168,13 +238,13 @@ export function TurnoCard({
           <span
             className={cn(
               "flex items-center gap-1 text-xs",
-              agotado ? theme.agotadoText : theme.cuposText
+              agotado ? theme.agotadoText : esNocturna ? "text-stone-500" : theme.cuposText
             )}
           >
             <Users className="size-3" aria-hidden="true" />
             {agotado ? "Sin cupos disponibles" : `${cuposLibres} cupos disponibles`}
           </span>
-          <span className={cn("text-xs", theme.ocupText)}>
+          <span className={cn("text-xs", esNocturna ? "text-stone-300" : theme.ocupText)}>
             {ocupacion}% ocupado
           </span>
         </div>
@@ -184,6 +254,8 @@ export function TurnoCard({
               "h-full rounded-full transition-all",
               ocupacion >= 80
                 ? theme.progressHigh
+                : esNocturna
+                ? "bg-amber-400/70"
                 : selected
                 ? theme.progressSelected
                 : theme.progressIdle

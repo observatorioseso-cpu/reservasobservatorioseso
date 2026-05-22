@@ -19,8 +19,8 @@ const prisma = new PrismaClient({ adapter })
 const configs = [
   {
     clave: "MAX_PERSONAS_CLIENTE",
-    valor: "4",
-    descripcion: "Máx. personas por reserva (4 = visita nocturna 30 mayo; restablecer a 10 tras el evento)",
+    valor: "10",
+    descripcion: "Máx. personas por reserva individual (visitas regulares). Las visitas nocturnas usan maxPersonasPorReserva del Turno.",
   },
   {
     clave: "HORA_CIERRE_VIERNES",
@@ -48,11 +48,12 @@ for (const cfg of configs) {
   console.log(`${result.clave} = ${result.valor}`)
 }
 
-// MAX_PERSONAS_CLIENTE forzado a 4 (evento nocturno)
+// MAX_PERSONAS_CLIENTE → 10 (valor normal para visitas regulares)
+// Las visitas nocturnas controlan su límite a través de Turno.maxPersonasPorReserva
 await prisma.configSistema.update({
   where: { clave: "MAX_PERSONAS_CLIENTE" },
-  data:  { valor: "4" },
+  data:  { valor: "10" },
 })
-console.log("MAX_PERSONAS_CLIENTE → 4 ✓")
+console.log("MAX_PERSONAS_CLIENTE → 10 ✓")
 
 await prisma.$disconnect()

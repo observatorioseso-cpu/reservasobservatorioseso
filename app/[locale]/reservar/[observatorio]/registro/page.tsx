@@ -41,8 +41,19 @@ export default async function FormularioPage({
   const tErrors = await getTranslations({ locale, namespace: "errors" })
   const nombre = NOMBRES[slug]
 
-  const configMax = await prisma.configSistema.findUnique({ where: { clave: "MAX_PERSONAS_CLIENTE" } })
-  const maxPersonas = configMax ? Math.min(parseInt(configMax.valor, 10) || 10, 10) : 10
+  // Max personas: turno override tiene prioridad sobre ConfigSistema global
+  const turnoData = await prisma.turno.findUnique({
+    where: { id: turnoId },
+    select: { tipo: true, maxPersonasPorReserva: true },
+  })
+  let maxPersonas = 10
+  if (turnoData?.maxPersonasPorReserva != null) {
+    maxPersonas = turnoData.maxPersonasPorReserva
+  } else {
+    const configMax = await prisma.configSistema.findUnique({ where: { clave: "MAX_PERSONAS_CLIENTE" } })
+    maxPersonas = configMax ? Math.min(parseInt(configMax.valor, 10) || 10, 50) : 10
+  }
+  const esNocturna = turnoData?.tipo === "NOCTURNA"
 
   return (
     <div className="min-h-[100dvh] bg-stone-50">
@@ -72,6 +83,21 @@ export default async function FormularioPage({
               ? `Up to ${maxPersonas} people per booking`
               : `Máximo ${maxPersonas} personas por reserva`}
           </p>
+          {esNocturna && (
+            <div className="mt-4 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3.5">
+              <span className="mt-0.5 shrink-0 text-base leading-none" aria-hidden="true">🌙</span>
+              <div className="text-sm text-amber-900">
+                <p className="font-semibold">
+                  {locale === "en" ? "Special nocturnal visit" : "Visita nocturna especial"}
+                </p>
+                <p className="mt-0.5 text-amber-800">
+                  {locale === "en"
+                    ? "Access exclusively by ESO bus (round trip). Personal vehicles are not permitted. Pick-up points and times will be communicated to registered attendees."
+                    : "El acceso es únicamente en bus oficial ESO (ida y vuelta). No se permite ingreso en vehículo propio. Los puntos y horarios de recogida se informarán a los inscritos."}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         <FormularioReserva

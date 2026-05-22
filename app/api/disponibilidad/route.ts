@@ -44,13 +44,15 @@ export async function GET(request: Request) {
       horaFin: true,
       capacidadMax: true,
       cuposOcupados: true,
+      tipo: true,
+      maxPersonasPorReserva: true,
     },
     orderBy: [{ fecha: "asc" }, { horaInicio: "asc" }],
   })
 
-  // Paranal only operates on Saturdays; filter out any legacy Sunday turnos
+  // Paranal regular: solo sábados. Turnos NOCTURNA: cualquier día.
   const turnos = observatorio === "PARANAL"
-    ? turnosRaw.filter((t) => t.fecha.getUTCDay() === 6)
+    ? turnosRaw.filter((t) => t.tipo === "NOCTURNA" || t.fecha.getUTCDay() === 6)
     : turnosRaw
 
   type TurnoDisponible = {
@@ -61,6 +63,8 @@ export async function GET(request: Request) {
     cuposOcupados: number
     cuposLibres: number
     disponible: boolean
+    tipo: string
+    maxPersonasPorReserva: number | null
   }
 
   // Agrupar por fecha ISO para el calendario
@@ -76,6 +80,8 @@ export async function GET(request: Request) {
         cuposOcupados: turno.cuposOcupados,
         cuposLibres: turno.capacidadMax - turno.cuposOcupados,
         disponible: turno.capacidadMax - turno.cuposOcupados > 0,
+        tipo: turno.tipo,
+        maxPersonasPorReserva: turno.maxPersonasPorReserva,
       })
       return acc
     },

@@ -73,9 +73,19 @@ export async function POST(request: Request) {
 
   const data = parsed.data
 
-  // 4. Verificar límite de personas (lee MAX_PERSONAS_CLIENTE de ConfigSistema; fallback: 10)
-  const configMax = await prisma.configSistema.findUnique({ where: { clave: "MAX_PERSONAS_CLIENTE" } })
-  const maxPersonasCliente = configMax ? Math.min(parseInt(configMax.valor, 10) || 10, 10) : 10
+  // 4. Verificar límite de personas
+  // Prioridad: turno.maxPersonasPorReserva → ConfigSistema global → fallback 10
+  const turnoParaMax = await prisma.turno.findUnique({
+    where: { id: data.turnoId },
+    select: { maxPersonasPorReserva: true },
+  })
+  let maxPersonasCliente = 10
+  if (turnoParaMax?.maxPersonasPorReserva != null) {
+    maxPersonasCliente = turnoParaMax.maxPersonasPorReserva
+  } else {
+    const configMax = await prisma.configSistema.findUnique({ where: { clave: "MAX_PERSONAS_CLIENTE" } })
+    maxPersonasCliente = configMax ? Math.min(parseInt(configMax.valor, 10) || 10, 50) : 10
+  }
 
   if (data.cantidadPersonas > maxPersonasCliente) {
     return NextResponse.json(

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "@/i18n/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { ChevronLeft, ChevronRight, AlertCircle, Telescope } from "lucide-react"
+import { ChevronLeft, ChevronRight, AlertCircle, Telescope, Moon } from "lucide-react"
 import { TurnoCard } from "./TurnoCard"
 import { Spinner } from "@/components/ui/Spinner"
 import { cn } from "@/lib/utils"
@@ -16,6 +16,8 @@ interface TurnoDisponible {
   cuposOcupados: number
   cuposLibres: number
   disponible: boolean
+  tipo: string
+  maxPersonasPorReserva: number | null
 }
 
 interface DisponibilidadPorFecha {
@@ -322,6 +324,7 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
             const isSelected = selectedDate === iso
             const isToday = iso === todayISO
             const isDisabled = esPasado || sinTurno || !!sinCupos
+            const tieneNocturna = turnos?.some((t) => t.tipo === "NOCTURNA" && t.cuposLibres > 0)
 
             return (
               <motion.button
@@ -334,7 +337,9 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
                   "relative aspect-square rounded-lg text-sm transition-all duration-100",
                   "focus-visible:outline-none focus-visible:ring-2",
                   theme.dayRing,
-                  isSelected
+                  tieneNocturna && !isSelected
+                    ? "bg-amber-50/60 text-amber-800 hover:bg-amber-100/70 ring-1 ring-amber-300/30"
+                    : isSelected
                     ? theme.daySelected
                     : esPasado || sinTurno
                     ? theme.dayDisabled
@@ -344,19 +349,35 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
                   // Hoy: subrayado sutil si no está seleccionado
                   isToday && !isSelected && "underline decoration-dotted underline-offset-2"
                 )}
-                aria-label={`${dia.getDate()} de ${MESES_ES[dia.getMonth()]}${isToday ? ", hoy" : ""}`}
+                aria-label={`${dia.getDate()} de ${MESES_ES[dia.getMonth()]}${isToday ? ", hoy" : ""}${tieneNocturna ? ", visita nocturna" : ""}`}
                 aria-pressed={isSelected}
                 aria-disabled={isDisabled}
               >
                 {dia.getDate()}
 
+                {/* Indicador nocturno */}
+                {tieneNocturna && !isSelected && (
+                  <Moon
+                    className="absolute top-0.5 right-0.5 size-2.5 text-amber-500"
+                    aria-hidden="true"
+                  />
+                )}
+
                 {/* Dot disponible */}
-                {tieneCupos && !isSelected && (
+                {tieneCupos && !isSelected && !tieneNocturna && (
                   <span
                     className={cn(
                       "absolute bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full",
                       theme.dotAvailable
                     )}
+                    aria-hidden="true"
+                  />
+                )}
+
+                {/* Dot nocturna disponible */}
+                {tieneNocturna && !isSelected && (
+                  <span
+                    className="absolute bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full bg-amber-400"
                     aria-hidden="true"
                   />
                 )}
@@ -378,12 +399,16 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
 
         {/* Leyenda */}
         <div
-          className={cn("mt-4 flex items-center gap-5 text-xs", theme.legend)}
+          className={cn("mt-4 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs", theme.legend)}
           aria-hidden="true"
         >
           <span className="flex items-center gap-1.5">
             <span className={cn("size-2 rounded-full", theme.dotAvailable)} />
             {labels.conCupos}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="size-2 rounded-full bg-amber-400" />
+            Visita nocturna
           </span>
           <span className="flex items-center gap-1.5">
             <span className={cn("size-2 rounded-full", theme.dotAgotado)} />
@@ -457,6 +482,8 @@ export function CalendarioReservas({ observatorio, labels }: CalendarioReservasP
                     selected={selectedTurnoId === turno.id}
                     onSelect={setSelectedTurnoId}
                     observatorio={observatorio}
+                    tipo={turno.tipo}
+                    maxPersonasPorReserva={turno.maxPersonasPorReserva}
                   />
                 ))}
               </motion.div>
