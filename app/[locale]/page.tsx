@@ -24,6 +24,11 @@ const BASE_URL = (
   process.env.NEXT_PUBLIC_BASE_URL || "https://reservasobservatorioseso.cl"
 ).replace(/^﻿/, "").trim()
 
+const titles: Record<string, string> = {
+  es: "Reserva tu visita guiada | ESO Observatorios Chile",
+  en: "Book your guided tour | ESO Observatories Chile",
+}
+
 const descriptions: Record<string, string> = {
   es: "Reserva gratis tu visita guiada a La Silla o Paranal, los observatorios de la ESO en Chile. Disponible en español e inglés.",
   en: "Book your free guided tour to La Silla or Paranal, ESO's world-class observatories in Chile.",
@@ -35,27 +40,29 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>
 }): Promise<Metadata> {
   const { locale } = await params
+  const title = titles[locale] ?? titles.es
   const description = descriptions[locale] ?? descriptions.es
+  const siteName = locale === "en" ? "ESO Observatories Chile" : "ESO Observatorios Chile"
   const canonicalUrl = `${BASE_URL}/${locale}`
   return {
-    title: "Reserva tu visita guiada | ESO Observatorios Chile",
+    title,
     description,
     alternates: {
       canonical: canonicalUrl,
       languages: { es: `${BASE_URL}/es`, en: `${BASE_URL}/en` },
     },
     openGraph: {
-      title: "Reserva tu visita guiada | ESO Observatorios Chile",
+      title,
       description,
       url: canonicalUrl,
-      siteName: "ESO Observatorios Chile",
+      siteName,
       locale: locale === "en" ? "en_US" : "es_CL",
       type: "website",
-      images: [{ url: `/api/og?obs=home&locale=${locale}`, width: 1200, height: 630, alt: "ESO Observatorios Chile" }],
+      images: [{ url: `/api/og?obs=home&locale=${locale}`, width: 1200, height: 630, alt: siteName }],
     },
     twitter: {
       card: "summary_large_image",
-      title: "Reserva tu visita guiada | ESO Observatorios Chile",
+      title,
       description,
       images: [`/api/og?obs=home&locale=${locale}`],
     },
@@ -116,6 +123,7 @@ export default async function LandingPage({
       <LandingNav
         homeLabel={tNav("home")}
         myBookingLabel={tNav("myBooking")}
+        brandLabel={tNav("brand")}
         locale={locale}
         lightBg
       />

@@ -20,7 +20,7 @@ const cardConfig = {
   LA_SILLA: {
     photo: "/images/lasilla-eclipse.jpg",
     photoAlt: "Eclipse solar total sobre el Observatorio La Silla, Región de Coquimbo, Chile",
-    photoPosition: "object-[center_25%]",
+    photoPosition: "center 18%",
     year: "HARPS",
     // Warm earth gradient for La Silla (ochre/brown tones of the Atacama terrain)
     photoOverlay:
@@ -36,7 +36,7 @@ const cardConfig = {
     photo: "/images/paranal-dusk.jpg",
     photoAlt:
       "Los cuatro telescopios VLT del Observatorio Paranal al atardecer del desierto de Atacama",
-    photoPosition: "object-center",
+    photoPosition: "center",
     year: "VLT",
     // Cool dusk gradient for Paranal (sky-blue/navy of the Atacama twilight)
     photoOverlay:
@@ -87,7 +87,8 @@ export function ObservatoryCard({
         <img
           src={cfg.photo}
           alt={cfg.photoAlt}
-          className={`absolute inset-0 w-full h-full object-cover ${cfg.photoPosition}`}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ objectPosition: cfg.photoPosition }}
           loading="lazy"
         />
 

@@ -148,7 +148,8 @@
     "home": "Home",
     "myBooking": "My booking",
     "schools": "School visits",
-    "contact": "Contact"
+    "contact": "Contact",
+    "brand": "ESO Observatories"
   },
   "errors": {
     "notFound": "Page not found",
@@ -179,11 +180,11 @@
     "skipToMain": "Skip to main content"
   },
   "home": {
-    "badge": "Nocturnal Experience · May 30 · La Silla & Paranal",
-    "heroTitle": "Book your nocturnal visit",
-    "heroSubtitle": "Special nocturnal visits on May 30 at La Silla and Paranal. Choose your observatory and secure your spot — max. 4 people per booking.",
+    "badge": "Regular visits · Special night event May 30",
+    "heroTitle": "Book your visit to ESO's observatories",
+    "heroSubtitle": "Free guided visits every Saturday at La Silla and Paranal. Next special night event: May 30 at both observatories — max. 4 people.",
     "myBookingBtn": "View my booking",
-    "ruleMaxPersons": "Max. 4 people per individual booking",
+    "ruleMaxPersons": "Max. 10 people per individual booking",
     "ruleDeadline": "Confirm by Friday 12:00 Santiago time",
     "ruleModifiable": "Modifiable until Friday 12:00",
     "obsStep": "Step 1 of 3 — Choose your observatory",

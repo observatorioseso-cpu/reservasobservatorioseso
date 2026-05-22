@@ -9,12 +9,13 @@ import { motion, AnimatePresence } from "framer-motion"
 interface LandingNavProps {
   homeLabel: string
   myBookingLabel: string
+  brandLabel: string
   locale: string
   /** When true the pill stays in light/cream mode regardless of scroll position */
   lightBg?: boolean
 }
 
-export function LandingNav({ homeLabel: _, myBookingLabel, locale, lightBg = false }: LandingNavProps) {
+export function LandingNav({ homeLabel: _, myBookingLabel, brandLabel, locale, lightBg = false }: LandingNavProps) {
   const [scrolled, setScrolled] = useState(lightBg)
   const [open, setOpen] = useState(false)
 
@@ -59,7 +60,7 @@ export function LandingNav({ homeLabel: _, myBookingLabel, locale, lightBg = fal
             <Link
               href="/"
               className="flex items-center gap-2 group"
-              aria-label="ESO Observatorios — Inicio"
+              aria-label={`${brandLabel} — Inicio`}
             >
               <span
                 className={cn(
@@ -82,7 +83,7 @@ export function LandingNav({ homeLabel: _, myBookingLabel, locale, lightBg = fal
                   scrolled ? "text-tinta-900" : "text-white"
                 )}
               >
-                Jornada Nocturna ESO
+                {brandLabel}
               </span>
             </Link>
 
