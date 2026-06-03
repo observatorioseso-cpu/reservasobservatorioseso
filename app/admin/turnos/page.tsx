@@ -7,6 +7,7 @@ import {
   Pencil,
   ClipboardList,
   PowerOff,
+  Power,
   Loader2,
   AlertCircle,
   X,
@@ -556,6 +557,8 @@ export default function TurnosPage() {
     result: { eliminados: number; omitidos: number; detalle: string } | null
     error: string | null
   }>({ loading: false, result: null, error: null })
+  const [resyncLoading, setResyncLoading] = useState(false)
+  const [generarLoading, setGenerarLoading] = useState(false)
 
   const fetchTurnos = useCallback(async () => {
     setLoading(true)
@@ -593,6 +596,69 @@ export default function TurnosPage() {
     }
   }
 
+  async function handleGenerar() {
+    if (
+      !window.confirm(
+        "¿Generar los turnos faltantes dentro de la ventana de reserva?\n\n" +
+          "Crea los turnos de sábado que aún no existan (no duplica ni modifica los existentes), " +
+          "con su estado correcto según el calendario."
+      )
+    )
+      return
+    setGenerarLoading(true)
+    try {
+      const res = await fetch("/api/admin/turnos/generar", { method: "POST" })
+      const json = await res.json()
+      if (!res.ok || !json.ok) {
+        alert(json.error ?? "Error al generar turnos.")
+        return
+      }
+      alert(
+        `Generación lista.\n\n` +
+          `Turnos creados: ${json.creados}\n` +
+          `· La Silla: ${json.laSilla}\n` +
+          `· Paranal: ${json.paranal}`
+      )
+      if (json.creados > 0) await fetchTurnos()
+    } catch {
+      alert("Error de conexión al generar turnos.")
+    } finally {
+      setGenerarLoading(false)
+    }
+  }
+
+  async function handleResync() {
+    if (
+      !window.confirm(
+        "¿Reactivar los turnos regulares futuros que deberían estar abiertos según el calendario?\n\n" +
+          "• Abre las mañanas y los turnos de Paranal.\n" +
+          "• NO abre los turnos de tarde de La Silla en verano ni fechas bloqueadas.\n" +
+          "• No cierra ningún turno.\n\n" +
+          "Útil para reabrir tras un cierre temporal por evento especial."
+      )
+    )
+      return
+    setResyncLoading(true)
+    try {
+      const res = await fetch("/api/admin/turnos/resincronizar", { method: "POST" })
+      const json = await res.json()
+      if (!res.ok || !json.ok) {
+        alert(json.error ?? "Error al re-sincronizar turnos.")
+        return
+      }
+      alert(
+        `Re-sincronización lista.\n\n` +
+          `Turnos reactivados: ${json.activados}\n` +
+          `Se mantienen cerrados (tarde verano La Silla / fechas bloqueadas): ${json.omitidos}`
+      )
+      if (json.activados > 0) await fetchTurnos()
+    } catch {
+      alert("Error de conexión al re-sincronizar.")
+    } finally {
+      setResyncLoading(false)
+    }
+  }
+
   async function handleCleanupDomingos() {
     if (
       !window.confirm(
@@ -626,6 +692,34 @@ export default function TurnosPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-xl font-semibold text-stone-100">Turnos</h2>
           <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleGenerar}
+              disabled={generarLoading}
+              title="Crea los turnos de sábado faltantes dentro de la ventana de reserva (idempotente, no duplica). Úsalo si no aparecen fechas disponibles."
+            >
+              {generarLoading ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <ClipboardList className="size-4" aria-hidden="true" />
+              )}
+              Generar turnos
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleResync}
+              disabled={resyncLoading}
+              title="Reabre los turnos regulares futuros que deberían estar disponibles según el calendario (mañanas y Paranal). No abre la tarde de La Silla en verano ni fechas bloqueadas, y no cierra ningún turno. Útil tras un cierre temporal por evento."
+            >
+              {resyncLoading ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Power className="size-4" aria-hidden="true" />
+              )}
+              Reactivar turnos
+            </Button>
             <Button
               variant="secondary"
               size="sm"
