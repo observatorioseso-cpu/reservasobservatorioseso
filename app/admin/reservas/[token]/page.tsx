@@ -13,6 +13,9 @@ import {
   X,
   ChevronDown,
   ChevronUp,
+  Plus,
+  Trash2,
+  CalendarClock,
 } from "lucide-react"
 import { AdminShell } from "@/components/admin/AdminShell"
 import { StatusBadge } from "@/components/admin/StatusBadge"
@@ -89,6 +92,19 @@ interface EditForm {
   idioma: IdiomaVisita
   estado: EstadoReserva
   forzarCupos: boolean
+}
+
+interface TurnoOpcion {
+  id: string
+  observatorio: Observatorio
+  fecha: string
+  horaInicio: string
+  horaFin: string
+  tipo: "REGULAR" | "NOCTURNA"
+  activo: boolean
+  capacidadMax: number
+  cuposOcupados: number
+  cuposLibres: number
 }
 
 // ---------------------------------------------------------------------------
@@ -170,6 +186,9 @@ function InlineAlert({ message, type }: { message: string; type: "error" | "succ
   )
 }
 
+const inputClass =
+  "w-full rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-sm text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
@@ -200,6 +219,29 @@ export default function ReservaDetallePage({ params }: PageProps) {
   const [editForm, setEditForm] = useState<EditForm | null>(null)
   const [guardandoEdit, setGuardandoEdit] = useState(false)
   const [editMsg, setEditMsg] = useState<{ text: string; type: "error" | "success" } | null>(null)
+
+  // Reagendar
+  const [reagOpen, setReagOpen] = useState(false)
+  const [turnos, setTurnos] = useState<TurnoOpcion[]>([])
+  const [turnosLoading, setTurnosLoading] = useState(false)
+  const [nuevoTurnoId, setNuevoTurnoId] = useState("")
+  const [reagForzar, setReagForzar] = useState(false)
+  const [reagNotificar, setReagNotificar] = useState(false)
+  const [reagendando, setReagendando] = useState(false)
+  const [reagMsg, setReagMsg] = useState<{ text: string; type: "error" | "success" } | null>(null)
+
+  // Acompañantes — agregar
+  const [addForm, setAddForm] = useState({ nombre: "", apellido: "", documento: "" })
+  const [addForzar, setAddForzar] = useState(false)
+  const [addNotificar, setAddNotificar] = useState(false)
+  const [addingAcomp, setAddingAcomp] = useState(false)
+  const [acompMsg, setAcompMsg] = useState<{ text: string; type: "error" | "success" } | null>(null)
+
+  // Acompañantes — editar
+  const [editAcompId, setEditAcompId] = useState<string | null>(null)
+  const [editAcompForm, setEditAcompForm] = useState({ nombre: "", apellido: "", documento: "" })
+  const [savingAcomp, setSavingAcomp] = useState(false)
+  const [deletingAcompId, setDeletingAcompId] = useState<string | null>(null)
 
   const fetchReserva = useCallback(async () => {
     setLoading(true)
@@ -338,6 +380,156 @@ export default function ReservaDetallePage({ params }: PageProps) {
     setEditForm((prev) => (prev ? { ...prev, [k]: v } : prev))
   }
 
+  // ── Reagendar ──────────────────────────────────────────────────────────
+  const fetchTurnos = useCallback(async () => {
+    setTurnosLoading(true)
+    try {
+      const res = await fetch(`/api/admin/turnos?activo=true`)
+      if (!res.ok) throw new Error("Error al cargar turnos.")
+      const data: TurnoOpcion[] = await res.json()
+      // Solo turnos de hoy en adelante, excluyendo el actual
+      const hoy = new Date()
+      hoy.setHours(0, 0, 0, 0)
+      const opciones = data
+        .filter((t) => new Date(t.fecha) >= hoy && t.id !== reserva?.turno.id)
+        .sort((a, b) => a.fecha.localeCompare(b.fecha) || a.horaInicio.localeCompare(b.horaInicio))
+      setTurnos(opciones)
+    } catch {
+      setTurnos([])
+    } finally {
+      setTurnosLoading(false)
+    }
+  }, [reserva?.turno.id])
+
+  function toggleReagendar() {
+    if (reagOpen) {
+      setReagOpen(false)
+      return
+    }
+    setReagMsg(null)
+    setNuevoTurnoId("")
+    setReagForzar(false)
+    setReagNotificar(false)
+    setReagOpen(true)
+    fetchTurnos()
+  }
+
+  async function handleReagendar(e: React.FormEvent) {
+    e.preventDefault()
+    if (!nuevoTurnoId) return
+    setReagendando(true)
+    setReagMsg(null)
+    try {
+      const res = await fetch(`/api/admin/reservas/${token}/reagendar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nuevoTurnoId, forzarCupos: reagForzar, notificar: reagNotificar }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error ?? "Error al reagendar.")
+      }
+      setReagMsg({ text: "Reserva reagendada correctamente.", type: "success" })
+      setReagOpen(false)
+      await fetchReserva()
+    } catch (err) {
+      setReagMsg({ text: err instanceof Error ? err.message : "Error desconocido.", type: "error" })
+    } finally {
+      setReagendando(false)
+    }
+  }
+
+  // ── Acompañantes ───────────────────────────────────────────────────────
+  async function handleAddAcompanante(e: React.FormEvent) {
+    e.preventDefault()
+    if (!addForm.nombre.trim() || !addForm.apellido.trim()) return
+    setAddingAcomp(true)
+    setAcompMsg(null)
+    try {
+      const res = await fetch(`/api/admin/reservas/${token}/acompanantes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: addForm.nombre.trim(),
+          apellido: addForm.apellido.trim(),
+          documento: addForm.documento.trim() || null,
+          forzarCupos: addForzar,
+          notificar: addNotificar,
+        }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error ?? "Error al agregar acompañante.")
+      }
+      setAcompMsg({ text: "Acompañante agregado.", type: "success" })
+      setAddForm({ nombre: "", apellido: "", documento: "" })
+      setAddForzar(false)
+      await fetchReserva()
+    } catch (err) {
+      setAcompMsg({ text: err instanceof Error ? err.message : "Error desconocido.", type: "error" })
+    } finally {
+      setAddingAcomp(false)
+    }
+  }
+
+  function startEditAcomp(a: Acompanante) {
+    setEditAcompId(a.id)
+    setEditAcompForm({ nombre: a.nombre, apellido: a.apellido, documento: a.documento ?? "" })
+    setAcompMsg(null)
+  }
+
+  async function handleSaveAcomp(id: string) {
+    setSavingAcomp(true)
+    setAcompMsg(null)
+    try {
+      const res = await fetch(`/api/admin/reservas/${token}/acompanantes/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: editAcompForm.nombre.trim(),
+          apellido: editAcompForm.apellido.trim(),
+          documento: editAcompForm.documento.trim() || null,
+        }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error ?? "Error al editar acompañante.")
+      }
+      setEditAcompId(null)
+      await fetchReserva()
+    } catch (err) {
+      setAcompMsg({ text: err instanceof Error ? err.message : "Error desconocido.", type: "error" })
+    } finally {
+      setSavingAcomp(false)
+    }
+  }
+
+  async function handleDeleteAcomp(a: Acompanante) {
+    const notificar = window.confirm(
+      `¿Quitar a ${a.nombre} ${a.apellido} de la reserva?\n\nAceptar = quitar y notificar al titular por email.\nCancelar para abortar.`
+    )
+    if (!notificar) return
+    setDeletingAcompId(a.id)
+    setAcompMsg(null)
+    try {
+      const res = await fetch(`/api/admin/reservas/${token}/acompanantes/${a.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notificar: true }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error ?? "Error al quitar acompañante.")
+      }
+      setAcompMsg({ text: "Acompañante quitado.", type: "success" })
+      await fetchReserva()
+    } catch (err) {
+      setAcompMsg({ text: err instanceof Error ? err.message : "Error desconocido.", type: "error" })
+    } finally {
+      setDeletingAcompId(null)
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
@@ -365,6 +557,7 @@ export default function ReservaDetallePage({ params }: PageProps) {
 
   const cantidadActual = editForm ? parseInt(editForm.cantidadPersonas, 10) : reserva.cantidadPersonas
   const cuposAumentan = !isNaN(cantidadActual) && cantidadActual > reserva.cantidadPersonas
+  const esAnulada = reserva.estado === "ANULADA"
 
   return (
     <AdminShell>
@@ -396,32 +589,149 @@ export default function ReservaDetallePage({ params }: PageProps) {
               </dl>
             </Card>
 
-            {/* Acompanantes */}
-            <Card title={`Acompanantes (${reserva.acompanantes.length})`}>
-              {reserva.acompanantes.length === 0 ? (
-                <p className="text-sm text-stone-500">Sin acompanantes registrados.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-stone-800 text-left text-xs font-medium uppercase tracking-wider text-stone-500">
-                        <th className="pb-2 pr-4">Nombre</th>
-                        <th className="pb-2 pr-4">Apellido</th>
-                        <th className="pb-2">Documento</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-stone-800">
-                      {reserva.acompanantes.map((a) => (
-                        <tr key={a.id}>
-                          <td className="py-2 pr-4 text-stone-200">{a.nombre}</td>
-                          <td className="py-2 pr-4 text-stone-200">{a.apellido}</td>
-                          <td className="py-2 font-mono text-stone-400">{a.documento ?? "—"}</td>
+            {/* Acompanantes — gestión */}
+            <Card title={`Acompañantes (${reserva.acompanantes.length})`}>
+              <div className="space-y-4">
+                {acompMsg && <InlineAlert message={acompMsg.text} type={acompMsg.type} />}
+
+                {reserva.acompanantes.length === 0 ? (
+                  <p className="text-sm text-stone-500">Sin acompañantes registrados.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-stone-800 text-left text-xs font-medium uppercase tracking-wider text-stone-500">
+                          <th className="pb-2 pr-4">Nombre</th>
+                          <th className="pb-2 pr-4">Apellido</th>
+                          <th className="pb-2 pr-4">Documento</th>
+                          <th className="pb-2 text-right">Acciones</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                      </thead>
+                      <tbody className="divide-y divide-stone-800">
+                        {reserva.acompanantes.map((a) =>
+                          editAcompId === a.id ? (
+                            <tr key={a.id} className="bg-stone-800/40">
+                              <td className="py-2 pr-2">
+                                <input
+                                  value={editAcompForm.nombre}
+                                  onChange={(e) => setEditAcompForm((f) => ({ ...f, nombre: e.target.value }))}
+                                  className={inputClass}
+                                  aria-label="Nombre del acompañante"
+                                />
+                              </td>
+                              <td className="py-2 pr-2">
+                                <input
+                                  value={editAcompForm.apellido}
+                                  onChange={(e) => setEditAcompForm((f) => ({ ...f, apellido: e.target.value }))}
+                                  className={inputClass}
+                                  aria-label="Apellido del acompañante"
+                                />
+                              </td>
+                              <td className="py-2 pr-2">
+                                <input
+                                  value={editAcompForm.documento}
+                                  onChange={(e) => setEditAcompForm((f) => ({ ...f, documento: e.target.value }))}
+                                  className={inputClass}
+                                  placeholder="RUT / Pasaporte"
+                                  aria-label="Documento del acompañante"
+                                />
+                              </td>
+                              <td className="py-2 text-right">
+                                <div className="flex justify-end gap-1.5">
+                                  <Button type="button" variant="primary" size="sm" loading={savingAcomp} onClick={() => handleSaveAcomp(a.id)}>
+                                    <Save className="size-3.5" aria-hidden="true" />
+                                  </Button>
+                                  <Button type="button" variant="ghost" size="sm" onClick={() => setEditAcompId(null)} disabled={savingAcomp}>
+                                    <X className="size-3.5" aria-hidden="true" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ) : (
+                            <tr key={a.id}>
+                              <td className="py-2 pr-4 text-stone-200">{a.nombre}</td>
+                              <td className="py-2 pr-4 text-stone-200">{a.apellido}</td>
+                              <td className="py-2 pr-4 font-mono text-stone-400">{a.documento ?? "—"}</td>
+                              <td className="py-2 text-right">
+                                <div className="flex justify-end gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => startEditAcomp(a)}
+                                    disabled={esAnulada}
+                                    className="rounded-md p-1.5 text-stone-400 hover:bg-stone-700 hover:text-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 disabled:opacity-30 disabled:pointer-events-none"
+                                    aria-label={`Editar ${a.nombre}`}
+                                  >
+                                    <Pencil className="size-3.5" aria-hidden="true" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteAcomp(a)}
+                                    disabled={esAnulada || deletingAcompId === a.id}
+                                    className="rounded-md p-1.5 text-stone-400 hover:bg-red-500/10 hover:text-red-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:opacity-30 disabled:pointer-events-none"
+                                    aria-label={`Quitar ${a.nombre}`}
+                                  >
+                                    {deletingAcompId === a.id ? (
+                                      <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                                    ) : (
+                                      <Trash2 className="size-3.5" aria-hidden="true" />
+                                    )}
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {/* Agregar acompañante */}
+                {!esAnulada && (
+                  <form onSubmit={handleAddAcompanante} className="space-y-3 border-t border-stone-800 pt-4">
+                    <p className="text-xs font-medium text-stone-500">Agregar persona</p>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <input
+                        value={addForm.nombre}
+                        onChange={(e) => setAddForm((f) => ({ ...f, nombre: e.target.value }))}
+                        placeholder="Nombre"
+                        className={inputClass}
+                        aria-label="Nombre"
+                        required
+                      />
+                      <input
+                        value={addForm.apellido}
+                        onChange={(e) => setAddForm((f) => ({ ...f, apellido: e.target.value }))}
+                        placeholder="Apellido"
+                        className={inputClass}
+                        aria-label="Apellido"
+                        required
+                      />
+                      <input
+                        value={addForm.documento}
+                        onChange={(e) => setAddForm((f) => ({ ...f, documento: e.target.value }))}
+                        placeholder="RUT / Pasaporte (opcional)"
+                        className={inputClass}
+                        aria-label="Documento"
+                      />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-4">
+                      <label className="flex cursor-pointer items-center gap-2 text-xs text-stone-400">
+                        <input type="checkbox" checked={addNotificar} onChange={(e) => setAddNotificar(e.target.checked)} className="size-4 rounded border-stone-600 accent-amber-500" />
+                        Notificar al titular
+                      </label>
+                      <label className="flex cursor-pointer items-center gap-2 text-xs text-amber-400">
+                        <input type="checkbox" checked={addForzar} onChange={(e) => setAddForzar(e.target.checked)} className="size-4 rounded border-stone-600 accent-amber-500" />
+                        Forzar cupos
+                      </label>
+                      <Button type="submit" variant="secondary" size="sm" loading={addingAcomp} className="ml-auto">
+                        <Plus className="size-4" aria-hidden="true" />
+                        Agregar
+                      </Button>
+                    </div>
+                  </form>
+                )}
+              </div>
             </Card>
 
             {/* Log de agente */}
@@ -455,7 +765,7 @@ export default function ReservaDetallePage({ params }: PageProps) {
                               {LOG_TIPO_LABELS[log.tipo]}
                             </span>
                           </td>
-                          <td className="py-2 pr-4 text-stone-300 max-w-xs truncate">{log.resultado}</td>
+                          <td className="py-2 pr-4 text-stone-300 max-w-xs truncate" title={log.resultado}>{log.resultado}</td>
                           <td className="py-2 pr-4 tabular-nums text-stone-500">
                             {log.duracionMs != null ? `${log.duracionMs}ms` : "—"}
                           </td>
@@ -527,6 +837,82 @@ export default function ReservaDetallePage({ params }: PageProps) {
               </div>
             </Card>
 
+            {/* Reagendar */}
+            <Card title="Reagendar visita">
+              <div className="space-y-3">
+                {reagMsg && <InlineAlert message={reagMsg.text} type={reagMsg.type} />}
+                <button
+                  type="button"
+                  onClick={toggleReagendar}
+                  disabled={esAnulada}
+                  className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-sm font-medium text-stone-300 hover:bg-stone-800 hover:text-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 disabled:opacity-40 disabled:pointer-events-none"
+                  aria-expanded={reagOpen}
+                >
+                  <span className="flex items-center gap-2">
+                    <CalendarClock className="size-4" aria-hidden="true" />
+                    {reagOpen ? "Cancelar reagendamiento" : "Cambiar fecha / turno"}
+                  </span>
+                  {reagOpen ? <ChevronUp className="size-4" aria-hidden="true" /> : <ChevronDown className="size-4" aria-hidden="true" />}
+                </button>
+
+                {esAnulada && (
+                  <p className="text-xs text-stone-500">No se puede reagendar una reserva anulada.</p>
+                )}
+
+                {reagOpen && (
+                  <form onSubmit={handleReagendar} className="space-y-3">
+                    {turnosLoading ? (
+                      <div className="flex items-center justify-center py-4">
+                        <Loader2 className="size-5 animate-spin text-amber-500" aria-label="Cargando turnos..." />
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-stone-400" htmlFor="nuevo-turno">
+                            Nuevo turno ({reserva.cantidadPersonas} personas)
+                          </label>
+                          <select
+                            id="nuevo-turno"
+                            value={nuevoTurnoId}
+                            onChange={(e) => setNuevoTurnoId(e.target.value)}
+                            className={inputClass}
+                            required
+                          >
+                            <option value="">Selecciona un turno…</option>
+                            {turnos.map((t) => (
+                              <option key={t.id} value={t.id} disabled={t.cuposLibres < reserva.cantidadPersonas && !reagForzar}>
+                                {OBS_LABELS[t.observatorio]} · {formatFechaES(t.fecha)} · {t.horaInicio}
+                                {t.tipo === "NOCTURNA" ? " (nocturna)" : ""} — {t.cuposLibres} libres
+                              </option>
+                            ))}
+                          </select>
+                          {turnos.length === 0 && (
+                            <p className="mt-1 text-xs text-stone-500">No hay turnos futuros disponibles.</p>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                          <label className="flex cursor-pointer items-center gap-2 text-xs text-stone-400">
+                            <input type="checkbox" checked={reagNotificar} onChange={(e) => setReagNotificar(e.target.checked)} className="size-4 rounded border-stone-600 accent-amber-500" />
+                            Notificar al titular por email
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-xs text-amber-400">
+                            <input type="checkbox" checked={reagForzar} onChange={(e) => setReagForzar(e.target.checked)} className="size-4 rounded border-stone-600 accent-amber-500" />
+                            Forzar cupos (omitir límite de capacidad)
+                          </label>
+                        </div>
+
+                        <Button type="submit" variant="primary" size="sm" loading={reagendando} disabled={!nuevoTurnoId} className="w-full">
+                          <CalendarClock className="size-4" aria-hidden="true" />
+                          Reagendar
+                        </Button>
+                      </>
+                    )}
+                  </form>
+                )}
+              </div>
+            </Card>
+
             {/* Nota interna */}
             <Card title="Nota interna">
               <div className="space-y-3">
@@ -584,7 +970,7 @@ export default function ReservaDetallePage({ params }: PageProps) {
                       type="text"
                       value={editForm.nombre}
                       onChange={(e) => setEdit("nombre", e.target.value)}
-                      className="w-full rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-sm text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className={inputClass}
                     />
                   </div>
 
@@ -597,7 +983,7 @@ export default function ReservaDetallePage({ params }: PageProps) {
                       type="text"
                       value={editForm.apellido}
                       onChange={(e) => setEdit("apellido", e.target.value)}
-                      className="w-full rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-sm text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className={inputClass}
                     />
                   </div>
 
@@ -610,7 +996,7 @@ export default function ReservaDetallePage({ params }: PageProps) {
                       type="email"
                       value={editForm.email}
                       onChange={(e) => setEdit("email", e.target.value)}
-                      className="w-full rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-sm text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className={inputClass}
                     />
                   </div>
 
@@ -623,7 +1009,7 @@ export default function ReservaDetallePage({ params }: PageProps) {
                       type="text"
                       value={editForm.telefono}
                       onChange={(e) => setEdit("telefono", e.target.value)}
-                      className="w-full rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-sm text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className={inputClass}
                     />
                   </div>
 
@@ -637,7 +1023,7 @@ export default function ReservaDetallePage({ params }: PageProps) {
                       min={1}
                       value={editForm.cantidadPersonas}
                       onChange={(e) => setEdit("cantidadPersonas", e.target.value)}
-                      className="w-full rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-sm text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className={inputClass}
                     />
                   </div>
 
@@ -649,7 +1035,7 @@ export default function ReservaDetallePage({ params }: PageProps) {
                       id="edit-idioma"
                       value={editForm.idioma}
                       onChange={(e) => setEdit("idioma", e.target.value as IdiomaVisita)}
-                      className="w-full rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-sm text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className={inputClass}
                     >
                       <option value="ES">Espanol</option>
                       <option value="EN">Ingles</option>
@@ -664,7 +1050,7 @@ export default function ReservaDetallePage({ params }: PageProps) {
                       id="edit-estado"
                       value={editForm.estado}
                       onChange={(e) => setEdit("estado", e.target.value as EstadoReserva)}
-                      className="w-full rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-sm text-stone-100 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className={inputClass}
                     >
                       <option value="PENDIENTE_CONFIRMACION">Pendiente</option>
                       <option value="CONFIRMADA">Confirmada</option>

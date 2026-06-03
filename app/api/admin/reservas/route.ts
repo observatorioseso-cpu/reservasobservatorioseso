@@ -14,6 +14,7 @@ export async function GET(request: Request): Promise<NextResponse> {
   const estado = searchParams.get("estado")
   const q = searchParams.get("q")?.trim() || undefined
   const turnoId = searchParams.get("turnoId") || undefined
+  const fecha = searchParams.get("fecha") || undefined // ISO YYYY-MM-DD — filtra por turno.fecha
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10))
   const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") ?? "50", 10)))
   const skip = (page - 1) * limit
@@ -30,6 +31,12 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   if (turnoId) {
     where.turnoId = turnoId
+  }
+
+  if (fecha && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    const desde = new Date(`${fecha}T00:00:00.000Z`)
+    const hasta = new Date(`${fecha}T23:59:59.999Z`)
+    where.turno = { fecha: { gte: desde, lte: hasta } }
   }
 
   if (q) {

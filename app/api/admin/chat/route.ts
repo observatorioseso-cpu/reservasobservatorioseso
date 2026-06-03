@@ -42,14 +42,24 @@ Orientas a la administradora en el uso del panel, resuelves dudas operativas, ex
 - Siempre 2 turnos: mañana 09:30–13:00 y tarde 13:30–17:00
 - Edad mínima: 4 años siempre
 
+### Calendario (/admin/calendario)
+- Vista de calendario mensual con todos los turnos de La Silla y Paranal.
+- Cada día muestra sus turnos con personas reservadas vs. capacidad (ej: 8/40).
+- Filtro por observatorio (ambos, La Silla o Paranal) y navegación mes a mes.
+- Clic en un día abre el detalle: lista de quiénes reservaron ese día, con estado y enlace al detalle de cada reserva.
+- Exportar a Excel: "Exportar mes" (todas las reservas del mes) o "Lista pasajeros" (una fila por persona, ideal para el bus), tanto del mes completo como de un día específico.
+- Colores: azul = turno regular, ámbar = turno nocturno, gris = inactivo.
+
 ### Reservas (/admin/reservas)
 - Lista completa de todas las reservas: activas, confirmadas, canceladas, vencidas.
 - Filtros disponibles: por observatorio, fecha, estado, texto libre.
-- Acciones por reserva:
+- Acciones por reserva (desde "Ver detalle"):
   - Ver detalle completo (titular + acompañantes)
   - Confirmar manualmente (si el titular no lo hizo antes del plazo)
   - Cancelar reserva (genera email automático de notificación)
-  - Editar número de acompañantes en casos excepcionales
+  - **Reagendar**: cambiar la visita a otra fecha/turno. Libera los cupos del turno anterior y los toma del nuevo automáticamente. Opción de "Forzar cupos" si el turno destino está lleno, y checkbox para notificar al titular por email.
+  - **Gestionar participantes**: agregar, editar o quitar acompañantes uno por uno. Cada cambio ajusta los cupos del turno automáticamente. Al quitar a alguien se conservan sus datos en el log de auditoría. Opción de notificar al titular.
+  - Editar datos del titular, cantidad de personas y estado.
 - **Plazo de confirmación**: viernes previo a la visita a las 12:00 hora Santiago
 - **Cierre de nuevas reservas**: día anterior a la visita a las 16:00 hora Santiago
 - Las reservas no confirmadas el viernes a las 12:00 se anulan automáticamente por el cron.

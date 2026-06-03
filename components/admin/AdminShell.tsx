@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 import {
   LayoutDashboard,
   CalendarDays,
+  CalendarRange,
   Users,
   Settings,
   LogOut,
@@ -23,9 +24,10 @@ import { useAdminTheme } from "@/contexts/adminTheme"
 import { AdminChatWidget } from "@/components/admin/AdminChatWidget"
 
 const NAV = [
-  { href: "/admin/dashboard", label: "Dashboard",  icon: LayoutDashboard },
-  { href: "/admin/turnos",    label: "Turnos",      icon: CalendarDays },
-  { href: "/admin/reservas",  label: "Reservas",    icon: Users },
+  { href: "/admin/dashboard",  label: "Dashboard",  icon: LayoutDashboard },
+  { href: "/admin/calendario", label: "Calendario", icon: CalendarRange },
+  { href: "/admin/turnos",     label: "Turnos",     icon: CalendarDays },
+  { href: "/admin/reservas",   label: "Reservas",   icon: Users },
   { href: "/admin/reportes",  label: "Reportes",    icon: BarChart2 },
   { href: "/admin/mensajes",  label: "Mensajes",    icon: MessageSquare },
   { href: "/admin/bloqueos",  label: "Cierres",     icon: CalendarOff },
@@ -34,8 +36,9 @@ const NAV = [
 ] as const
 
 const PAGE_TITLES: Record<string, string> = {
-  "/admin/dashboard": "Dashboard",
-  "/admin/turnos":    "Gestión de Turnos",
+  "/admin/dashboard":  "Dashboard",
+  "/admin/calendario": "Calendario de Reservas",
+  "/admin/turnos":     "Gestión de Turnos",
   "/admin/reservas":  "Gestión de Reservas",
   "/admin/reportes":  "Reportes Operacionales",
   "/admin/mensajes":  "Mensajes de Contacto",
