@@ -13,7 +13,7 @@ interface Message {
 const PAGE_CHIPS: Record<string, string[]> = {
   "/admin/dashboard":  ["¿Cómo interpreto las métricas?", "¿Qué hacer si hay pocas confirmaciones?", "Resumen del flujo de reservas"],
   "/admin/calendario": ["¿Cómo veo las reservas de un día?", "¿Cómo exporto la lista de pasajeros del mes?", "¿Cómo reagendo una visita?"],
-  "/admin/turnos":     ["¿Cómo creo un turno para el 30 de mayo?", "¿Qué turnos crea el cron automático?", "Horarios La Silla vs Paranal"],
+  "/admin/turnos":     ["¿Cómo creo un turno nuevo?", "¿Qué turnos crea el cron automático?", "Horarios La Silla vs Paranal"],
   "/admin/reservas":   ["¿Cómo confirmo una reserva manualmente?", "¿Cuándo se anulan reservas automáticamente?", "¿Cómo cancelo con notificación?"],
   "/admin/reportes":   ["¿Cómo exporto a Excel?", "¿Qué es la tasa de confirmación?", "Cómo medir asistencia real"],
   "/admin/mensajes":   ["¿Cómo respondo un mensaje?", "¿Qué hacer con grupos grandes?", "Mensajes sin responder"],
