@@ -21,6 +21,19 @@ function formatAcompanantes(
   return acompanantes.map((a) => `${a.nombre} ${a.apellido}`).join(" | ")
 }
 
+const TIPO_VISITANTE_LABELS: Record<string, string> = {
+  PERSONAL: "Personal / Familiar",
+  COLEGIO: "Colegio",
+  INSTITUTO: "Instituto",
+  UNIVERSIDAD: "Universidad",
+  EMPRESA: "Empresa",
+  AGENCIA_VIAJES: "Agencia de viajes",
+  OTRO: "Otra",
+}
+function tipoVisitanteLabel(t: string | null | undefined): string {
+  return t ? TIPO_VISITANTE_LABELS[t] ?? t : "—"
+}
+
 export async function GET(request: Request): Promise<Response> {
   const admin = await getAdminFromRequest(request)
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 401 })
@@ -67,7 +80,7 @@ export async function GET(request: Request): Promise<Response> {
         },
       },
       acompanantes: {
-        select: { nombre: true, apellido: true, documento: true },
+        select: { nombre: true, apellido: true, documento: true, esMenor: true },
       },
     },
   })
@@ -93,6 +106,8 @@ export async function GET(request: Request): Promise<Response> {
       { key: "nombre",      width: 20, header: "Nombre" },
       { key: "apellido",    width: 20, header: "Apellido" },
       { key: "documento",   width: 18, header: "RUT / Pasaporte" },
+      { key: "menor",       width: 8,  header: "Menor" },
+      { key: "nacionalidad",width: 16, header: "Nacionalidad" },
       { key: "email",       width: 30, header: "Email (titular)" },
       { key: "telefono",    width: 16, header: "Teléfono" },
       { key: "estado",      width: 22, header: "Estado reserva" },
@@ -100,7 +115,7 @@ export async function GET(request: Request): Promise<Response> {
 
     // Header row — dark, white text, bold
     const headerRow = sheet.getRow(1)
-    headerRow.values = ["#","Rol","Reserva","Observatorio","Tipo visita","Fecha","Horario","Nombre","Apellido","RUT / Pasaporte","Email (titular)","Teléfono","Estado reserva"]
+    headerRow.values = ["#","Rol","Reserva","Observatorio","Tipo visita","Fecha","Horario","Nombre","Apellido","RUT / Pasaporte","Menor","Nacionalidad","Email (titular)","Teléfono","Estado reserva"]
     headerRow.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 }
     headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1C1917" } }
     headerRow.height = 20
@@ -138,6 +153,8 @@ export async function GET(request: Request): Promise<Response> {
         r.nombre,
         r.apellido,
         r.rutOPasaporte,
+        r.titularEsMenor ? "Sí" : "No",
+        r.nacionalidad ?? "—",
         r.email,
         r.telefono,
         r.estado,
@@ -162,6 +179,8 @@ export async function GET(request: Request): Promise<Response> {
           a.nombre,
           a.apellido,
           a.documento ?? "—",
+          a.esMenor ? "Sí" : "No",
+          r.nacionalidad ?? "—",
           "—",
           "—",
           "—",
@@ -212,9 +231,15 @@ export async function GET(request: Request): Promise<Response> {
     "Email",
     "Teléfono",
     "Personas",
+    "Tipo visitante",
+    "Organización",
+    "Nacionalidad",
+    "Ciudad residencia",
+    "Incluye menores",
     "Estado",
     "Confirmada en",
     "Acompañantes",
+    "Info adicional",
     "Nota admin",
   ]
 
@@ -242,9 +267,15 @@ export async function GET(request: Request): Promise<Response> {
         r.email,
         r.telefono,
         String(r.cantidadPersonas),
+        tipoVisitanteLabel(r.tipoVisitante),
+        r.organizacion ?? "",
+        r.nacionalidad ?? "",
+        r.ciudadResidencia ?? "",
+        r.tienesMenores ? "Sí" : "No",
         r.estado,
         r.confirmadaEn ? toISODate(r.confirmadaEn) : "",
         formatAcompanantes(r.acompanantes),
+        r.infoAdicional ?? "",
         r.notaAdmin ?? "",
       ]
       rows.push(row.map(escape).join(","))
@@ -278,9 +309,15 @@ export async function GET(request: Request): Promise<Response> {
     { key: "email",          width: 30 },
     { key: "telefono",       width: 16 },
     { key: "personas",       width: 10 },
+    { key: "tipoVisitante",  width: 18 },
+    { key: "organizacion",   width: 24 },
+    { key: "nacionalidad",   width: 16 },
+    { key: "ciudad",         width: 18 },
+    { key: "menores",        width: 10 },
     { key: "estado",         width: 24 },
     { key: "confirmadaEn",   width: 14 },
     { key: "acompanantes",   width: 50 },
+    { key: "infoAdicional",  width: 40 },
     { key: "notaAdmin",      width: 40 },
   ]
 
@@ -306,9 +343,15 @@ export async function GET(request: Request): Promise<Response> {
       r.email,
       r.telefono,
       r.cantidadPersonas,
+      tipoVisitanteLabel(r.tipoVisitante),
+      r.organizacion ?? "",
+      r.nacionalidad ?? "",
+      r.ciudadResidencia ?? "",
+      r.tienesMenores ? "Sí" : "No",
       r.estado,
       r.confirmadaEn ? toISODate(r.confirmadaEn) : "",
       formatAcompanantes(r.acompanantes),
+      r.infoAdicional ?? "",
       r.notaAdmin ?? "",
     ])
   }

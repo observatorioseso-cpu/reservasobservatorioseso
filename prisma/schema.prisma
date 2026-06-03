@@ -31,6 +31,16 @@ enum TipoTurno {
   NOCTURNA
 }
 
+enum TipoVisitante {
+  PERSONAL
+  COLEGIO
+  INSTITUTO
+  UNIVERSIDAD
+  EMPRESA
+  AGENCIA_VIAJES
+  OTRO
+}
+
 enum TipoLogAgente {
   VALIDACION
   COMUNICACION
@@ -115,8 +125,16 @@ model Reserva {
   idioma          IdiomaVisita @default(ES)
   cantidadPersonas Int
   tienesMenores   Boolean     @default(false)
+  titularEsMenor  Boolean     @default(false)
   recibirWhatsapp Boolean     @default(false)
   whatsappOptIn   Boolean     @default(false)
+
+  // Datos para estadística de visitas (segmento, origen, logística)
+  tipoVisitante    TipoVisitante @default(PERSONAL)
+  organizacion     String?       // nombre del colegio/empresa/agencia (si aplica)
+  nacionalidad     String?       // nacionalidad del grupo/titular
+  ciudadResidencia String?       // ciudad de residencia del grupo/titular
+  infoAdicional    String?       @db.Text // necesidades especiales / accesibilidad
 
   // Contraseña de gestión (bcryptjs, 12 rounds) — nunca en texto plano
   passwordHash    String
@@ -154,7 +172,8 @@ model Acompanante {
 
   nombre      String
   apellido    String
-  documento   String? // RUT o pasaporte — opcional, sin validación algorítmica
+  documento   String? // RUT o pasaporte — requerido a nivel formulario; nullable en BD por compatibilidad
+  esMenor     Boolean @default(false) // marca de menor de edad (lista de control)
 
   createdAt DateTime @default(now())
 

@@ -5,7 +5,7 @@ import { useRouter } from "@/i18n/navigation"
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion, AnimatePresence } from "framer-motion"
-import { UserPlus, Eye, EyeOff, AlertCircle } from "lucide-react"
+import { Eye, EyeOff, AlertCircle } from "lucide-react"
 import { reservaSchema, type ReservaInput } from "@/lib/schemas"
 import { Button } from "@/components/ui/Button"
 import { Input } from "@/components/ui/Input"
@@ -39,6 +39,29 @@ interface Labels {
   sectionPassword: string
   reducirPersonas: string
   aumentarPersonas: string
+  // Nuevos campos de estadística
+  titularEsMenor: string
+  nacionalidad: string
+  nacionalidadPlaceholder: string
+  ciudadResidencia: string
+  ciudadPlaceholder: string
+  sectionGrupo: string
+  tipoVisitante: string
+  tipoPersonal: string
+  tipoColegio: string
+  tipoInstituto: string
+  tipoUniversidad: string
+  tipoEmpresa: string
+  tipoAgencia: string
+  tipoOtro: string
+  organizacion: string
+  organizacionPlaceholder: string
+  infoAdicional: string
+  infoAdicionalPlaceholder: string
+  acompananteLabel: string
+  acompananteDocumento: string
+  acompananteDocumentoHint: string
+  acompananteEsMenor: string
 }
 
 interface FormularioReservaProps {
@@ -79,8 +102,14 @@ export function FormularioReserva({
       idioma: locale === "en" ? "EN" : "ES",
       cantidadPersonas: 1,
       tienesMenores: false,
+      titularEsMenor: false,
       recibirWhatsapp: false,
       whatsappOptIn: false,
+      tipoVisitante: "PERSONAL",
+      organizacion: "",
+      nacionalidad: "",
+      ciudadResidencia: "",
+      infoAdicional: "",
       acompanantes: [],
       locale: locale as "es" | "en",
     } as unknown as ReservaInput,
@@ -93,6 +122,7 @@ export function FormularioReserva({
 
   const cantidadPersonas = form.watch("cantidadPersonas") as number
   const recibirWhatsapp = form.watch("recibirWhatsapp") as boolean
+  const tipoVisitante = form.watch("tipoVisitante") as string
 
   // Sincronizar cantidad de acompañantes con cantidadPersonas
   const handleCantidadChange = (val: number) => {
@@ -101,7 +131,7 @@ export function FormularioReserva({
     const current = fields.length
     if (needed > current) {
       for (let i = current; i < needed; i++) {
-        append({ nombre: "", apellido: "", documento: "" })
+        append({ nombre: "", apellido: "", documento: "", esMenor: false })
       }
     } else if (needed < current) {
       for (let i = current - 1; i >= needed; i--) {
@@ -243,6 +273,102 @@ export function FormularioReserva({
             {...form.register("telefono")}
           />
         </FormField>
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            label={labels.nacionalidad}
+            htmlFor="nacionalidad"
+            error={form.formState.errors.nacionalidad?.message}
+            required
+          >
+            <Input
+              id="nacionalidad"
+              placeholder={labels.nacionalidadPlaceholder}
+              autoComplete="country-name"
+              error={form.formState.errors.nacionalidad?.message}
+              {...form.register("nacionalidad")}
+            />
+          </FormField>
+          <FormField
+            label={labels.ciudadResidencia}
+            htmlFor="ciudadResidencia"
+            error={form.formState.errors.ciudadResidencia?.message}
+            required
+          >
+            <Input
+              id="ciudadResidencia"
+              placeholder={labels.ciudadPlaceholder}
+              autoComplete="address-level2"
+              error={form.formState.errors.ciudadResidencia?.message}
+              {...form.register("ciudadResidencia")}
+            />
+          </FormField>
+        </div>
+
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            className="size-4 rounded accent-amber-500"
+            {...form.register("titularEsMenor")}
+          />
+          <span className="text-sm text-stone-700">{labels.titularEsMenor}</span>
+        </label>
+      </section>
+
+      {/* ─── Sección: Tipo de visita (estadística) ─── */}
+      <section className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm space-y-5">
+        <h2 className="font-playfair font-bold text-stone-800 text-lg">{labels.sectionGrupo}</h2>
+
+        <FormField label={labels.tipoVisitante} htmlFor="tipoVisitante" required>
+          <select
+            id="tipoVisitante"
+            className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            {...form.register("tipoVisitante")}
+          >
+            <option value="PERSONAL">{labels.tipoPersonal}</option>
+            <option value="COLEGIO">{labels.tipoColegio}</option>
+            <option value="INSTITUTO">{labels.tipoInstituto}</option>
+            <option value="UNIVERSIDAD">{labels.tipoUniversidad}</option>
+            <option value="EMPRESA">{labels.tipoEmpresa}</option>
+            <option value="AGENCIA_VIAJES">{labels.tipoAgencia}</option>
+            <option value="OTRO">{labels.tipoOtro}</option>
+          </select>
+        </FormField>
+
+        <AnimatePresence>
+          {tipoVisitante !== "PERSONAL" && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <FormField
+                label={labels.organizacion}
+                htmlFor="organizacion"
+                error={form.formState.errors.organizacion?.message}
+                required
+              >
+                <Input
+                  id="organizacion"
+                  placeholder={labels.organizacionPlaceholder}
+                  error={form.formState.errors.organizacion?.message}
+                  {...form.register("organizacion")}
+                />
+              </FormField>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <FormField label={labels.infoAdicional} htmlFor="infoAdicional">
+          <textarea
+            id="infoAdicional"
+            rows={3}
+            placeholder={labels.infoAdicionalPlaceholder}
+            className="w-full resize-y rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+            {...form.register("infoAdicional")}
+          />
+        </FormField>
       </section>
 
       {/* ─── Sección: Visita ─── */}
@@ -307,16 +433,7 @@ export function FormularioReserva({
           </div>
         </FormField>
 
-        {/* Checkboxes */}
-        <label className="flex items-center gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            className="size-4 rounded accent-amber-500"
-            {...form.register("tienesMenores")}
-          />
-          <span className="text-sm text-stone-700">{labels.tienesMenores}</span>
-        </label>
-
+        {/* WhatsApp opt-in */}
         <div className="space-y-3">
           <label className="flex items-center gap-3 cursor-pointer">
             <input
@@ -374,6 +491,14 @@ export function FormularioReserva({
                   register={form.register}
                   errors={form.formState.errors}
                   onRemove={() => handleCantidadChange(cantidadPersonas - 1)}
+                  labels={{
+                    nombre: labels.nombre,
+                    apellido: labels.apellido,
+                    documento: labels.acompananteDocumento,
+                    documentoHint: labels.acompananteDocumentoHint,
+                    esMenor: labels.acompananteEsMenor,
+                    acompananteLabel: labels.acompananteLabel,
+                  }}
                 />
               </motion.div>
             ))}

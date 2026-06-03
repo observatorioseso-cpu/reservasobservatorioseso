@@ -46,6 +46,17 @@ interface Acompanante {
   nombre: string
   apellido: string
   documento: string | null
+  esMenor?: boolean
+}
+
+const TIPO_VISITANTE_LABELS: Record<string, string> = {
+  PERSONAL: "Personal / Familiar",
+  COLEGIO: "Colegio",
+  INSTITUTO: "Instituto",
+  UNIVERSIDAD: "Universidad",
+  EMPRESA: "Empresa",
+  AGENCIA_VIAJES: "Agencia de viajes",
+  OTRO: "Otra",
 }
 
 interface LogAgente {
@@ -77,6 +88,12 @@ interface ReservaDetalle {
   idioma: IdiomaVisita
   cantidadPersonas: number
   tienesMenores: boolean
+  titularEsMenor?: boolean
+  tipoVisitante?: string
+  organizacion?: string | null
+  nacionalidad?: string | null
+  ciudadResidencia?: string | null
+  infoAdicional?: string | null
   notaAdmin: string | null
   acompanantes: Acompanante[]
   logsAgente: LogAgente[]
@@ -583,8 +600,14 @@ export default function ReservaDetallePage({ params }: PageProps) {
                 <FieldRow label="Email" value={<a href={`mailto:${reserva.email}`} className="text-sky-300 hover:text-sky-200">{reserva.email}</a>} />
                 <FieldRow label="Telefono" value={reserva.telefono} />
                 <FieldRow label="Idioma" value={reserva.idioma === "ES" ? "Espanol" : "Ingles"} />
+                <FieldRow label="Nacionalidad" value={reserva.nacionalidad || "—"} />
+                <FieldRow label="Ciudad" value={reserva.ciudadResidencia || "—"} />
+                <FieldRow label="Tipo de visita" value={reserva.tipoVisitante ? (TIPO_VISITANTE_LABELS[reserva.tipoVisitante] ?? reserva.tipoVisitante) : "—"} />
+                {reserva.organizacion && <FieldRow label="Organización" value={reserva.organizacion} />}
+                <FieldRow label="Titular menor de edad" value={reserva.titularEsMenor ? "Sí" : "No"} />
                 <FieldRow label="Personas" value={reserva.cantidadPersonas} />
-                <FieldRow label="Con menores" value={reserva.tienesMenores ? "Si" : "No"} />
+                <FieldRow label="Incluye menores" value={reserva.tienesMenores ? "Si" : "No"} />
+                {reserva.infoAdicional && <FieldRow label="Info adicional" value={reserva.infoAdicional} />}
                 <FieldRow label="Reserva creada" value={formatFechaHoraES(reserva.createdAt)} />
               </dl>
             </Card>
@@ -649,7 +672,14 @@ export default function ReservaDetallePage({ params }: PageProps) {
                             </tr>
                           ) : (
                             <tr key={a.id}>
-                              <td className="py-2 pr-4 text-stone-200">{a.nombre}</td>
+                              <td className="py-2 pr-4 text-stone-200">
+                                {a.nombre}
+                                {a.esMenor && (
+                                  <span className="ml-2 inline-flex rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-medium text-amber-300">
+                                    menor
+                                  </span>
+                                )}
+                              </td>
                               <td className="py-2 pr-4 text-stone-200">{a.apellido}</td>
                               <td className="py-2 pr-4 font-mono text-stone-400">{a.documento ?? "—"}</td>
                               <td className="py-2 text-right">

@@ -16,18 +16,24 @@ export const documentoSchema = z
     }
   })
 
-export const documentoAcompananteSchema = z
-  .string()
-  .max(20)
-  .regex(/^[A-Za-z0-9.\-\s]*$/, "Solo letras, números y guiones")
-  .optional()
-  .or(z.literal(""))
-
+// Documento de acompañante: AHORA OBLIGATORIO (lista de control de seguridad).
+// Reusa la misma validación que el titular: RUT-aware, acepta pasaportes libres (regla #10).
 export const acompananteSchema = z.object({
   nombre: z.string().min(1, "Requerido").max(100),
   apellido: z.string().min(1, "Requerido").max(100),
-  documento: documentoAcompananteSchema,
+  documento: documentoSchema,
+  esMenor: z.boolean().default(false),
 })
+
+export const TIPOS_VISITANTE = [
+  "PERSONAL",
+  "COLEGIO",
+  "INSTITUTO",
+  "UNIVERSIDAD",
+  "EMPRESA",
+  "AGENCIA_VIAJES",
+  "OTRO",
+] as const
 
 export const reservaSchema = z
   .object({
@@ -49,6 +55,7 @@ export const reservaSchema = z
       .min(1, "Mínimo 1 persona")
       .max(10, "Máximo 10 personas por reserva"),
     tienesMenores: z.boolean().default(false),
+    titularEsMenor: z.boolean().default(false),
     recibirWhatsapp: z.boolean().default(false),
     whatsappOptIn: z.boolean().default(false),
     password: z
@@ -56,12 +63,25 @@ export const reservaSchema = z
       .min(6, "La contraseña debe tener al menos 6 caracteres")
       .max(100),
     locale: z.enum(["es", "en"]).default("es"),
+    // Datos de estadística (nivel grupo)
+    tipoVisitante: z.enum(TIPOS_VISITANTE).default("PERSONAL"),
+    organizacion: z.string().max(150).optional().or(z.literal("")),
+    nacionalidad: z.string().min(2, "Indica la nacionalidad").max(60),
+    ciudadResidencia: z.string().min(2, "Indica la ciudad de residencia").max(100),
+    infoAdicional: z.string().max(1000).optional().or(z.literal("")),
     acompanantes: z.array(acompananteSchema).max(9).default([]),
   })
   .refine((data) => data.email === data.emailConfirm, {
     message: "Los correos no coinciden",
     path: ["emailConfirm"],
   })
+  .refine(
+    (data) => data.tipoVisitante === "PERSONAL" || (data.organizacion ?? "").trim().length > 0,
+    {
+      message: "Indica el nombre de la organización",
+      path: ["organizacion"],
+    }
+  )
   .refine(
     (data) => data.acompanantes.length === data.cantidadPersonas - 1,
     {

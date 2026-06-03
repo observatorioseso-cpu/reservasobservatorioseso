@@ -11,9 +11,17 @@ interface AcompananteFieldProps {
   register: UseFormRegister<any>
   errors: FieldErrors
   onRemove: () => void
+  labels: {
+    nombre: string
+    apellido: string
+    documento: string
+    documentoHint: string
+    esMenor: string
+    acompananteLabel: string
+  }
 }
 
-export function AcompananteField({ index, register, errors, onRemove }: AcompananteFieldProps) {
+export function AcompananteField({ index, register, errors, onRemove, labels }: AcompananteFieldProps) {
   const errores = (errors.acompanantes as any)?.[index]
 
   return (
@@ -23,7 +31,7 @@ export function AcompananteField({ index, register, errors, onRemove }: Acompana
     )}>
       <div className="flex items-center justify-between mb-4">
         <span className="text-xs font-semibold uppercase tracking-widest text-stone-400">
-          Acompañante {index + 1}
+          {labels.acompananteLabel} {index + 1}
         </span>
         <button
           type="button"
@@ -36,7 +44,7 @@ export function AcompananteField({ index, register, errors, onRemove }: Acompana
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <FormField label="Nombre" htmlFor={`ac-nombre-${index}`} error={errores?.nombre?.message} required>
+        <FormField label={labels.nombre} htmlFor={`ac-nombre-${index}`} error={errores?.nombre?.message} required>
           <Input
             id={`ac-nombre-${index}`}
             placeholder="María"
@@ -44,7 +52,7 @@ export function AcompananteField({ index, register, errors, onRemove }: Acompana
             {...register(`acompanantes.${index}.nombre`)}
           />
         </FormField>
-        <FormField label="Apellido" htmlFor={`ac-apellido-${index}`} error={errores?.apellido?.message} required>
+        <FormField label={labels.apellido} htmlFor={`ac-apellido-${index}`} error={errores?.apellido?.message} required>
           <Input
             id={`ac-apellido-${index}`}
             placeholder="González"
@@ -55,7 +63,13 @@ export function AcompananteField({ index, register, errors, onRemove }: Acompana
       </div>
 
       <div className="mt-4">
-        <FormField label="RUT o Pasaporte" htmlFor={`ac-doc-${index}`} error={errores?.documento?.message}>
+        <FormField
+          label={labels.documento}
+          htmlFor={`ac-doc-${index}`}
+          error={errores?.documento?.message}
+          hint={labels.documentoHint}
+          required
+        >
           <Input
             id={`ac-doc-${index}`}
             placeholder="12.345.678-9 o ABC123456"
@@ -64,6 +78,15 @@ export function AcompananteField({ index, register, errors, onRemove }: Acompana
           />
         </FormField>
       </div>
+
+      <label className="mt-4 flex items-center gap-3 cursor-pointer">
+        <input
+          type="checkbox"
+          className="size-4 rounded accent-amber-500"
+          {...register(`acompanantes.${index}.esMenor`)}
+        />
+        <span className="text-sm text-stone-700">{labels.esMenor}</span>
+      </label>
     </div>
   )
 }
