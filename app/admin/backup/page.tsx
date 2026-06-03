@@ -326,7 +326,8 @@ export default function BackupPage() {
           <div>
             <h2 className="text-xl font-semibold text-stone-100">Backup y recuperacion</h2>
             <p className="mt-1 text-sm text-stone-500">
-              Backups diarios automaticos a las 03:00 UTC. Retencion: 30 copias.
+              Backups diarios automaticos a medianoche (Santiago). Retencion: 7 dias
+              — las copias mas antiguas se eliminan solas, sin borrado manual.
             </p>
           </div>
 

@@ -5,12 +5,25 @@
  * 1. Vercel Blob (BLOB_READ_WRITE_TOKEN configurado) — almacenamiento externo
  * 2. JSONB en BackupJob.datosJson — fallback en la propia BD
  *
- * Retención: máximo 30 backups. El job de limpieza elimina los más antiguos.
+ * Retención: 7 días de backups diarios (configurable con BACKUP_RETENCION_DIAS).
+ *            El job de limpieza elimina automáticamente los anteriores a la
+ *            ventana, conservando siempre al menos 3 copias recientes.
  */
 
 import { createHash } from "crypto"
 import { prisma } from "@/lib/prisma"
 import { resend, EMAIL_FROM } from "@/lib/email"
+
+// ---------------------------------------------------------------------------
+// Política de retención (ver limpiarBackupsAntiguos)
+// ---------------------------------------------------------------------------
+
+/** Días de respaldos diarios que se conservan. 1 semana por defecto. */
+const RETENCION_DIAS = Math.max(1, Number(process.env.BACKUP_RETENCION_DIAS) || 7)
+
+/** Piso de seguridad: nunca dejar menos copias COMPLETADO que esto, aunque
+ *  superen la ventana de retención (protege ante un cron pausado). */
+const MIN_BACKUPS_RETENIDOS = 3
 
 // ---------------------------------------------------------------------------
 // Types
@@ -168,6 +181,7 @@ export async function ejecutarBackup(triggeredBy = "cron"): Promise<{
   stats: BackupStats
   blobUrl: string | null
   sizeBytes: number
+  eliminados: number
 }> {
   // Crear registro de job en progreso
   const job = await prisma.backupJob.create({
@@ -196,10 +210,10 @@ export async function ejecutarBackup(triggeredBy = "cron"): Promise<{
       },
     })
 
-    // Limpieza de backups antiguos (mantener últimos 30)
-    await limpiarBackupsAntiguos()
+    // Limpieza automática: elimina backups fuera de la ventana de retención.
+    const { eliminados } = await limpiarBackupsAntiguos()
 
-    return { jobId: job.id, stats: backup.stats, blobUrl, sizeBytes }
+    return { jobId: job.id, stats: backup.stats, blobUrl, sizeBytes, eliminados }
   } catch (err) {
     const mensaje = err instanceof Error ? err.message : String(err)
     await prisma.backupJob.update({
@@ -211,23 +225,45 @@ export async function ejecutarBackup(triggeredBy = "cron"): Promise<{
 }
 
 // ---------------------------------------------------------------------------
-// Limpieza de backups antiguos (retención: 30)
+// Limpieza automática de backups antiguos
+//
+// Política de retención: se conservan los backups de los últimos
+// RETENCION_DIAS días (1 semana por defecto). Cualquier backup anterior a esa
+// ventana se elimina automáticamente en cada ejecución del cron diario, sin
+// intervención manual.
+//
+// Piso de seguridad: nunca se elimina por debajo de las MIN_BACKUPS_RETENIDOS
+// copias COMPLETADO más recientes, de modo que si el cron se pausa varios días
+// el sistema jamás queda sin ningún respaldo recuperable.
 // ---------------------------------------------------------------------------
 
-async function limpiarBackupsAntiguos(): Promise<void> {
-  const todos = await prisma.backupJob.findMany({
+async function limpiarBackupsAntiguos(): Promise<{ eliminados: number }> {
+  const corte = new Date(Date.now() - RETENCION_DIAS * 24 * 60 * 60 * 1000)
+
+  // Copias recientes que se protegen siempre, aunque superen la ventana.
+  const protegidos = await prisma.backupJob.findMany({
     where: { status: "COMPLETADO" },
     orderBy: { createdAt: "desc" },
+    take: MIN_BACKUPS_RETENIDOS,
+    select: { id: true },
+  })
+  const idsProtegidos = protegidos.map((j) => j.id)
+
+  // Candidatos: cualquier job anterior al corte que no esté protegido.
+  const aEliminar = await prisma.backupJob.findMany({
+    where: {
+      createdAt: { lt: corte },
+      id: { notIn: idsProtegidos },
+    },
     select: { id: true, blobUrl: true },
   })
 
-  if (todos.length <= 30) return
-
-  const aEliminar = todos.slice(30)
   for (const j of aEliminar) {
     if (j.blobUrl) await eliminarDeBlob(j.blobUrl)
     await prisma.backupJob.delete({ where: { id: j.id } })
   }
+
+  return { eliminados: aEliminar.length }
 }
 
 // ---------------------------------------------------------------------------
