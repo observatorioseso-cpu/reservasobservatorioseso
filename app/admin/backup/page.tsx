@@ -35,7 +35,8 @@ interface BackupJob {
   id: string
   status: "EN_PROGRESO" | "COMPLETADO" | "ERROR"
   triggeredBy: string
-  blobUrl: string | null
+  /** La API entrega solo esta bandera. La URL del Blob no sale del servidor. */
+  enBlob: boolean
   sizeBytes: number
   checksum: string
   stats: BackupStats
@@ -426,10 +427,10 @@ export default function BackupPage() {
                         </span>
 
                         {/* Storage type */}
-                        {backup.blobUrl ? (
+                        {backup.enBlob ? (
                           <span className="inline-flex items-center gap-1 text-xs text-sky-400">
                             <HardDriveDownload className="size-3" aria-hidden="true" />
-                            Blob externo
+                            Blob externo (cifrado)
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-xs text-stone-500">

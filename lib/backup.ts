@@ -2,8 +2,14 @@
  * lib/backup.ts — Sistema de backup y recuperación ante desastres
  *
  * Estrategia de almacenamiento (por prioridad):
- * 1. Vercel Blob (BLOB_READ_WRITE_TOKEN configurado) — almacenamiento externo
+ * 1. Vercel Blob (BLOB_READ_WRITE_TOKEN y BACKUP_ENCRYPTION_KEY configurados)
  * 2. JSONB en BackupJob.datosJson — fallback en la propia BD
+ *
+ * El contenido del Blob va cifrado con AES-256-GCM (ver lib/cifradoBackup.ts).
+ * Vercel Blob en la versión 0.27 solo expone objetos públicos, así que el
+ * cifrado es lo que impide que un respaldo con RUT, correo y teléfono de todos
+ * los visitantes quede legible para cualquiera que consiga la URL. Sin clave
+ * configurada no se sube nada al Blob.
  *
  * Retención: 7 días de backups diarios (configurable con BACKUP_RETENCION_DIAS).
  *            El job de limpieza elimina automáticamente los anteriores a la
@@ -13,6 +19,12 @@
 import { createHash } from "crypto"
 import { prisma } from "@/lib/prisma"
 import { resend, EMAIL_FROM } from "@/lib/email"
+import {
+  cifrar,
+  descifrar,
+  esSobreCifrado,
+  leerClave,
+} from "@/lib/cifradoBackup"
 
 // ---------------------------------------------------------------------------
 // Política de retención (ver limpiarBackupsAntiguos)
@@ -137,17 +149,35 @@ async function subirABlob(
   const token = process.env.BLOB_READ_WRITE_TOKEN
   if (!token) return null
 
+  // Sin clave de cifrado no se sube nada. El respaldo cae al JSONB de la BD,
+  // que ya está detrás de credenciales. Subir datos personales en claro a un
+  // objeto público es peor que no tener copia externa.
+  let clave: Buffer | null
+  try {
+    clave = leerClave()
+  } catch (err) {
+    console.error("[backup/blob]", err instanceof Error ? err.message : err)
+    return null
+  }
+  if (!clave) {
+    console.warn(
+      "[backup/blob] BACKUP_ENCRYPTION_KEY no configurada. El respaldo queda solo en la base de datos."
+    )
+    return null
+  }
+
   try {
     // Importar dinámicamente para no romper el build si el paquete no existe
     const { put } = await import("@vercel/blob")
-    const json = JSON.stringify(backup)
+    const sobre = cifrar(JSON.stringify(backup), clave)
     const fecha = backup.timestamp.split("T")[0]
     const filename = `backups/eso-backup-${fecha}-${jobId}.json`
 
-    const blob = await put(filename, json, {
+    const blob = await put(filename, JSON.stringify(sobre), {
       access: "public",
       contentType: "application/json",
       token,
+      addRandomSuffix: true,
     })
 
     return blob.url
@@ -280,8 +310,26 @@ export async function obtenerDatosBackup(
   if (job.blobUrl) {
     try {
       const res = await fetch(job.blobUrl)
-      if (res.ok) return (await res.json()) as BackupData
-    } catch {
+      if (res.ok) {
+        const contenido: unknown = await res.json()
+
+        if (esSobreCifrado(contenido)) {
+          const clave = leerClave()
+          if (!clave) {
+            console.error(
+              "[backup] respaldo cifrado pero falta BACKUP_ENCRYPTION_KEY. Sin la clave no hay restauración posible desde el Blob."
+            )
+          } else {
+            return JSON.parse(descifrar(contenido, clave)) as BackupData
+          }
+        } else {
+          // Respaldo anterior al cifrado, todavía dentro de la ventana de
+          // retención. Se acepta hasta que expire por antigüedad.
+          return contenido as BackupData
+        }
+      }
+    } catch (err) {
+      console.error("[backup] no se pudo leer el respaldo desde el Blob:", err)
       // fallthrough to datosJson
     }
   }
