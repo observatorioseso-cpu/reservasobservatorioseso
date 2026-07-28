@@ -46,14 +46,25 @@ export async function POST(
     const result = await prisma.$transaction(async (tx) => {
       const turno = await tx.turno.findUniqueOrThrow({ where: { id: reserva.turnoId } })
       const cuposLibres = turno.capacidadMax - turno.cuposOcupados
-      const nuevaCantidad = reserva.cantidadPersonas + 1
 
-      if (cuposLibres < 1 && !forzarCupos) {
+      // En una reserva de grupo los cupos ya se bloquearon por adelantado
+      // (cantidadPersonas > nombres cargados). Completar la nómina no debe
+      // volver a descontar: solo crece el grupo si el nuevo nombre supera
+      // los cupos ya reservados.
+      const acompanantesActuales = await tx.acompanante.count({
+        where: { reservaId: reserva.id },
+      })
+      const personasConNombre = acompanantesActuales + 2 // titular + existentes + el nuevo
+      const delta = Math.max(0, personasConNombre - reserva.cantidadPersonas)
+      const nuevaCantidad = reserva.cantidadPersonas + delta
+
+      if (delta > 0 && cuposLibres < delta && !forzarCupos) {
         throw Object.assign(new Error("CUPOS_INSUFICIENTES"), { code: "CUPOS_INSUFICIENTES" })
       }
 
       // Límite por reserva del turno (p.ej. nocturna = 4), salvo forzarCupos
       if (
+        delta > 0 &&
         turno.maxPersonasPorReserva != null &&
         nuevaCantidad > turno.maxPersonasPorReserva &&
         !forzarCupos
@@ -73,27 +84,33 @@ export async function POST(
         },
       })
 
-      await tx.turno.update({
-        where: { id: reserva.turnoId },
-        data: { cuposOcupados: { increment: 1 } },
-      })
+      if (delta > 0) {
+        await tx.turno.update({
+          where: { id: reserva.turnoId },
+          data: { cuposOcupados: { increment: delta } },
+        })
 
-      await tx.reserva.update({
-        where: { token },
-        data: { cantidadPersonas: nuevaCantidad },
-      })
+        await tx.reserva.update({
+          where: { token },
+          data: { cantidadPersonas: nuevaCantidad },
+        })
+      }
 
       await tx.logAgente.create({
         data: {
           tipo: "MODIFICACION",
           reservaId: reserva.id,
-          resultado: `Admin ${admin.email} agregó acompañante: ${nombre} ${apellido}${forzarCupos ? " (cupos forzados)" : ""}`,
+          resultado:
+            `Admin ${admin.email} agregó acompañante: ${nombre} ${apellido}` +
+            (delta === 0 ? " (completa nómina, sin cupo adicional)" : "") +
+            (forzarCupos ? " (cupos forzados)" : ""),
           metadata: {
             adminEmail: admin.email,
             accion: "agregar_acompanante",
             acompananteId: acompanante.id,
             documento: documento || null,
             forzarCupos,
+            cuposAgregados: delta,
           },
         },
       })

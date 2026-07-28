@@ -70,8 +70,16 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 })
   }
 
+  await prisma.admin
+    .update({ where: { id: admin.id }, data: { ultimoLoginEn: new Date() } })
+    .catch(() => {}) // registrar el ingreso nunca debe impedir entrar
+
   const token = signAdminToken({ adminId: admin.id, email: admin.email })
-  const response = NextResponse.json({ nombre: admin.nombre, email: admin.email })
+  const response = NextResponse.json({
+    nombre: admin.nombre,
+    email: admin.email,
+    debeCambiarPassword: admin.debeCambiarPassword,
+  })
   setAdminCookie(response, token)
   return response
 }

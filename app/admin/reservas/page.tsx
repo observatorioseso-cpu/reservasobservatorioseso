@@ -12,6 +12,7 @@ import {
   AlertCircle,
   ExternalLink,
   X,
+  UserPlus,
 } from "lucide-react"
 import { AdminShell } from "@/components/admin/AdminShell"
 import { StatusBadge } from "@/components/admin/StatusBadge"
@@ -155,14 +156,22 @@ function ReservasPageInner() {
         {/* Header */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-xl font-semibold text-stone-100">Reservas</h2>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => window.open(buildExportUrl(), "_blank")}
-          >
-            <Download className="size-4" aria-hidden="true" />
-            Exportar Excel
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/admin/reservas/nueva">
+              <Button size="sm">
+                <UserPlus className="size-4" aria-hidden="true" />
+                Nueva reserva de grupo
+              </Button>
+            </Link>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => window.open(buildExportUrl(), "_blank")}
+            >
+              <Download className="size-4" aria-hidden="true" />
+              Exportar Excel
+            </Button>
+          </div>
         </div>
 
         {/* Filtros */}

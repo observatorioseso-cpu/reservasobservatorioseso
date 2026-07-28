@@ -37,7 +37,8 @@ export default function AdminLoginPage() {
         body:    JSON.stringify(data),
       })
       if (res.ok) {
-        router.push("/admin/dashboard")
+        const body = await res.json().catch(() => null)
+        router.push(body?.debeCambiarPassword ? "/admin/password" : "/admin/dashboard")
       } else {
         const body = await res.json().catch(() => null)
         setServerError(body?.error ?? "Credenciales incorrectas")

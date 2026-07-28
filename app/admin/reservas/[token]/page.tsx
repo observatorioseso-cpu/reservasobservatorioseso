@@ -16,10 +16,12 @@ import {
   Plus,
   Trash2,
   CalendarClock,
+  ClipboardPaste,
 } from "lucide-react"
 import { AdminShell } from "@/components/admin/AdminShell"
 import { StatusBadge } from "@/components/admin/StatusBadge"
 import { Button } from "@/components/ui/Button"
+import { parseLista } from "@/lib/listaParticipantes"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -253,6 +255,15 @@ export default function ReservaDetallePage({ params }: PageProps) {
   const [addNotificar, setAddNotificar] = useState(false)
   const [addingAcomp, setAddingAcomp] = useState(false)
   const [acompMsg, setAcompMsg] = useState<{ text: string; type: "error" | "success" } | null>(null)
+
+  // Acompañantes — carga masiva de nómina (bus, curso escolar)
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkTexto, setBulkTexto] = useState("")
+  const [bulkMenores, setBulkMenores] = useState(false)
+  const [bulkReemplazar, setBulkReemplazar] = useState(false)
+  const [bulkForzar, setBulkForzar] = useState(false)
+  const [bulkNotificar, setBulkNotificar] = useState(false)
+  const [bulkLoading, setBulkLoading] = useState(false)
 
   // Acompañantes — editar
   const [editAcompId, setEditAcompId] = useState<string | null>(null)
@@ -489,6 +500,53 @@ export default function ReservaDetallePage({ params }: PageProps) {
     }
   }
 
+  async function handleBulkNomina() {
+    const personas = parseLista(bulkTexto)
+    if (personas.length === 0) {
+      setAcompMsg({ text: "No se reconoció ningún nombre en el texto pegado.", type: "error" })
+      return
+    }
+    setBulkLoading(true)
+    setAcompMsg(null)
+    try {
+      const res = await fetch(`/api/admin/reservas/${token}/acompanantes/bulk`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          personas: personas.map((p) => ({
+            nombre: p.nombre,
+            apellido: p.apellido,
+            documento: p.documento || null,
+            esMenor: bulkMenores,
+          })),
+          reemplazar: bulkReemplazar,
+          forzarCupos: bulkForzar,
+          notificar: bulkNotificar,
+        }),
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body.error ?? "Error al cargar la nómina.")
+
+      const d = body.data as { cargados: number; cuposAgregados: number; nombresFaltantes: number }
+      setAcompMsg({
+        text:
+          `${d.cargados} nombres cargados` +
+          (d.cuposAgregados > 0 ? ` · ${d.cuposAgregados} cupos adicionales tomados` : " · sin cupos adicionales") +
+          (d.nombresFaltantes > 0 ? ` · quedan ${d.nombresFaltantes} por cargar` : ""),
+        type: "success",
+      })
+      setBulkTexto("")
+      setBulkReemplazar(false)
+      setBulkForzar(false)
+      setBulkOpen(false)
+      await fetchReserva()
+    } catch (err) {
+      setAcompMsg({ text: err instanceof Error ? err.message : "Error desconocido.", type: "error" })
+    } finally {
+      setBulkLoading(false)
+    }
+  }
+
   function startEditAcomp(a: Acompanante) {
     setEditAcompId(a.id)
     setEditAcompForm({ nombre: a.nombre, apellido: a.apellido, documento: a.documento ?? "" })
@@ -575,6 +633,11 @@ export default function ReservaDetallePage({ params }: PageProps) {
   const cantidadActual = editForm ? parseInt(editForm.cantidadPersonas, 10) : reserva.cantidadPersonas
   const cuposAumentan = !isNaN(cantidadActual) && cantidadActual > reserva.cantidadPersonas
   const esAnulada = reserva.estado === "ANULADA"
+  // Cupos bloqueados por adelantado a los que todavía no se les puso nombre
+  const nombresPendientes = Math.max(
+    0,
+    reserva.cantidadPersonas - 1 - reserva.acompanantes.length
+  )
 
   return (
     <AdminShell>
@@ -760,6 +823,86 @@ export default function ReservaDetallePage({ params }: PageProps) {
                       </Button>
                     </div>
                   </form>
+                )}
+
+                {/* Carga masiva de nómina */}
+                {!esAnulada && (
+                  <div className="space-y-3 border-t border-stone-800 pt-4">
+                    {nombresPendientes > 0 && (
+                      <p className="rounded-lg bg-sky-500/10 px-3 py-2 text-sm text-sky-300 ring-1 ring-sky-500/20">
+                        Esta reserva tiene {reserva.cantidadPersonas} cupos tomados y{" "}
+                        {reserva.acompanantes.length} acompañantes cargados. Faltan{" "}
+                        <strong>{nombresPendientes} nombres</strong>. Cargarlos aquí no descuenta
+                        cupos nuevos.
+                      </p>
+                    )}
+
+                    {!bulkOpen ? (
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setBulkOpen(true)}>
+                        <ClipboardPaste className="size-4" aria-hidden="true" />
+                        Pegar nómina completa
+                      </Button>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-sm font-medium text-stone-400">
+                          Pega la lista, una persona por línea
+                        </p>
+                        <textarea
+                          rows={6}
+                          value={bulkTexto}
+                          onChange={(e) => setBulkTexto(e.target.value)}
+                          placeholder={"Juan Pérez, 12.345.678-9\nMaría González, 98.765.432-1\nPedro Soto"}
+                          className="w-full rounded-lg border border-stone-700 bg-stone-950 px-3 py-2.5 font-mono text-sm leading-relaxed text-stone-100 placeholder:text-stone-600 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                          aria-label="Nómina de participantes"
+                        />
+                        <p className="text-sm text-stone-400">
+                          Se reconocieron <strong className="text-stone-200">{parseLista(bulkTexto).length}</strong>{" "}
+                          nombres. Acepta copiar y pegar desde Excel.
+                        </p>
+
+                        <div className="flex flex-wrap items-center gap-4">
+                          <label className="flex cursor-pointer items-center gap-2 text-sm text-stone-400">
+                            <input type="checkbox" checked={bulkMenores} onChange={(e) => setBulkMenores(e.target.checked)} className="size-4 rounded border-stone-600 accent-amber-500" />
+                            Todos menores de edad
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-sm text-stone-400">
+                            <input type="checkbox" checked={bulkReemplazar} onChange={(e) => setBulkReemplazar(e.target.checked)} className="size-4 rounded border-stone-600 accent-amber-500" />
+                            Reemplazar la lista actual
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-sm text-stone-400">
+                            <input type="checkbox" checked={bulkNotificar} onChange={(e) => setBulkNotificar(e.target.checked)} className="size-4 rounded border-stone-600 accent-amber-500" />
+                            Notificar al titular
+                          </label>
+                          <label className="flex cursor-pointer items-center gap-2 text-sm text-amber-400">
+                            <input type="checkbox" checked={bulkForzar} onChange={(e) => setBulkForzar(e.target.checked)} className="size-4 rounded border-stone-600 accent-amber-500" />
+                            Forzar cupos
+                          </label>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            loading={bulkLoading}
+                            onClick={handleBulkNomina}
+                          >
+                            <ClipboardPaste className="size-4" aria-hidden="true" />
+                            Cargar {parseLista(bulkTexto).length || ""} personas
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { setBulkOpen(false); setBulkTexto("") }}
+                            disabled={bulkLoading}
+                          >
+                            Cancelar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </Card>

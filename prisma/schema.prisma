@@ -211,6 +211,12 @@ model Admin {
   passwordHash String
   nombre       String
 
+  // Cuando se entrega una contraseña temporal por un canal externo (WhatsApp,
+  // llamada), esta marca obliga a cambiarla en el primer ingreso. Así la clave
+  // que viajó fuera del sistema deja de servir apenas la titular entra.
+  debeCambiarPassword Boolean   @default(false)
+  ultimoLoginEn       DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

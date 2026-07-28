@@ -91,7 +91,16 @@ export async function DELETE(
     return NextResponse.json({ error: "Acompañante no encontrado en esta reserva" }, { status: 404 })
   }
 
-  const nuevaCantidad = Math.max(1, reserva.cantidadPersonas - 1)
+  // Si la nómina está completa (cantidadPersonas = acompañantes + titular),
+  // quitar un nombre encoge el grupo y libera un cupo.
+  // En una reserva de grupo con nombres pendientes, quitar un nombre solo
+  // corrige la nómina: los cupos ya bloqueados se mantienen.
+  const acompanantesActuales = await prisma.acompanante.count({
+    where: { reservaId: reserva.id },
+  })
+  const nominaCompleta = reserva.cantidadPersonas === acompanantesActuales + 1
+  const delta = nominaCompleta ? 1 : 0
+  const nuevaCantidad = Math.max(1, reserva.cantidadPersonas - delta)
 
   await prisma.$transaction(async (tx) => {
     // Preservar los datos del acompañante en el log ANTES de eliminar (regla #6)
@@ -103,6 +112,7 @@ export async function DELETE(
         metadata: {
           adminEmail: admin.email,
           accion: "quitar_acompanante",
+          cuposLiberados: delta,
           datosEliminados: {
             nombre: acompanante.nombre,
             apellido: acompanante.apellido,
@@ -114,15 +124,17 @@ export async function DELETE(
 
     await tx.acompanante.delete({ where: { id } })
 
-    await tx.turno.update({
-      where: { id: reserva.turnoId },
-      data: { cuposOcupados: { decrement: 1 } },
-    })
+    if (delta > 0) {
+      await tx.turno.update({
+        where: { id: reserva.turnoId },
+        data: { cuposOcupados: { decrement: delta } },
+      })
 
-    await tx.reserva.update({
-      where: { token },
-      data: { cantidadPersonas: nuevaCantidad },
-    })
+      await tx.reserva.update({
+        where: { token },
+        data: { cantidadPersonas: nuevaCantidad },
+      })
+    }
   })
 
   if (notificar) {
