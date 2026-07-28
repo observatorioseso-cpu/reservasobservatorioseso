@@ -4,6 +4,7 @@ import Link from "next/link"
 import { CheckCircle2, Clock, XCircle, Users, CalendarDays, Telescope } from "lucide-react"
 import { prisma } from "@/lib/prisma"
 import { verifyAdminToken } from "@/lib/adminAuth"
+import { formatearFechaTurno } from "@/lib/fechas"
 import { AdminShell } from "@/components/admin/AdminShell"
 
 export const metadata: Metadata = { title: "Dashboard" }
@@ -15,17 +16,12 @@ export const revalidate = 60
 // Helpers
 // ---------------------------------------------------------------------------
 
+// Formatea el instante actual, así que la zona de Santiago es la correcta.
+// Las fechas de turno van por formatearFechaTurno: ver lib/fechas.ts.
 const fmt = new Intl.DateTimeFormat("es-CL", {
   timeZone: "America/Santiago",
   day:      "2-digit",
   month:    "long",
-  year:     "numeric",
-})
-
-const fmtShort = new Intl.DateTimeFormat("es-CL", {
-  timeZone: "America/Santiago",
-  day:      "2-digit",
-  month:    "2-digit",
   year:     "numeric",
 })
 
@@ -300,7 +296,7 @@ export default async function DashboardPage() {
                           </Link>
                         </td>
                         <td className="px-4 py-3 text-stone-300">
-                          {fmtShort.format(new Date(turno.fecha))}
+                          {formatearFechaTurno(turno.fecha)}
                         </td>
                         <td className="px-4 py-3 text-stone-300">
                           {turno.horaInicio} – {turno.horaFin}

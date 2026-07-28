@@ -19,6 +19,7 @@ import { AdminShell } from "@/components/admin/AdminShell"
 import { Button } from "@/components/ui/Button"
 import { useAdminTheme } from "@/contexts/adminTheme"
 import { parseLista, type ParticipanteParseado } from "@/lib/listaParticipantes"
+import { formatearFechaTurno } from "@/lib/fechas"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -51,8 +52,9 @@ const TIPOS_VISITANTE = [
   { value: "OTRO", label: "Otra" },
 ] as const
 
+// Turno.fecha es un día del calendario. Ver lib/fechas.ts.
 function formatFecha(iso: string): string {
-  return new Date(iso).toLocaleDateString("es-CL", {
+  return formatearFechaTurno(iso, "es-CL", {
     weekday: "short",
     day: "2-digit",
     month: "2-digit",

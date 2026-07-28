@@ -17,6 +17,7 @@ import {
 import { AdminShell } from "@/components/admin/AdminShell"
 import { StatusBadge } from "@/components/admin/StatusBadge"
 import { Button } from "@/components/ui/Button"
+import { formatearFechaTurno } from "@/lib/fechas"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -57,6 +58,13 @@ const OBS_LABELS: Record<Observatorio, string> = {
   PARANAL: "Paranal",
 }
 
+/**
+ * Solo para instantes reales, como fechaLimiteConfirmacion. La zona local es la
+ * correcta ahí, porque importa la hora que vive el usuario.
+ *
+ * Las fechas de turno son días del calendario y van por formatearFechaTurno.
+ * Ver lib/fechas.ts.
+ */
 function formatFechaES(iso: string): string {
   const d = new Date(iso)
   return d.toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit", year: "numeric" })
@@ -282,7 +290,7 @@ function ReservasPageInner() {
                       </td>
                       <td className="px-4 py-3 text-stone-300">{OBS_LABELS[r.observatorio]}</td>
                       <td className="px-4 py-3 tabular-nums text-stone-300">
-                        {formatFechaES(r.turno.fecha)}
+                        {formatearFechaTurno(r.turno.fecha)}
                       </td>
                       <td className="px-4 py-3 tabular-nums text-stone-300">
                         {r.turno.horaInicio}
