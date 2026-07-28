@@ -1,8 +1,10 @@
 import type { Metadata } from "next"
 import "./globals.css"
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://reservasobservatorioseso.cl"
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://reservasobservatorioseso.cl"),
+  metadataBase: new URL(BASE_URL),
   title: {
     default: "Reservas Observatorios ESO Chile",
     template: "%s | ESO Chile",

@@ -7,6 +7,9 @@ import { Redis } from "@upstash/redis"
 import { prisma } from "@/lib/prisma"
 import { resend, EMAIL_FROM, EMAIL_CONTACTO } from "@/lib/email"
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
+const DOMINIO = BASE_URL.replace(/^https?:\/\//, "").replace(/\/+$/, "")
+
 // ---------------------------------------------------------------------------
 // Rate limiting — 3 mensajes por IP cada 15 minutos (lazy init)
 // ---------------------------------------------------------------------------
@@ -146,7 +149,7 @@ function buildConfirmationEmail(data: ContactoPayload): string {
       }
       <p style="color:#8b6a3a;font-size:12px;margin-top:24px">
         Este es un mensaje automático. Si tienes una consulta urgente, puedes usar el chat de asistencia
-        disponible en <a href="https://reservasobservatorioseso.cl" style="color:#8b4e10">reservasobservatorioseso.cl</a>.
+        disponible en <a href="${BASE_URL}" style="color:#8b4e10">${DOMINIO}</a>.
       </p>
     </div>
   </div>

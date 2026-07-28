@@ -3,6 +3,11 @@ import type { NextRequest } from "next/server"
 
 export const runtime = "edge"
 
+// NEXT_PUBLIC_* se inlinea en build, así que funciona también en el runtime edge.
+const DOMINIO = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl")
+  .replace(/^https?:\/\//, "")
+  .replace(/\/+$/, "")
+
 const titles: Record<string, string> = {
   home: "La Silla & Paranal",
   "la-silla": "Observatorio La Silla",
@@ -194,7 +199,7 @@ export async function GET(request: NextRequest) {
               display: "flex",
             }}
           >
-            reservasobservatorioseso.cl
+            {DOMINIO}
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { streamText } from "ai"
 import { anthropic } from "@ai-sdk/anthropic"
 import { NextResponse } from "next/server"
 import { getAdminFromRequest } from "@/lib/adminAuth"
+import { prepararHistorial } from "@/lib/chatGuard"
 
 const ADMIN_SYSTEM_PROMPT = `Eres Astra, la asistente de IA del panel de administración de los Observatorios ESO Chile. Apoyas exclusivamente a Bernardita y al equipo de administración. Eres experta en todas las operaciones del sistema de reservas.
 
@@ -150,28 +151,26 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
-  let body: { messages: Array<{ role: string; content: string }>; page?: string }
+  let body: { messages?: unknown; page?: string }
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: "Body inválido" }, { status: 400 })
   }
 
-  const { messages, page } = body
+  const { page } = body
 
-  if (!messages || !Array.isArray(messages) || messages.length === 0) {
-    return NextResponse.json({ error: "messages requerido" }, { status: 400 })
+  // Astra vive detrás del login del panel, así que no lleva límite por IP. El
+  // tope de tamaño sí aplica: acota lo que cuesta un turno aunque la sesión sea
+  // legítima, y evita que un payload inflado dispare la factura de Sonnet.
+  const preparado = prepararHistorial(body.messages, {
+    maxMensajes: 12,
+    maxCharsConversacion: 10000,
+  })
+  if (!preparado.ok) {
+    return NextResponse.json({ error: preparado.error }, { status: preparado.status })
   }
-
-  const all = messages
-    .filter((m) => m.role === "user" || m.role === "assistant")
-    .slice(-12) as Array<{ role: "user" | "assistant"; content: string }>
-
-  const firstUserIdx = all.findIndex((m) => m.role === "user")
-  if (firstUserIdx === -1) {
-    return NextResponse.json({ error: "Se requiere al menos un mensaje de usuario" }, { status: 400 })
-  }
-  const historial = all.slice(firstUserIdx)
+  const historial = preparado.mensajes
 
   // Inyectar contexto de la página actual en el último mensaje del usuario
   const messagesWithContext = page

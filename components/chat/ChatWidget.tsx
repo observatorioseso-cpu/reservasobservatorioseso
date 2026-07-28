@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { MessageCircle, X, Send } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { usePathname } from "next/navigation"
+import { MAX_CHARS_MENSAJE } from "@/lib/chatLimites"
 
 interface Mensaje {
   role: "user" | "assistant"
@@ -69,8 +70,25 @@ export function ChatWidget() {
         body: JSON.stringify({ messages: nuevosMensajes }),
       })
 
-      if (!res.ok || !res.body) {
-        throw new Error(`Error HTTP ${res.status}`)
+      // El servidor responde JSON cuando rechaza la petición (tamaño, límite
+      // por IP, techo diario). Ese texto explica qué pasó y a dónde escribir,
+      // así que se muestra tal cual en vez del error genérico del catch.
+      if (!res.ok) {
+        const detalle = await res.json().catch(() => null)
+        setMensajes([
+          ...nuevosMensajes,
+          {
+            role: "assistant",
+            content:
+              detalle?.error ??
+              "Lo siento, no pude procesar tu mensaje. Por favor intenta de nuevo.",
+          },
+        ])
+        return
+      }
+
+      if (!res.body) {
+        throw new Error("Respuesta sin cuerpo")
       }
 
       // Leer stream de texto plano (toTextStreamResponse)
@@ -195,6 +213,9 @@ export function ChatWidget() {
                 onKeyDown={manejarKeyDown}
                 placeholder="Escribe tu pregunta..."
                 rows={1}
+                // Mismo tope que valida el servidor: el visitante topa aquí
+                // antes de recibir un 413.
+                maxLength={MAX_CHARS_MENSAJE}
                 disabled={cargando}
                 className={cn(
                   "flex-1 resize-none rounded-xl px-3 py-2 text-sm",

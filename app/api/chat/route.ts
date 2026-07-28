@@ -3,8 +3,17 @@ export const dynamic = "force-dynamic"
 import { streamText } from "ai"
 import { anthropic } from "@ai-sdk/anthropic"
 import { NextResponse } from "next/server"
+import { extraerIp, prepararHistorial, revisarLimites } from "@/lib/chatGuard"
 
-// System prompt bilingüe — estático y largo (>1024 tokens) → elegible para prompt caching
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
+
+// El prompt nombra el sitio en prosa, sin esquema ni barra final.
+const DOMINIO = BASE_URL.replace(/^https?:\/\//, "").replace(/\/+$/, "")
+
+// System prompt bilingüe — largo (>1024 tokens) y constante dentro de un mismo
+// deploy → elegible para prompt caching. El dominio sale de la env var para que
+// el asistente nunca derive visitantes al sistema antiguo mientras convivimos
+// con dos hostnames.
 const SYSTEM_PROMPT = `Eres el asistente virtual de los Observatorios ESO Chile. Ayudas a los visitantes a reservar visitas guiadas gratuitas a La Silla y Paranal.
 
 ## Sobre los observatorios
@@ -19,7 +28,7 @@ const SYSTEM_PROMPT = `Eres el asistente virtual de los Observatorios ESO Chile.
 
 ## Cómo reservar
 
-1. Ir a reservasobservatorioseso.cl
+1. Ir a ${DOMINIO}
 2. Elegir observatorio (La Silla o Paranal)
 3. Seleccionar fecha y turno disponible
 4. Completar formulario con datos del titular (nombre, RUT o pasaporte, email, teléfono)
@@ -36,14 +45,14 @@ const SYSTEM_PROMPT = `Eres el asistente virtual de los Observatorios ESO Chile.
 
 ## Portal de gestión
 
-- Los visitantes pueden gestionar su reserva en: reservasobservatorioseso.cl/mi-reserva
+- Los visitantes pueden gestionar su reserva en: ${DOMINIO}/mi-reserva
 - Necesitan su código de reserva (formato ESO-XXXXXXXX) y contraseña
 - Desde el portal pueden: confirmar asistencia, modificar acompañantes, cancelar
 
 ## Contacto
 
 - Email: reservas@observatorioseso.cl
-- Portal: reservasobservatorioseso.cl/mi-reserva
+- Portal: ${DOMINIO}/mi-reserva
 
 ## Preguntas frecuentes
 
@@ -57,7 +66,7 @@ const SYSTEM_PROMPT = `Eres el asistente virtual de los Observatorios ESO Chile.
 
 **¿Qué pasa si no confirmo?** Si no confirmas antes del viernes a las 12:00, tu reserva puede ser anulada automáticamente.
 
-**¿Puedo modificar mi reserva?** Sí, desde reservasobservatorioseso.cl/mi-reserva puedes agregar o quitar acompañantes antes del viernes 12:00.
+**¿Puedo modificar mi reserva?** Sí, desde ${DOMINIO}/mi-reserva puedes agregar o quitar acompañantes antes del viernes 12:00.
 
 ---
 
@@ -74,36 +83,38 @@ Amable, profesional y conciso. Eres un experto en astronomía y puedes responder
 You are the virtual assistant for ESO Chile Observatories. You help visitors book free guided tours to La Silla and Paranal observatories. Always respond in the user's language. Be friendly, professional, and concise. You can also answer general astronomy questions about ESO telescopes and facilities.`
 
 export async function POST(request: Request) {
-  let body: { messages: Array<{ role: string; content: string }>; locale?: string }
+  let body: { messages?: unknown }
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: "Body inválido" }, { status: 400 })
   }
 
-  const { messages } = body
-
-  if (!messages || !Array.isArray(messages) || messages.length === 0) {
-    return NextResponse.json({ error: "messages requerido" }, { status: 400 })
+  // 1. Forma y tamaño. Va primero porque rechazar un payload gigante no debe
+  //    costar ni una consulta a Redis ni un token de Anthropic.
+  const historial = prepararHistorial(body.messages)
+  if (!historial.ok) {
+    return NextResponse.json({ error: historial.error }, { status: historial.status })
   }
 
-  // Filtrar solo roles válidos y tomar últimos 10
-  const all = messages
-    .filter((m) => m.role === "user" || m.role === "assistant")
-    .slice(-10) as Array<{ role: "user" | "assistant"; content: string }>
-
-  // Asegurar que el historial empiece con un mensaje de usuario
-  // (el mensaje inicial de bienvenida es assistant y se incluye desde el cliente)
-  const firstUserIdx = all.findIndex((m) => m.role === "user")
-  if (firstUserIdx === -1) {
-    return NextResponse.json({ error: "Se requiere al menos un mensaje de usuario" }, { status: 400 })
+  // 2 y 3. Frecuencia por IP y techo diario del sitio.
+  const limite = await revisarLimites(extraerIp(request))
+  if (!limite.ok) {
+    return NextResponse.json(
+      { error: limite.error },
+      {
+        status: limite.status,
+        headers: limite.retryAfter
+          ? { "Retry-After": String(limite.retryAfter) }
+          : undefined,
+      }
+    )
   }
-  const historial = all.slice(firstUserIdx)
 
   const result = streamText({
     model: anthropic("claude-sonnet-4-6"),
     system: SYSTEM_PROMPT,
-    messages: historial,
+    messages: historial.mensajes,
     maxOutputTokens: 1024,
   })
 

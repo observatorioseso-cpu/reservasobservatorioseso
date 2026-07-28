@@ -44,6 +44,9 @@ export interface DatosReservaPDF {
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://reservasobservatorioseso.cl"
 
+// El ticket muestra el dominio impreso, sin esquema ni barra final.
+const DOMINIO = BASE_URL.replace(/^https?:\/\//, "").replace(/\/+$/, "")
+
 function nombreObservatorio(obs: "LA_SILLA" | "PARANAL"): string {
   return obs === "LA_SILLA" ? "La Silla" : "Paranal (VLT)"
 }
@@ -308,7 +311,7 @@ function ReservaPDF({ datos, qrDataUrl }: ReservaPDFProps): React.ReactElement {
             <Text style={S.headerOrg}>ESO CHILE</Text>
             <Text style={S.headerSub}>Observatorios Astronómicos</Text>
             <Text style={[S.headerSub, { marginTop: 8, fontSize: 9, color: "#a8a29e" }]}>
-              reservasobservatorioseso.cl
+              {DOMINIO}
             </Text>
           </View>
           <Image src={qrDataUrl} style={S.headerQr} />
