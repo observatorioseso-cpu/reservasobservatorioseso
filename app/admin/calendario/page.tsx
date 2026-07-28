@@ -15,6 +15,7 @@ import {
 import { AdminShell } from "@/components/admin/AdminShell"
 import { StatusBadge } from "@/components/admin/StatusBadge"
 import { Button } from "@/components/ui/Button"
+import { useAdminTheme } from "@/contexts/adminTheme"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -94,6 +95,9 @@ function formatFechaLarga(iso: string): string {
 // ---------------------------------------------------------------------------
 
 export default function CalendarioPage() {
+  const { theme } = useAdminTheme()
+  const isLight = theme === "light"
+
   const now = new Date()
   const [year, setYear] = useState(now.getUTCFullYear())
   const [month, setMonth] = useState(now.getUTCMonth() + 1) // 1-12
@@ -339,10 +343,10 @@ export default function CalendarioPage() {
                     <div className="mt-1 space-y-1">
                       {turnos.map((t) => {
                         const color = !t.activo
-                          ? "bg-stone-700/60 text-stone-400 ring-stone-600"
+                          ? (isLight ? "bg-stone-200 text-stone-600 ring-stone-300" : "bg-stone-700/60 text-stone-400 ring-stone-600")
                           : t.tipo === "NOCTURNA"
-                            ? "bg-amber-500/15 text-amber-300 ring-amber-500/30"
-                            : "bg-sky-500/15 text-sky-300 ring-sky-500/30"
+                            ? (isLight ? "bg-amber-100 text-amber-900 ring-amber-400" : "bg-amber-500/15 text-amber-300 ring-amber-500/30")
+                            : (isLight ? "bg-sky-100 text-sky-900 ring-sky-400" : "bg-sky-500/15 text-sky-300 ring-sky-500/30")
                         return (
                           <div
                             key={t.id}

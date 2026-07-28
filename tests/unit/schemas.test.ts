@@ -1,6 +1,15 @@
 import { describe, it, expect } from "vitest"
 import { reservaSchema } from "@/lib/schemas"
 
+/**
+ * Reserva mínima que reservaSchema acepta.
+ *
+ * Tiene que ser válida de verdad: los casos que afirman `success === false`
+ * solo prueban algo si el único defecto es el que introduce cada test. Si al
+ * esquema le agregan un campo obligatorio y este objeto no lo trae, los tests
+ * negativos siguen en verde sin cubrir nada. Al tocar reservaSchema, revisa
+ * también este objeto.
+ */
 const baseReserva = {
   turnoId: "cm0000000000000000000000",
   nombre: "Ana",
@@ -16,6 +25,8 @@ const baseReserva = {
   whatsappOptIn: false,
   password: "secreta123",
   locale: "es" as const,
+  nacionalidad: "Chile",
+  ciudadResidencia: "Santiago",
   acompanantes: [],
 }
 
@@ -53,23 +64,37 @@ describe("reservaSchema", () => {
     expect(result.success).toBe(false)
   })
 
+  // El documento del acompañante es obligatorio desde que la nómina se usa como
+  // lista de control de seguridad. Uno lleva RUT y el otro pasaporte, para
+  // cubrir los dos caminos de validarDocumento.
   it("acepta grupo de 3 con 2 acompañantes", () => {
     const result = reservaSchema.safeParse({
       ...baseReserva,
       cantidadPersonas: 3,
       acompanantes: [
-        { nombre: "Pedro", apellido: "Soto", documento: "" },
-        { nombre: "María", apellido: "López", documento: "" },
+        { nombre: "Pedro", apellido: "Soto", documento: "12.345.678-5" },
+        { nombre: "María", apellido: "López", documento: "AB123456" },
       ],
     })
     expect(result.success).toBe(true)
+  })
+
+  it("rechaza acompañante sin documento", () => {
+    const result = reservaSchema.safeParse({
+      ...baseReserva,
+      cantidadPersonas: 2,
+      acompanantes: [{ nombre: "Pedro", apellido: "Soto", documento: "" }],
+    })
+    expect(result.success).toBe(false)
   })
 
   it("rechaza acompañantes si cantidad no coincide", () => {
     const result = reservaSchema.safeParse({
       ...baseReserva,
       cantidadPersonas: 3,
-      acompanantes: [{ nombre: "Pedro", apellido: "Soto", documento: "" }],
+      acompanantes: [
+        { nombre: "Pedro", apellido: "Soto", documento: "12.345.678-5" },
+      ],
     })
     expect(result.success).toBe(false)
   })

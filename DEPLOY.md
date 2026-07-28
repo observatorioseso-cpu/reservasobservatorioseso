@@ -194,14 +194,23 @@ Each `vercel env add` command will prompt you for the value interactively (the v
 | `RESEND_API_KEY` | Key from Step 4 |
 | `RESEND_FROM_EMAIL` | `noreply@reservasobservatorioseso.cl` |
 | `CRON_SECRET` | 32-char hex from Step 6 |
+| `BACKUP_ENCRYPTION_KEY` | 64-char hex from `node scripts/generar-clave-backup.mjs` |
 | `NODE_ENV` | `production` (Vercel sets this automatically) |
+
+`BACKUP_ENCRYPTION_KEY` cifra el respaldo antes de subirlo a Vercel Blob. Los
+objetos del Blob son públicos y el respaldo lleva RUT, correo y teléfono de
+todos los visitantes, así que sin esta clave el sistema no sube nada al Blob y
+la copia queda solo en la base de datos. Guarda la clave también en el gestor
+de contraseñas del equipo: sin ella los respaldos del Blob no se restauran.
 
 ### Optional values
 
 | Variable | Default if absent | Purpose |
 |---|---|---|
-| `UPSTASH_REDIS_REST_URL` | Rate limiting disabled | Redis for chat rate limiting |
-| `UPSTASH_REDIS_REST_TOKEN` | Rate limiting disabled | Redis auth token |
+| `UPSTASH_REDIS_REST_URL` | Límite por IP en memoria, por instancia | Redis para el rate limiting del chat |
+| `UPSTASH_REDIS_REST_TOKEN` | Igual que arriba | Token de Redis |
+| `CHAT_LIMITE_DIARIO_GLOBAL` | `250` | Techo diario de turnos del chat público. Acota el gasto en Sonnet ante un ataque distribuido |
+| `BACKUP_RETENCION_DIAS` | `7` | Días de respaldos diarios que se conservan |
 | `TWILIO_ACCOUNT_SID` | WhatsApp disabled | WhatsApp notifications |
 | `TWILIO_AUTH_TOKEN` | WhatsApp disabled | WhatsApp auth |
 | `TWILIO_WHATSAPP_FROM` | WhatsApp disabled | e.g. `whatsapp:+14155238886` |

@@ -25,8 +25,7 @@ const turnos = [
     fecha,
     horaInicio: "16:30",
     horaFin:    "20:30",
-    capacidadTotal:      40,
-    cuposLibres:         40,
+    capacidadMax:        40,
     tipo:                "NOCTURNA",
     maxPersonasPorReserva: 4,
   },
@@ -35,8 +34,7 @@ const turnos = [
     fecha,
     horaInicio: "16:30",
     horaFin:    "20:30",
-    capacidadTotal:      40,
-    cuposLibres:         40,
+    capacidadMax:        40,
     tipo:                "NOCTURNA",
     maxPersonasPorReserva: 4,
   },
@@ -59,7 +57,7 @@ for (const t of turnos) {
   }
 
   const result = await prisma.turno.create({ data: t })
-  console.log(`Creado:    ${result.observatorio} ${result.fecha.toISOString().slice(0, 10)} ${result.horaInicio}–${result.horaFin} | cap: ${result.capacidadTotal} | máx/reserva: ${result.maxPersonasPorReserva} (ID: ${result.id})`)
+  console.log(`Creado:    ${result.observatorio} ${result.fecha.toISOString().slice(0, 10)} ${result.horaInicio}–${result.horaFin} | cap: ${result.capacidadMax} | máx/reserva: ${result.maxPersonasPorReserva} (ID: ${result.id})`)
 }
 
 await prisma.$disconnect()

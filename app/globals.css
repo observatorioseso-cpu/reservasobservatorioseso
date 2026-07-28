@@ -4,6 +4,16 @@
   --font-playfair: var(--font-playfair);
   --font-franklin: var(--font-franklin);
 
+  /* ━━ Tipografía — escala ampliada para mejor legibilidad ━━━━━━━━━━━
+     Sube el texto pequeño (xs/sm) en todo el sistema sin tocar espaciados.
+     Basado en rem → respeta el zoom del usuario. */
+  --text-xs:   0.8125rem;  /* 12px → 13px */
+  --text-xs--line-height: 1.5;
+  --text-sm:   0.9375rem;  /* 14px → 15px */
+  --text-sm--line-height: 1.55;
+  --text-base: 1.0625rem;  /* 16px → 17px */
+  --text-base--line-height: 1.6;
+
   /* ━━ ARENA — fondos cálidos del desierto (light mode público) ━━━━━ */
   --color-arena-50:  #FDFAF2;
   --color-arena-100: #F7EDDA;
@@ -158,14 +168,18 @@
 [data-admin-theme="light"] .border-white\/5        { border-color: rgba(107,74,34,0.08) !important; }
 [data-admin-theme="light"] .border-white\/10       { border-color: rgba(107,74,34,0.12) !important; }
 
-/* ── Text ─────────────────────────────────────────────────────────── */
+/* ── Text ─────────────────────────────────────────────────────────────
+   Ramp oscurecida para cumplir WCAG AA (≥4.5:1) sobre los fondos crema.
+   Antes 500/600/700 eran marrones demasiado claros (≈2.5–4:1). */
 [data-admin-theme="light"] .text-stone-100  { color: #1a1205 !important; }
-[data-admin-theme="light"] .text-stone-200  { color: #2d1e08 !important; }
-[data-admin-theme="light"] .text-stone-300  { color: #4a3015 !important; }
-[data-admin-theme="light"] .text-stone-400  { color: #6b4a22 !important; }
-[data-admin-theme="light"] .text-stone-500  { color: #8b6a3a !important; }
-[data-admin-theme="light"] .text-stone-600  { color: #a88855 !important; }
-[data-admin-theme="light"] .text-stone-700  { color: #c4a87a !important; }
+[data-admin-theme="light"] .text-stone-200  { color: #2a1d0a !important; }
+[data-admin-theme="light"] .text-stone-300  { color: #3d2c12 !important; }
+[data-admin-theme="light"] .text-stone-400  { color: #5e4017 !important; }
+[data-admin-theme="light"] .text-stone-500  { color: #6b4a22 !important; }
+[data-admin-theme="light"] .text-stone-600  { color: #7c5a2c !important; }
+[data-admin-theme="light"] .text-stone-700  { color: #8a6838 !important; }
+/* Texto atenuado con opacidad usado en algunos lugares */
+[data-admin-theme="light"] .text-stone-500\/80 { color: rgba(107,74,34,0.92) !important; }
 
 /* ── Hover states ─────────────────────────────────────────────────── */
 [data-admin-theme="light"] .hover\:bg-stone-800:hover     { background-color: #ede0c4 !important; }
