@@ -6,6 +6,7 @@ import {
   esSobreCifrado,
   leerClave,
   hayClave,
+  normalizarClave,
   ClaveBackupInvalida,
 } from "@/lib/cifradoBackup"
 
@@ -78,6 +79,34 @@ describe("esSobreCifrado", () => {
     expect(esSobreCifrado(null)).toBe(false)
     expect(esSobreCifrado("texto")).toBe(false)
     expect(esSobreCifrado(7)).toBe(false)
+  })
+})
+
+describe("normalizarClave", () => {
+  it("acepta 64 caracteres hex", () => {
+    expect(normalizarClave(CLAVE.toString("hex")).equals(CLAVE)).toBe(true)
+  })
+
+  it("acepta base64", () => {
+    expect(normalizarClave(CLAVE.toString("base64")).equals(CLAVE)).toBe(true)
+  })
+
+  it("ignora espacios alrededor, que es lo que deja copiar y pegar", () => {
+    expect(normalizarClave(`  ${CLAVE.toString("hex")}\n`).equals(CLAVE)).toBe(true)
+  })
+
+  it("rechaza una clave corta", () => {
+    expect(() => normalizarClave(randomBytes(16).toString("hex"))).toThrow(
+      ClaveBackupInvalida
+    )
+  })
+
+  it("rechaza texto que no es una clave", () => {
+    expect(() => normalizarClave("clave-secreta")).toThrow(ClaveBackupInvalida)
+  })
+
+  it("rechaza la cadena vacía", () => {
+    expect(() => normalizarClave("")).toThrow(ClaveBackupInvalida)
   })
 })
 

@@ -1,7 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Loader2, AlertCircle, Save, CheckCircle2, CalendarCog } from "lucide-react"
+import {
+  Loader2,
+  AlertCircle,
+  Save,
+  CheckCircle2,
+  CalendarCog,
+  ShieldCheck,
+  ShieldAlert,
+} from "lucide-react"
 import { AdminShell } from "@/components/admin/AdminShell"
 import { Button } from "@/components/ui/Button"
 
@@ -9,7 +17,7 @@ import { Button } from "@/components/ui/Button"
 // Meta
 // ---------------------------------------------------------------------------
 
-type ConfigTipo = "number" | "text" | "boolean"
+type ConfigTipo = "number" | "text" | "boolean" | "secret"
 
 interface ConfigMeta {
   label: string
@@ -17,6 +25,8 @@ interface ConfigMeta {
   tipo: ConfigTipo
   min?: number
   max?: number
+  /** Solo para tipo "secret": qué se muestra bajo el campo cuando ya está puesta. */
+  nota?: string
 }
 
 const CONFIG_META: Record<string, ConfigMeta> = {
@@ -55,6 +65,17 @@ const CONFIG_META: Record<string, ConfigMeta> = {
     min: 0,
     max: 360,
   },
+  BACKUP_ENCRYPTION_KEY: {
+    label: "Clave de cifrado de respaldos",
+    descripcion:
+      "Cifra el respaldo diario antes de subirlo al almacenamiento externo. Sin ella la copia " +
+      "se queda dentro de la base de datos. 64 caracteres hexadecimales, generados con " +
+      "scripts/generar-clave-backup.mjs.",
+    tipo: "secret",
+    nota:
+      "Guardala tambien en el gestor de contrasenas del equipo. Es la unica forma de restaurar " +
+      "un respaldo externo, y cambiarla deja ilegibles los que ya estan subidos.",
+  },
 }
 
 // ---------------------------------------------------------------------------
@@ -67,6 +88,10 @@ interface ConfigEntry {
   descripcion: string | null
   updatedAt: string
   updatedBy: string | null
+  /** true si la API oculta el valor. Los secretos llegan siempre con valor "". */
+  secreto?: boolean
+  /** true si hay un valor guardado, aunque no venga en la respuesta. */
+  configurado?: boolean
 }
 
 type ConfigMap = Record<string, ConfigEntry>
@@ -158,6 +183,48 @@ function ConfigField({ clave, meta, value, entry, onChange }: FieldProps) {
           max={meta.max}
           className="w-40 rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 text-sm text-stone-100 tabular-nums focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
+      ) : meta.tipo === "secret" ? (
+        <div className="space-y-2">
+          <input
+            id={inputId}
+            type="password"
+            value={value}
+            onChange={(e) => onChange(clave, e.target.value)}
+            autoComplete="new-password"
+            spellCheck={false}
+            placeholder={
+              entry?.configurado
+                ? "Ya guardada. Escribe una nueva solo si quieres reemplazarla."
+                : "64 caracteres hexadecimales"
+            }
+            aria-describedby={`${inputId}-estado`}
+            className="w-full rounded-lg border border-stone-700 bg-stone-800 px-3 py-2 font-mono text-sm text-stone-100 placeholder:font-sans placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+          />
+          <p id={`${inputId}-estado`} className="flex items-start gap-1.5 text-xs">
+            {entry?.configurado ? (
+              <>
+                <ShieldCheck
+                  className="mt-0.5 size-3.5 shrink-0 text-green-400"
+                  aria-hidden="true"
+                />
+                <span className="text-green-400">
+                  Configurada.{" "}
+                  <span className="text-stone-500">{meta.nota}</span>
+                </span>
+              </>
+            ) : (
+              <>
+                <ShieldAlert
+                  className="mt-0.5 size-3.5 shrink-0 text-amber-400"
+                  aria-hidden="true"
+                />
+                <span className="text-amber-400">
+                  Sin configurar. El respaldo diario se queda dentro de la base de datos.
+                </span>
+              </>
+            )}
+          </p>
+        </div>
       ) : (
         <input
           id={inputId}
@@ -230,8 +297,15 @@ export default function ConfigPage() {
     setSaveMsg(null)
 
     try {
-      // Build array of { clave, valor } pairs
-      const payload = Object.entries(values).map(([clave, valor]) => ({ clave, valor }))
+      // Un secreto en blanco significa "no lo toques". El navegador nunca recibe
+      // el valor guardado, asi que mandarlo vacio lo borraria cada vez que
+      // alguien cambie cualquier otra opcion.
+      const payload = Object.entries(values)
+        .filter(
+          ([clave, valor]) =>
+            CONFIG_META[clave]?.tipo !== "secret" || valor.trim().length > 0
+        )
+        .map(([clave, valor]) => ({ clave, valor }))
 
       const res = await fetch("/api/admin/config", {
         method: "PUT",
@@ -254,6 +328,16 @@ export default function ConfigPage() {
         }
         setEntries(map)
       }
+
+      // Los secretos no se quedan escritos en el campo despues de guardar. El
+      // estado bajo el input pasa a "Configurada" y eso basta como confirmacion.
+      setValues((prev) => {
+        const limpio = { ...prev }
+        for (const [clave, meta] of Object.entries(CONFIG_META)) {
+          if (meta.tipo === "secret") limpio[clave] = ""
+        }
+        return limpio
+      })
 
       setSaveMsg({ text: "Configuracion guardada correctamente.", type: "success" })
     } catch (err) {

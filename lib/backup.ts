@@ -19,12 +19,8 @@
 import { createHash } from "crypto"
 import { prisma } from "@/lib/prisma"
 import { resend, EMAIL_FROM } from "@/lib/email"
-import {
-  cifrar,
-  descifrar,
-  esSobreCifrado,
-  leerClave,
-} from "@/lib/cifradoBackup"
+import { cifrar, descifrar, esSobreCifrado } from "@/lib/cifradoBackup"
+import { resolverClaveBackup, type ClaveResuelta } from "@/lib/claveBackup"
 
 // ---------------------------------------------------------------------------
 // Política de retención (ver limpiarBackupsAntiguos)
@@ -152,16 +148,16 @@ async function subirABlob(
   // Sin clave de cifrado no se sube nada. El respaldo cae al JSONB de la BD,
   // que ya está detrás de credenciales. Subir datos personales en claro a un
   // objeto público es peor que no tener copia externa.
-  let clave: Buffer | null
+  let resuelta: ClaveResuelta | null
   try {
-    clave = leerClave()
+    resuelta = await resolverClaveBackup()
   } catch (err) {
     console.error("[backup/blob]", err instanceof Error ? err.message : err)
     return null
   }
-  if (!clave) {
+  if (!resuelta) {
     console.warn(
-      "[backup/blob] BACKUP_ENCRYPTION_KEY no configurada. El respaldo queda solo en la base de datos."
+      "[backup/blob] Sin clave de cifrado: no está BACKUP_ENCRYPTION_KEY en el entorno ni la fila equivalente en ConfigSistema. El respaldo queda solo en la base de datos."
     )
     return null
   }
@@ -169,7 +165,7 @@ async function subirABlob(
   try {
     // Importar dinámicamente para no romper el build si el paquete no existe
     const { put } = await import("@vercel/blob")
-    const sobre = cifrar(JSON.stringify(backup), clave)
+    const sobre = cifrar(JSON.stringify(backup), resuelta.clave)
     const fecha = backup.timestamp.split("T")[0]
     const filename = `backups/eso-backup-${fecha}-${jobId}.json`
 
@@ -314,13 +310,16 @@ export async function obtenerDatosBackup(
         const contenido: unknown = await res.json()
 
         if (esSobreCifrado(contenido)) {
-          const clave = leerClave()
-          if (!clave) {
+          const resuelta = await resolverClaveBackup().catch((err) => {
+            console.error("[backup]", err instanceof Error ? err.message : err)
+            return null
+          })
+          if (!resuelta) {
             console.error(
-              "[backup] respaldo cifrado pero falta BACKUP_ENCRYPTION_KEY. Sin la clave no hay restauración posible desde el Blob."
+              "[backup] respaldo cifrado y no hay clave, ni en el entorno ni en ConfigSistema. Sin ella no hay restauración posible desde el Blob."
             )
           } else {
-            return JSON.parse(descifrar(contenido, clave)) as BackupData
+            return JSON.parse(descifrar(contenido, resuelta.clave)) as BackupData
           }
         } else {
           // Respaldo anterior al cifrado, todavía dentro de la ventana de

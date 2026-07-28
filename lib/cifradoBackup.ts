@@ -32,25 +32,42 @@ export interface SobreCifrado {
 export class ClaveBackupInvalida extends Error {}
 
 /**
- * Lee BACKUP_ENCRYPTION_KEY. Acepta 64 caracteres hex o 32 bytes en base64.
+ * Convierte una clave escrita en texto a los 32 bytes que exige AES-256.
+ * Acepta 64 caracteres hex o 32 bytes en base64.
  *
- * @returns La clave, o null si no está configurada.
- * @throws ClaveBackupInvalida si está configurada pero no mide 32 bytes.
+ * La clave puede llegar desde la variable de entorno o desde ConfigSistema, así
+ * que el mensaje de error no nombra ninguna fuente en particular.
+ *
+ * @throws ClaveBackupInvalida si no mide 32 bytes.
+ */
+export function normalizarClave(bruto: string): Buffer {
+  const limpio = bruto.trim()
+
+  const buffer = /^[0-9a-fA-F]{64}$/.test(limpio)
+    ? Buffer.from(limpio, "hex")
+    : Buffer.from(limpio, "base64")
+
+  if (buffer.length !== CLAVE_BYTES) {
+    throw new ClaveBackupInvalida(
+      `La clave de respaldo debe medir ${CLAVE_BYTES} bytes: 64 caracteres hexadecimales o 44 en base64. Recibidos: ${buffer.length} bytes.`
+    )
+  }
+  return buffer
+}
+
+/**
+ * Lee BACKUP_ENCRYPTION_KEY del entorno.
+ *
+ * Para resolver la clave con el respaldo de ConfigSistema incluido, usa
+ * `resolverClaveBackup()` de lib/claveBackup.ts.
+ *
+ * @returns La clave, o null si la variable no está definida.
+ * @throws ClaveBackupInvalida si está definida pero no mide 32 bytes.
  */
 export function leerClave(): Buffer | null {
   const bruto = process.env.BACKUP_ENCRYPTION_KEY?.trim()
   if (!bruto) return null
-
-  const buffer = /^[0-9a-fA-F]{64}$/.test(bruto)
-    ? Buffer.from(bruto, "hex")
-    : Buffer.from(bruto, "base64")
-
-  if (buffer.length !== CLAVE_BYTES) {
-    throw new ClaveBackupInvalida(
-      `BACKUP_ENCRYPTION_KEY debe medir ${CLAVE_BYTES} bytes (64 caracteres hex o 44 en base64). Recibidos: ${buffer.length} bytes.`
-    )
-  }
-  return buffer
+  return normalizarClave(bruto)
 }
 
 /** true si el sistema puede cifrar respaldos ahora mismo. */
